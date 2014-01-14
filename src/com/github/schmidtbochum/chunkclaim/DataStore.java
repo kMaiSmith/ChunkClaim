@@ -28,15 +28,14 @@ import java.util.*;
 public abstract class DataStore {
 
     public int nextChunkId = 0;
-    int minModifiedBlocks = 10;
 
     ArrayList<ChunkPlot> chunks = new ArrayList<ChunkPlot>();
     ArrayList<ChunkPlot> unusedChunks = new ArrayList<ChunkPlot>();
     HashMap<String, ChunkWorld> worlds = new HashMap<String, ChunkWorld>();
 
-    protected HashMap<String, PlayerData> playerNameToPlayerDataMap = new HashMap<String, PlayerData>();
+    private HashMap<String, PlayerData> playerNameToPlayerDataMap = new HashMap<String, PlayerData>();
 
-    protected final static String dataLayerFolderPath = "plugins" + File.separator + "ChunkClaim";
+    final static String dataLayerFolderPath = "plugins" + File.separator + "ChunkClaim";
 
     void initialize() throws Exception {
         ChunkClaim.addLogEntry(this.chunks.size() + " total claimed chunks loaded.");
@@ -58,15 +57,17 @@ public abstract class DataStore {
         System.gc();
     }
 
-    abstract void loadWorldData(String worldName) throws Exception;
+    abstract void loadWorldData(String worldName);
 
-    public void cleanUp(int n) {
-        if (this.chunks.size() < 1) return;
+    public void cleanUp() {
+        if (this.chunks.size() < 1) {
+            return;
+        }
 
         Date now = new Date();
         double deletionTime = (1000 * 60 * 60 * 24) * ChunkClaim.plugin.config_autoDeleteDays;
         int r = 0;
-        for (int i = 0; i < n; i++) {
+        for (int i = 0; i < 100; i++) {
             nextChunkId++;
 
             if (nextChunkId >= this.chunks.size()) nextChunkId = 0;
@@ -192,8 +193,6 @@ public abstract class DataStore {
         return playerChunks.size();
     }
 
-    abstract void close();
-
     public boolean ownsNear(Location location, String playerName) {
         int x = location.getChunk().getX();
         int z = location.getChunk().getZ();
@@ -204,15 +203,9 @@ public abstract class DataStore {
         ChunkPlot b = getChunkAtPos(x, z - 1, worldName);
         ChunkPlot d = getChunkAtPos(x, z + 1, worldName);
 
-        if (a != null && a.isTrusted(playerName)) {
-            return true;
-        } else if (b != null && b.isTrusted(playerName)) {
-            return true;
-        } else if (c != null && c.isTrusted(playerName)) {
-            return true;
-        } else if (d != null && d.isTrusted(playerName)) {
-            return true;
-        }
-        return false;
+        return a != null && a.isTrusted(playerName) ||
+                b != null && b.isTrusted(playerName) ||
+                c != null && c.isTrusted(playerName) ||
+                d != null && d.isTrusted(playerName);
     }
 }

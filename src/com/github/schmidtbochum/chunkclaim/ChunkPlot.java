@@ -34,8 +34,8 @@ public class ChunkPlot {
     private Date claimDate;
     private boolean inDataStore;
     private Chunk chunk;
-    private boolean marked = false;
-    private boolean inspected = false;
+    private boolean marked;
+    private boolean inspected;
 
     ChunkPlot(Chunk chunk) {
         this.chunk = chunk;
@@ -45,13 +45,9 @@ public class ChunkPlot {
         this.claimDate = new Date();
     }
 
-    ChunkPlot(Chunk chunk, String owner) {
+    ChunkPlot(Chunk chunk, String owner, ArrayList<String> builders) {
         this(chunk);
         this.ownerName = owner;
-    }
-
-    ChunkPlot(Chunk chunk, String owner, ArrayList<String> builders) {
-        this(chunk, owner);
         for (String builder : builders) {
             this.builderNames.add(builder);
         }
@@ -100,8 +96,8 @@ public class ChunkPlot {
         return inspected;
     }
 
-    public void setInspected(boolean inspected) {
-        this.inspected = inspected;
+    public void setInspected() {
+        this.inspected = true;
     }
 
     public boolean isMarked() {

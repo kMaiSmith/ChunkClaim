@@ -25,7 +25,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
 
-public class WorldEventHandler implements Listener {
+class WorldEventHandler implements Listener {
 
     private DataStore dataStore;
 

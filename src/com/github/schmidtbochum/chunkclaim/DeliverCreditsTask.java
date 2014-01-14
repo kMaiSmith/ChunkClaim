@@ -25,14 +25,14 @@ import org.bukkit.entity.Player;
 //FEATURE: give players credits for playing, as long as they're not away from their computer
 
 //runs every 5 minutes in the main thread, grants blocks per hour / 12 to each online player who appears to be actively playing
-public class DeliverCreditsTask implements Runnable {
+class DeliverCreditsTask implements Runnable {
 
     @Override
     public void run() {
 
         DataStore dataStore = ChunkClaim.plugin.dataStore;
 
-        dataStore.cleanUp(100);
+        dataStore.cleanUp();
 
         Player[] players = ChunkClaim.plugin.getServer().getOnlinePlayers();
 

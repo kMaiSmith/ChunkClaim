@@ -32,9 +32,9 @@ import org.bukkit.inventory.InventoryHolder;
 
 import java.util.Date;
 
-public class PlayerEventHandler implements Listener {
+class PlayerEventHandler implements Listener {
 
-    private DataStore dataStore;
+    private final DataStore dataStore;
 
     public PlayerEventHandler(DataStore dataStore) {
         this.dataStore = dataStore;

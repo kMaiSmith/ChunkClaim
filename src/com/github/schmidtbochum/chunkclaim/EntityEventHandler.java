@@ -32,8 +32,8 @@ import org.bukkit.event.vehicle.VehicleDamageEvent;
 
 import java.util.List;
 
-public class EntityEventHandler implements Listener {
-    private DataStore dataStore;
+class EntityEventHandler implements Listener {
+    private final DataStore dataStore;
 
     public EntityEventHandler(DataStore dataStore) {
         this.dataStore = dataStore;

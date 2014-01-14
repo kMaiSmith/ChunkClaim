@@ -21,7 +21,7 @@ package com.github.schmidtbochum.chunkclaim;
 
 import org.bukkit.entity.Player;
 
-public class VisualizationClearTask implements Runnable {
+class VisualizationClearTask implements Runnable {
 
     private Visualization visualization;
     private Player player;

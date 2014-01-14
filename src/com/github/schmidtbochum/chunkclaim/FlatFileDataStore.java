@@ -38,7 +38,6 @@ public class FlatFileDataStore extends DataStore {
     private final static String playerDataFolderPath = dataLayerFolderPath + File.separator + "PlayerData";
     private final static String worldDataFolderPath = dataLayerFolderPath + File.separator + "ChunkData";
 
-
     FlatFileDataStore() throws Exception {
         this.initialize();
     }
@@ -69,10 +68,12 @@ public class FlatFileDataStore extends DataStore {
     }
 
     @Override
-    synchronized void loadWorldData(String worldName) throws Exception {
+    synchronized void loadWorldData(String worldName) {
+
+        int minModifiedBlocks = 10;
 
         //create a new world object and register it
-        ChunkWorld world = new ChunkWorld(worldName);
+        ChunkWorld world = new ChunkWorld();
         this.worlds.put(worldName, world);
 
 
@@ -140,7 +141,7 @@ public class FlatFileDataStore extends DataStore {
                 chunk.setModifiedBlocks(modifiedBlocks);
                 this.chunks.add(chunk);
 
-                if (modifiedBlocks < this.minModifiedBlocks) {
+                if (modifiedBlocks < minModifiedBlocks) {
                     this.unusedChunks.add(chunk);
                 }
                 this.worlds.get(chunk.getChunk().getWorld().getName()).addChunk(chunk);
@@ -370,9 +371,5 @@ public class FlatFileDataStore extends DataStore {
         } catch (IOException exception) {
             ChunkClaim.addLogEntry("Failed to close player file for " + playerName);
         }
-    }
-
-    @Override
-    synchronized void close() {
     }
 }

@@ -36,7 +36,7 @@ import java.util.logging.Logger;
 
 public class ChunkClaim extends JavaPlugin {
     public static ChunkClaim plugin;
-    public static final Logger logger = Logger.getLogger("Minecraft");
+    private static final Logger logger = Logger.getLogger("Minecraft");
 
     public DataStore dataStore;
 
@@ -61,7 +61,6 @@ public class ChunkClaim extends JavaPlugin {
             this.dataStore.savePlayerData(playerName, playerData);
         }
 
-        this.dataStore.close();
         plugin = null;
     }
 
@@ -685,7 +684,7 @@ public class ChunkClaim extends JavaPlugin {
                             return true;
                         }
 
-                        chunk.setInspected(true);
+                        chunk.setInspected();
                         int x = chunk.getChunk().getX() * 16 + 8;
                         int z = chunk.getChunk().getZ() * 16 + 8;
                         int y = player.getWorld().getHighestBlockYAt(new Location(player.getWorld(), x, 0, z)) + 15;
@@ -716,7 +715,7 @@ public class ChunkClaim extends JavaPlugin {
         return false;
     }
 
-    public ArrayList<ChunkPlot> getChunksInRadius(ChunkPlot chunk, String playerName, int radius) {
+    ArrayList<ChunkPlot> getChunksInRadius(ChunkPlot chunk, String playerName, int radius) {
 
         ArrayList<ChunkPlot> chunksInRadius = new ArrayList<ChunkPlot>();
 
@@ -745,7 +744,7 @@ public class ChunkClaim extends JavaPlugin {
 
     }
 
-    public OfflinePlayer resolvePlayer(String name) {
+    OfflinePlayer resolvePlayer(String name) {
 
         Player player = this.getServer().getPlayer(name);
         if (player != null)

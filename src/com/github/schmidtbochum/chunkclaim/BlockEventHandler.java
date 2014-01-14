@@ -38,9 +38,9 @@ import org.bukkit.util.Vector;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BlockEventHandler implements Listener {
+class BlockEventHandler implements Listener {
 
-    private DataStore dataStore;
+    private final DataStore dataStore;
 
     public BlockEventHandler(DataStore dataStore) {
         this.dataStore = dataStore;

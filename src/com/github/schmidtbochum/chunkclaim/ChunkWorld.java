@@ -22,8 +22,7 @@ package com.github.schmidtbochum.chunkclaim;
 
 import com.google.common.collect.HashBasedTable;
 
-public class ChunkWorld {
-    public String worldName;
+class ChunkWorld {
     public HashBasedTable<Integer, Integer, ChunkPlot> chunkTable = HashBasedTable.create();
 
     public ChunkPlot getChunk(int x, int z) {
@@ -36,9 +35,5 @@ public class ChunkWorld {
 
     public void removeChunk(ChunkPlot chunk) {
         chunkTable.remove(chunk.getChunk().getX(), chunk.getChunk().getZ());
-    }
-
-    ChunkWorld(String name) {
-        this.worldName = name;
     }
 }

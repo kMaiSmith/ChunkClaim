@@ -24,7 +24,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 
 //represents a "fake" block sent to a player as part of a visualization
-public class VisualizationElement {
+class VisualizationElement {
 
     public Location location;
     public Material visualizedMaterial;

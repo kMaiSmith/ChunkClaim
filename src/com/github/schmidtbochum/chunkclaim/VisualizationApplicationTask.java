@@ -22,7 +22,7 @@ package com.github.schmidtbochum.chunkclaim;
 
 import org.bukkit.entity.Player;
 
-public class VisualizationApplicationTask implements Runnable {
+class VisualizationApplicationTask implements Runnable {
 
     private Visualization visualization;
     private Player player;
