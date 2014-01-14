@@ -22,21 +22,20 @@ package com.github.schmidtbochum.chunkclaim;
 import org.bukkit.entity.Player;
 
 public class VisualizationClearTask implements Runnable {
-	
-	private Visualization visualization;
-	private Player player;
-	private PlayerData playerData;
-	
-	public VisualizationClearTask(Player player, PlayerData playerData, Visualization visualization) {
-		this.visualization = visualization;
-		this.playerData = playerData;
-		this.player = player;
-	}
-	
-	@Override
-	public void run() {
-		if(playerData.currentVisualization == visualization)
-			Visualization.Revert(player);
-	}
 
+    private Visualization visualization;
+    private Player player;
+    private PlayerData playerData;
+
+    public VisualizationClearTask(Player player, PlayerData playerData, Visualization visualization) {
+        this.visualization = visualization;
+        this.playerData = playerData;
+        this.player = player;
+    }
+
+    @Override
+    public void run() {
+        if (playerData.currentVisualization == visualization)
+            Visualization.Revert(player);
+    }
 }

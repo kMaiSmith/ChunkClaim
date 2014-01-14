@@ -23,29 +23,28 @@ package com.github.schmidtbochum.chunkclaim;
 import org.bukkit.entity.Player;
 
 public class VisualizationApplicationTask implements Runnable {
-	
-	private Visualization visualization;
-	private Player player;
-	private PlayerData playerData;
-	
-	public VisualizationApplicationTask(Player player, PlayerData playerData, Visualization visualization) {
-		this.visualization = visualization;
-		this.playerData = playerData;
-		this.player = player;
-	}
 
-	@Override
-	public void run() {
-		//for each element (=block) of the visualization
-		if(playerData.currentVisualization == visualization) {
-			for(int i = 0; i < visualization.elements.size(); i++) {
-				VisualizationElement element = visualization.elements.get(i);
-	
-				//send the player a fake block change event
-				if(element.location!=null)
-				player.sendBlockChange(element.location, element.visualizedMaterial, element.visualizedData);
-			}
-		}
-	}
+    private Visualization visualization;
+    private Player player;
+    private PlayerData playerData;
 
+    public VisualizationApplicationTask(Player player, PlayerData playerData, Visualization visualization) {
+        this.visualization = visualization;
+        this.playerData = playerData;
+        this.player = player;
+    }
+
+    @Override
+    public void run() {
+        //for each element (=block) of the visualization
+        if (playerData.currentVisualization == visualization) {
+            for (int i = 0; i < visualization.elements.size(); i++) {
+                VisualizationElement element = visualization.elements.get(i);
+
+                //send the player a fake block change event
+                if (element.location != null)
+                    player.sendBlockChange(element.location, element.visualizedMaterial, element.visualizedData);
+            }
+        }
+    }
 }

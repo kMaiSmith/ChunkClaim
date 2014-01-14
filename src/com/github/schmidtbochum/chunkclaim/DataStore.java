@@ -29,7 +29,6 @@ public abstract class DataStore {
 
     public int nextChunkId = 0;
 
-
     int minModifiedBlocks = 10;
 
     ArrayList<Chunk> chunks = new ArrayList<Chunk>();
@@ -65,9 +64,7 @@ public abstract class DataStore {
 
     abstract void loadWorldData(String worldName) throws Exception;
 
-
     public void cleanUp(int n) {
-
         if (this.chunks.size() < 1) return;
 
         Date now = new Date();
@@ -91,9 +88,10 @@ public abstract class DataStore {
                     this.deleteChunk(chunk);
                     r++;
                 }
-                ;
             }
-            if (r > 50) break;
+            if (r > 50) {
+                break;
+            }
         }
 
     }

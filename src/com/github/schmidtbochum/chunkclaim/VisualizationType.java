@@ -21,7 +21,7 @@
 package com.github.schmidtbochum.chunkclaim;
 
 public enum VisualizationType {
-	Chunk,
-	ErrorChunk,
-	Public
+    Chunk,
+    ErrorChunk,
+    Public
 }

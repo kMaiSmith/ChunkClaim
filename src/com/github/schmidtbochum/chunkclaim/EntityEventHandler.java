@@ -28,9 +28,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
-import org.bukkit.event.painting.PaintingBreakByEntityEvent;
-import org.bukkit.event.painting.PaintingBreakEvent;
-import org.bukkit.event.painting.PaintingPlaceEvent;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
 
 import java.util.List;
@@ -92,7 +89,6 @@ public class EntityEventHandler implements Listener {
         Item item = (Item) entity;
         Material material = item.getItemStack().getType();
 
-
         //allow dropping books. levers for chairs plugin
         if (material == Material.WRITTEN_BOOK || material == Material.BOOK_AND_QUILL || material == Material.LEVER) {
             return;
@@ -116,7 +112,6 @@ public class EntityEventHandler implements Listener {
 
         SpawnReason reason = event.getSpawnReason();
         if (reason != SpawnReason.SPAWNER_EGG) event.setCancelled(true);
-
     }
 
     //when an entity dies...
@@ -125,61 +120,6 @@ public class EntityEventHandler implements Listener {
         if (!ChunkClaim.plugin.config_worlds.contains(event.getEntity().getWorld().getName())) return;
         event.setDroppedExp(0);
         event.getDrops().clear();
-    }
-
-    //when a painting is broken
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-    public void onPaintingBreak(PaintingBreakEvent event) {
-
-        if (!ChunkClaim.plugin.config_worlds.contains(event.getPainting().getWorld().getName())) return;
-
-        if (!(event instanceof PaintingBreakByEntityEvent)) {
-            event.setCancelled(true);
-            return;
-        }
-
-        PaintingBreakByEntityEvent entityEvent = (PaintingBreakByEntityEvent) event;
-
-        //who is removing it?
-        Entity remover = entityEvent.getRemover();
-
-        //again, making sure the breaker is a player
-        if (!(remover instanceof Player)) {
-            event.setCancelled(true);
-            return;
-        }
-
-        Chunk chunk = this.dataStore.getChunkAt(event.getPainting().getLocation(), null);
-
-        if (chunk == null) {
-            event.setCancelled(true);
-            return;
-        }
-        if (!chunk.isTrusted(((Player) remover).getName())) {
-            event.setCancelled(true);
-            ChunkClaim.plugin.sendMsg(((Player) remover), "You don't have " + chunk.ownerName + "'s permission to build here.");
-            return;
-        }
-    }
-
-    //when a painting is placed
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-    public void onPaintingPlace(PaintingPlaceEvent event) {
-
-        if (!ChunkClaim.plugin.config_worlds.contains(event.getPlayer().getWorld().getName())) return;
-
-        Player player = event.getPlayer();
-        Chunk chunk = this.dataStore.getChunkAt(event.getPainting().getLocation(), null);
-
-        if (chunk == null) {
-            event.setCancelled(true);
-            return;
-        }
-        if (!chunk.isTrusted(player.getName())) {
-            event.setCancelled(true);
-            ChunkClaim.plugin.sendMsg(player, "You don't have " + chunk.ownerName + "'s permission to build here.");
-            return;
-        }
     }
 
     //when an entity is damaged
@@ -236,12 +176,9 @@ public class EntityEventHandler implements Listener {
                         if (playerData != null) {
                             playerData.lastChunk = chunk;
                         }
-
                     }
                 }
-
             }
-
         }
     }
 
@@ -295,10 +232,7 @@ public class EntityEventHandler implements Listener {
                 if (playerData != null) {
                     playerData.lastChunk = chunk;
                 }
-
             }
         }
-
-
     }
 }

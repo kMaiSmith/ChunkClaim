@@ -46,23 +46,24 @@ public class BlockEventHandler implements Listener {
         this.dataStore = dataStore;
     }
 
-
     //when a player breaks a block...
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onBlockBreak(BlockBreakEvent event) {
 
-        if (!ChunkClaim.plugin.config_worlds.contains(event.getBlock().getWorld().getName())) return;
-
+        if (!ChunkClaim.plugin.config_worlds.contains(event.getBlock().getWorld().getName())) {
+            return;
+        }
 
         Player player = event.getPlayer();
         Block block = event.getBlock();
         Location location = block.getLocation();
 
-
         PlayerData playerData = this.dataStore.getPlayerData(player.getName());
         Chunk chunk = dataStore.getChunkAt(location, playerData.lastChunk);
 
-        if (playerData.ignorechunks) return;
+        if (playerData.ignoreChunks) {
+            return;
+        }
 
         if (chunk == null) {
             String playerName = player.getName();
@@ -96,7 +97,6 @@ public class BlockEventHandler implements Listener {
 
                 playerData.credits--;
                 playerData.lastChunk = newChunk;
-                //newChunk.modify();
                 this.dataStore.savePlayerData(playerName, playerData);
 
                 ChunkClaim.plugin.sendMsg(player, "You claimed this chunk. Credits left: " + playerData.getCredits());
@@ -105,34 +105,25 @@ public class BlockEventHandler implements Listener {
                 Visualization.Apply(player, visualization);
 
             } else {
-
-
                 ChunkClaim.plugin.sendMsg(player, "Not enough credits to claim this chunk.");
-
 
                 if (playerData.lastChunk != chunk) {
                     playerData.lastChunk = chunk;
                     Visualization visualization = Visualization.FromBukkitChunk(location.getChunk(), location.getBlockY(), VisualizationType.Public, location);
                     Visualization.Apply(player, visualization);
                 }
-
                 event.setCancelled(true);
             }
             return;
         } else if (chunk.isTrusted(player.getName())) {
-
             return;
         } else {
-
-
             ChunkClaim.plugin.sendMsg(player, "You don't have " + chunk.ownerName + "'s permission to build here.");
-
             if (playerData.lastChunk != chunk) {
                 playerData.lastChunk = chunk;
                 Visualization visualization = Visualization.FromChunk(chunk, location.getBlockY(), VisualizationType.ErrorChunk, location);
                 Visualization.Apply(player, visualization);
             }
-
             event.setCancelled(true);
             return;
         }
@@ -142,7 +133,9 @@ public class BlockEventHandler implements Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onBlockPlace(BlockPlaceEvent event) {
 
-        if (!ChunkClaim.plugin.config_worlds.contains(event.getBlock().getWorld().getName())) return;
+        if (!ChunkClaim.plugin.config_worlds.contains(event.getBlock().getWorld().getName())) {
+            return;
+        }
 
         Player player = event.getPlayer();
         Block block = event.getBlock();
@@ -151,7 +144,9 @@ public class BlockEventHandler implements Listener {
         PlayerData playerData = this.dataStore.getPlayerData(player.getName());
         Chunk chunk = dataStore.getChunkAt(location, playerData.lastChunk);
 
-        if (playerData.ignorechunks) return;
+        if (playerData.ignoreChunks) {
+            return;
+        }
 
         if (chunk == null) {
 
@@ -190,8 +185,7 @@ public class BlockEventHandler implements Listener {
                 Visualization visualization = Visualization.FromBukkitChunk(location.getChunk(), location.getBlockY(), VisualizationType.Public, location);
                 Visualization.Apply(player, visualization);
                 return;
-            } else
-
+            } else {
                 //check credits
                 if (playerData.getCredits() <= 0) {
                     ChunkClaim.plugin.sendMsg(player, "Not enough credits to claim this chunk.");
@@ -202,6 +196,7 @@ public class BlockEventHandler implements Listener {
                     event.setCancelled(true);
                     return;
                 }
+            }
             //claim the chunk
             Chunk newChunk = new Chunk(location, playerName, playerData.builderNames);
 
@@ -217,10 +212,12 @@ public class BlockEventHandler implements Listener {
             Visualization visualization = Visualization.FromChunk(newChunk, location.getBlockY(), VisualizationType.Chunk, location);
             Visualization.Apply(player, visualization);
             return;
+
         } else if (chunk.isTrusted(player.getName())) {
             chunk.modify();
 
             return;
+
         } else {
             ChunkClaim.plugin.sendMsg(player, "You don't have " + chunk.ownerName + "'s permission to build here.");
 
@@ -229,8 +226,6 @@ public class BlockEventHandler implements Listener {
                 Visualization visualization = Visualization.FromChunk(chunk, location.getBlockY(), VisualizationType.ErrorChunk, location);
                 Visualization.Apply(player, visualization);
             }
-
-
             event.setCancelled(true);
             return;
         }
@@ -328,7 +323,9 @@ public class BlockEventHandler implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onBlockIgnite(BlockIgniteEvent igniteEvent) {
 
-        if (!ChunkClaim.plugin.config_worlds.contains(igniteEvent.getBlock().getWorld().getName())) return;
+        if (!ChunkClaim.plugin.config_worlds.contains(igniteEvent.getBlock().getWorld().getName())) {
+            return;
+        }
 
         if (igniteEvent.getCause() != IgniteCause.FLINT_AND_STEEL) {
             igniteEvent.setCancelled(true);
@@ -339,7 +336,9 @@ public class BlockEventHandler implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onBlockSpread(BlockSpreadEvent spreadEvent) {
 
-        if (!ChunkClaim.plugin.config_worlds.contains(spreadEvent.getBlock().getWorld().getName())) return;
+        if (!ChunkClaim.plugin.config_worlds.contains(spreadEvent.getBlock().getWorld().getName())) {
+            return;
+        }
 
         if (spreadEvent.getSource().getType() == Material.FIRE) {
             spreadEvent.setCancelled(true);
@@ -350,7 +349,10 @@ public class BlockEventHandler implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onBlockBurn(BlockBurnEvent burnEvent) {
 
-        if (!ChunkClaim.plugin.config_worlds.contains(burnEvent.getBlock().getWorld().getName())) return;
+        if (!ChunkClaim.plugin.config_worlds.contains(burnEvent.getBlock().getWorld().getName())) {
+            return;
+        }
+
         burnEvent.setCancelled(true);
     }
 
@@ -360,10 +362,14 @@ public class BlockEventHandler implements Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onBlockFromTo(BlockFromToEvent spreadEvent) {
 
-        if (!ChunkClaim.plugin.config_worlds.contains(spreadEvent.getBlock().getWorld().getName())) return;
+        if (!ChunkClaim.plugin.config_worlds.contains(spreadEvent.getBlock().getWorld().getName())) {
+            return;
+        }
 
         //always allow fluids to flow straight down
-        if (spreadEvent.getFace() == BlockFace.DOWN) return;
+        if (spreadEvent.getFace() == BlockFace.DOWN) {
+            return;
+        }
 
         //from where?
         Block fromBlock = spreadEvent.getBlock();
@@ -377,7 +383,9 @@ public class BlockEventHandler implements Listener {
         Chunk toChunk = this.dataStore.getChunkAt(toBlock.getLocation(), fromChunk);
 
         //if it's within the same claim or wilderness to wilderness, allow it
-        if (fromChunk == toChunk) return;
+        if (fromChunk == toChunk) {
+            return;
+        }
 
         //block any spread into the wilderness from a claim
         if (fromChunk != null && toChunk == null) {
@@ -413,11 +421,17 @@ public class BlockEventHandler implements Listener {
         int xChange = 0;
         int zChange = 0;
         if (Math.abs(velocity.getX()) > Math.abs(velocity.getZ())) {
-            if (velocity.getX() > 0) xChange = 1;
-            else xChange = -1;
+            if (velocity.getX() > 0) {
+                xChange = 1;
+            } else {
+                xChange = -1;
+            }
         } else {
-            if (velocity.getZ() > 0) zChange = 1;
-            else zChange = -1;
+            if (velocity.getZ() > 0) {
+                zChange = 1;
+            } else {
+                zChange = -1;
+            }
         }
 
         Block toBlock = fromBlock.getRelative(xChange, 0, zChange);
@@ -450,8 +464,9 @@ public class BlockEventHandler implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onTreeGrow(StructureGrowEvent growEvent) {
 
-        if (!ChunkClaim.plugin.config_worlds.contains(growEvent.getLocation().getBlock().getWorld().getName())) return;
-
+        if (!ChunkClaim.plugin.config_worlds.contains(growEvent.getLocation().getBlock().getWorld().getName())) {
+            return;
+        }
 
         Location rootLocation = growEvent.getLocation();
         Chunk rootChunk = this.dataStore.getChunkAt(rootLocation, null);
