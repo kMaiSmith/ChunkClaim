@@ -31,7 +31,6 @@ import org.bukkit.event.player.*;
 import org.bukkit.inventory.InventoryHolder;
 
 import java.util.Date;
-import java.util.HashSet;
 
 public class PlayerEventHandler implements Listener {
 
@@ -82,7 +81,7 @@ public class PlayerEventHandler implements Listener {
         Player player = event.getPlayer();
         Entity entity = event.getRightClicked();
 
-        Chunk chunk = this.dataStore.getChunkAt(entity.getLocation(), null);
+        ChunkPlot chunk = this.dataStore.getChunkAt(entity.getLocation(), null);
 
         if (chunk != null) {
             if (entity instanceof StorageMinecart || entity instanceof PoweredMinecart || entity instanceof Animals) {
@@ -102,7 +101,7 @@ public class PlayerEventHandler implements Listener {
         Player player = bedEvent.getPlayer();
         Block block = bedEvent.getBed();
 
-        Chunk chunk = this.dataStore.getChunkAt(block.getLocation(), null);
+        ChunkPlot chunk = this.dataStore.getChunkAt(block.getLocation(), null);
 
         if (chunk != null) {
             if (!chunk.isTrusted(player.getName())) {
@@ -122,18 +121,15 @@ public class PlayerEventHandler implements Listener {
         Player player = bucketEvent.getPlayer();
         Block block = bucketEvent.getBlockClicked().getRelative(bucketEvent.getBlockFace());
 
-        Chunk chunk = this.dataStore.getChunkAt(block.getLocation(), null);
+        ChunkPlot chunk = this.dataStore.getChunkAt(block.getLocation(), null);
 
         if (chunk == null) {
             bucketEvent.setCancelled(true);
             return;
         }
-        if (chunk.isTrusted(player.getName())) {
-            return;
-        } else {
-            ChunkClaim.plugin.sendMsg(player, "You don't have " + chunk.ownerName + "'s permission to build here.");
+        if (!chunk.isTrusted(player.getName())) {
+            ChunkClaim.plugin.sendMsg(player, "You don't have " + chunk.getOwnerName() + "'s permission to build here.");
             bucketEvent.setCancelled(true);
-            return;
         }
 
     }
@@ -145,18 +141,15 @@ public class PlayerEventHandler implements Listener {
 
         Player player = bucketEvent.getPlayer();
         Block block = bucketEvent.getBlockClicked();
-        Chunk chunk = this.dataStore.getChunkAt(block.getLocation(), null);
+        ChunkPlot chunk = this.dataStore.getChunkAt(block.getLocation(), null);
 
         if (chunk == null) {
             bucketEvent.setCancelled(true);
             return;
         }
-        if (chunk.isTrusted(player.getName())) {
-            return;
-        } else {
-            ChunkClaim.plugin.sendMsg(player, "You don't have " + chunk.ownerName + "'s permission.");
+        if (!chunk.isTrusted(player.getName())) {
+            ChunkClaim.plugin.sendMsg(player, "You don't have " + chunk.getOwnerName() + "'s permission.");
             bucketEvent.setCancelled(true);
-            return;
         }
     }
 
@@ -167,11 +160,8 @@ public class PlayerEventHandler implements Listener {
 
         Item item = event.getItemDrop();
         Material material = item.getItemStack().getType();
-        //allow dropping books
-        if (material == Material.WRITTEN_BOOK || material == Material.BOOK_AND_QUILL) {
-            return;
-        } else {
-            //ChunkClaim.addLogEntry("Item drop cancelled.");
+
+        if (!(material == Material.WRITTEN_BOOK || material == Material.BOOK_AND_QUILL)) {
             event.setCancelled(true);
         }
 
@@ -186,18 +176,10 @@ public class PlayerEventHandler implements Listener {
         Player player = event.getPlayer();
 
         //determine target block. FEATURE: shovel and string can be used from a distance away
-        Block clickedBlock = null;
+        Block clickedBlock;
 
         try {
             clickedBlock = event.getClickedBlock(); //null returned here means interacting with air
-            if (clickedBlock == null || clickedBlock.getType() == Material.SNOW) {
-                //try to find a far away non-air block along line of sight
-                HashSet<Byte> transparentMaterials = new HashSet<Byte>();
-                transparentMaterials.add(Byte.valueOf((byte) Material.AIR.getId()));
-                transparentMaterials.add(Byte.valueOf((byte) Material.SNOW.getId()));
-                transparentMaterials.add(Byte.valueOf((byte) Material.LONG_GRASS.getId()));
-                clickedBlock = player.getTargetBlock(transparentMaterials, 250);
-            }
         } catch (Exception e) {//an exception intermittently comes from getTargetBlock(). when it does, just ignore the event
             return;
         }
@@ -213,38 +195,35 @@ public class PlayerEventHandler implements Listener {
         PlayerData playerData = this.dataStore.getPlayerData(player.getName());
 
         if (event.getClickedBlock() != null && event.getClickedBlock().getRelative(event.getBlockFace()).getType() == Material.FIRE) {
-            Chunk chunk = this.dataStore.getChunkAt(clickedBlock.getLocation(), playerData.lastChunk);
+            ChunkPlot chunk = this.dataStore.getChunkAt(clickedBlock.getLocation(), playerData.lastChunk);
 
             if (chunk != null) {
                 playerData.lastChunk = chunk;
                 if (!chunk.isTrusted(player.getName())) {
                     event.setCancelled(true);
-                    ChunkClaim.plugin.sendMsg(player, "You don't have " + chunk.ownerName + "'s permission to build here.");
-                    return;
+                    ChunkClaim.plugin.sendMsg(player, "You don't have " + chunk.getOwnerName() + "'s permission to build here.");
                 }
             }
         }
         //apply rules for containers and crafting blocks
         else if (ChunkClaim.plugin.config_protectContainers && (clickedBlock.getState() instanceof InventoryHolder || clickedBlockType == Material.WORKBENCH || clickedBlockType == Material.ENDER_CHEST || clickedBlockType == Material.DISPENSER || clickedBlockType == Material.BREWING_STAND || clickedBlockType == Material.JUKEBOX || clickedBlockType == Material.ENCHANTMENT_TABLE)) {
-            Chunk chunk = this.dataStore.getChunkAt(clickedBlock.getLocation(), playerData.lastChunk);
+            ChunkPlot chunk = this.dataStore.getChunkAt(clickedBlock.getLocation(), playerData.lastChunk);
             if (chunk != null) {
                 playerData.lastChunk = chunk;
                 if (!chunk.isTrusted(player.getName())) {
                     event.setCancelled(true);
                     ChunkClaim.plugin.sendMsg(player, "Not permitted.");
-                    return;
                 }
             }
         }
         //otherwise apply rules for buttons and switches
         else if (ChunkClaim.plugin.config_protectSwitches && (clickedBlockType == null || clickedBlockType == Material.STONE_BUTTON || clickedBlockType == Material.LEVER)) {
-            Chunk chunk = this.dataStore.getChunkAt(clickedBlock.getLocation(), playerData.lastChunk);
+            ChunkPlot chunk = this.dataStore.getChunkAt(clickedBlock.getLocation(), playerData.lastChunk);
             if (chunk != null) {
                 playerData.lastChunk = chunk;
                 if (!chunk.isTrusted(player.getName())) {
                     event.setCancelled(true);
                     ChunkClaim.plugin.sendMsg(player, "Not permitted.");
-                    return;
                 }
             }
 
@@ -253,18 +232,16 @@ public class PlayerEventHandler implements Listener {
         //NOTE: that this event applies only to players. monsters and animals can still trample.
         else if (event.getAction() == Action.PHYSICAL && clickedBlockType == Material.SOIL) {
             event.setCancelled(true);
-            return;
         }
 
         //apply rule for note blocks and repeaters
         else if (clickedBlockType == Material.NOTE_BLOCK || clickedBlockType == Material.DIODE_BLOCK_ON || clickedBlockType == Material.DIODE_BLOCK_OFF) {
-            Chunk chunk = this.dataStore.getChunkAt(clickedBlock.getLocation(), playerData.lastChunk);
+            ChunkPlot chunk = this.dataStore.getChunkAt(clickedBlock.getLocation(), playerData.lastChunk);
             if (chunk != null) {
                 playerData.lastChunk = chunk;
                 if (!chunk.isTrusted(player.getName())) {
                     event.setCancelled(true);
                     ChunkClaim.plugin.sendMsg(player, "Not permitted.");
-                    return;
                 }
             }
         }
@@ -279,49 +256,42 @@ public class PlayerEventHandler implements Listener {
 
             //check for build permission (ink sac == bone meal, must be a Bukkit bug?)
             if (materialInHand == Material.INK_SACK || materialInHand == Material.BOAT || materialInHand == Material.MINECART || materialInHand == Material.POWERED_MINECART || materialInHand == Material.STORAGE_MINECART || materialInHand == Material.BOAT) {
-                Chunk chunk = this.dataStore.getChunkAt(clickedBlock.getLocation(), playerData.lastChunk);
+                ChunkPlot chunk = this.dataStore.getChunkAt(clickedBlock.getLocation(), playerData.lastChunk);
                 if (chunk != null) {
                     playerData.lastChunk = chunk;
                     if (!chunk.isTrusted(player.getName())) {
                         event.setCancelled(true);
                         ChunkClaim.plugin.sendMsg(player, "Not permitted.");
-                        return;
                     }
                 } else {
                     event.setCancelled(true);
                     ChunkClaim.plugin.sendMsg(player, "Not permitted.");
-                    return;
                 }
             } else if (materialInHand == Material.MONSTER_EGG) {
                 if (ChunkClaim.plugin.config_mobsForCredits && (player.getItemInHand().getDurability() == EntityType.WOLF.getTypeId() || player.getItemInHand().getDurability() == EntityType.OCELOT.getTypeId())) {
 
-                    Chunk chunk = this.dataStore.getChunkAt(clickedBlock.getLocation(), playerData.lastChunk);
+                    ChunkPlot chunk = this.dataStore.getChunkAt(clickedBlock.getLocation(), playerData.lastChunk);
                     if (chunk != null) {
                         playerData.lastChunk = chunk;
                         if (!chunk.isTrusted(player.getName())) {
                             event.setCancelled(true);
                             ChunkClaim.plugin.sendMsg(player, "Not permitted.");
-                            return;
                         } else {
                             if (playerData.getCredits() >= ChunkClaim.plugin.config_mobPrice) {
                                 playerData.credits -= 30;
                                 ChunkClaim.plugin.sendMsg(player, "You spawned this mob for " + ChunkClaim.plugin.config_mobPrice + " credits. Credits left: " + playerData.getCredits());
-                                return;
 
                             } else {
                                 event.setCancelled(true);
                                 ChunkClaim.plugin.sendMsg(player, "Not enough credits to spawn a mob (" + ChunkClaim.plugin.config_mobPrice + ").");
-                                return;
                             }
                         }
                     } else {
                         event.setCancelled(true);
                         ChunkClaim.plugin.sendMsg(player, "Not permitted.");
-                        return;
                     }
                 } else {
                     event.setCancelled(true);
-                    return;
                 }
             }
         }

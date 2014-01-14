@@ -24,20 +24,18 @@ import com.google.common.collect.HashBasedTable;
 
 public class ChunkWorld {
     public String worldName;
-    public HashBasedTable<Integer, Integer, Chunk> chunkTable = HashBasedTable.create();
+    public HashBasedTable<Integer, Integer, ChunkPlot> chunkTable = HashBasedTable.create();
 
-
-    public Chunk getChunk(int x, int z) {
+    public ChunkPlot getChunk(int x, int z) {
         return chunkTable.get(x, z);
     }
 
-
-    public void addChunk(Chunk newChunk) {
-        chunkTable.put(newChunk.x, newChunk.z, newChunk);
+    public void addChunk(ChunkPlot newChunk) {
+        chunkTable.put(newChunk.getChunk().getX(), newChunk.getChunk().getZ(), newChunk);
     }
 
-    public void removeChunk(Chunk chunk) {
-        chunkTable.remove(chunk.x, chunk.z);
+    public void removeChunk(ChunkPlot chunk) {
+        chunkTable.remove(chunk.getChunk().getX(), chunk.getChunk().getZ());
     }
 
     ChunkWorld(String name) {

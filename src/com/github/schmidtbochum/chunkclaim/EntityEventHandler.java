@@ -155,13 +155,13 @@ public class EntityEventHandler implements Listener {
         if (event instanceof EntityDamageByEntityEvent) {
             //if the entity is an non-monster creature (remember monsters disqualified above), or a vehicle
             if ((subEvent.getEntity() instanceof Creature)) {
-                Chunk cachedChunk = null;
+                ChunkPlot cachedChunk = null;
                 PlayerData playerData = null;
                 if (attacker != null) {
                     playerData = this.dataStore.getPlayerData(attacker.getName());
                     cachedChunk = playerData.lastChunk;
                 }
-                Chunk chunk = dataStore.getChunkAt(event.getEntity().getLocation(), cachedChunk);
+                ChunkPlot chunk = dataStore.getChunkAt(event.getEntity().getLocation(), cachedChunk);
 
                 //if it's claimed
                 if (chunk != null) {
@@ -211,13 +211,13 @@ public class EntityEventHandler implements Listener {
                 attacker = (Player) potion.getShooter();
             }
         }
-        Chunk cachedChunk = null;
+        ChunkPlot cachedChunk = null;
         PlayerData playerData = null;
         if (attacker != null) {
             playerData = this.dataStore.getPlayerData(attacker.getName());
             cachedChunk = playerData.lastChunk;
         }
-        Chunk chunk = dataStore.getChunkAt(event.getVehicle().getLocation(), cachedChunk);
+        ChunkPlot chunk = dataStore.getChunkAt(event.getVehicle().getLocation(), cachedChunk);
 
         //if it's claimed
         if (chunk != null) {

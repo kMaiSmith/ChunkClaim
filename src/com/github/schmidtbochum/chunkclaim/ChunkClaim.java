@@ -20,7 +20,6 @@
 
 package com.github.schmidtbochum.chunkclaim;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -56,15 +55,14 @@ public class ChunkClaim extends JavaPlugin {
 
     public void onDisable() {
         Player[] players = this.getServer().getOnlinePlayers();
-        for (int i = 0; i < players.length; i++) {
-            Player player = players[i];
+        for (Player player : players) {
             String playerName = player.getName();
             PlayerData playerData = this.dataStore.getPlayerData(playerName);
             this.dataStore.savePlayerData(playerName, playerData);
         }
 
         this.dataStore.close();
-        this.plugin = null;
+        plugin = null;
     }
 
     public void onEnable() {
@@ -133,25 +131,23 @@ public class ChunkClaim extends JavaPlugin {
 
             if (args.length == 0) {
 
-                Chunk chunk = this.dataStore.getChunkAt(player.getLocation(), null);
+                ChunkPlot chunk = this.dataStore.getChunkAt(player.getLocation(), null);
                 Location location = player.getLocation();
                 PlayerData playerData = this.dataStore.getPlayerData(player.getName());
 
                 if (player.hasPermission("chunkclaim.admin")) {
                     String adminString = "ID: " + location.getChunk().getX() + "|" + location.getChunk().getZ();
                     if (chunk != null) {
-                        adminString += ", Permanent: " + (chunk.modifiedBlocks < 0 ? "true" : ("false (" + chunk.modifiedBlocks + ")"));
-                        long loginDays = ((new Date()).getTime() - this.dataStore.getPlayerData(chunk.ownerName).lastLogin.getTime()) / (1000 * 60 * 60 * 24);
+                        adminString += ", Permanent: " + (chunk.getModifiedBlocks() < 0 ? "true" : ("false (" + chunk.getModifiedBlocks() + ")"));
+                        long loginDays = ((new Date()).getTime() - this.dataStore.getPlayerData(chunk.getOwnerName()).lastLogin.getTime()) / (1000 * 60 * 60 * 24);
                         adminString += ", Last Login: " + loginDays + " days ago.";
                     }
                     sendMsg(player, adminString);
-                    if (chunk != null && !chunk.ownerName.equals(player.getName())) {
+                    if (chunk != null && !chunk.getOwnerName().equals(player.getName())) {
                         StringBuilder builders = new StringBuilder();
-                        for (int i = 0; i < chunk.builderNames.size(); i++) {
-                            builders.append(chunk.builderNames.get(i));
-                            if (i < chunk.builderNames.size() - 1) {
-                                builders.append(", ");
-                            }
+                        for (String builder : chunk.getBuilderNames()) {
+                            builders.append(builder);
+                            builders.append(" ");
                         }
                         Visualization visualization = Visualization.FromChunk(chunk, location.getBlockY(), VisualizationType.Chunk, location);
                         Visualization.Apply(player, visualization);
@@ -166,15 +162,12 @@ public class ChunkClaim extends JavaPlugin {
                     Visualization.Apply(player, visualization);
                     return true;
 
-                } else if (chunk.ownerName.equals(player.getName())) {
-                    if (chunk.builderNames.size() > 0) {
+                } else if (chunk.getOwnerName().equals(player.getName())) {
+                    if (chunk.getBuilderNames().size() > 0) {
                         StringBuilder builders = new StringBuilder();
-                        for (int i = 0; i < chunk.builderNames.size(); i++) {
-                            builders.append(chunk.builderNames.get(i));
-
-                            if (i < chunk.builderNames.size() - 1) {
-                                builders.append(", ");
-                            }
+                        for (String builder : chunk.getBuilderNames()) {
+                            builders.append(builder);
+                            builders.append(" ");
                         }
                         Visualization visualization = Visualization.FromChunk(chunk, location.getBlockY(), VisualizationType.Chunk, location);
                         Visualization.Apply(player, visualization);
@@ -191,7 +184,7 @@ public class ChunkClaim extends JavaPlugin {
                 } else {
 
                     if (chunk.isTrusted(player.getName())) {
-                        sendMsg(player, chunk.ownerName + " owns this chunk. You have build rights!");
+                        sendMsg(player, chunk.getOwnerName() + " owns this chunk. You have build rights!");
                         if (playerData.lastChunk != chunk) {
                             playerData.lastChunk = chunk;
                             Visualization visualization = Visualization.FromChunk(chunk, location.getBlockY(), VisualizationType.Chunk, location);
@@ -199,7 +192,7 @@ public class ChunkClaim extends JavaPlugin {
                         }
                     } else {
 
-                        sendMsg(player, chunk.ownerName + " owns this chunk. You can't build here.");
+                        sendMsg(player, chunk.getOwnerName() + " owns this chunk. You can't build here.");
                         if (playerData.lastChunk != chunk) {
                             playerData.lastChunk = chunk;
                             Visualization visualization = Visualization.FromChunk(chunk, location.getBlockY(), VisualizationType.ErrorChunk, location);
@@ -209,7 +202,7 @@ public class ChunkClaim extends JavaPlugin {
                     return true;
                 }
             } else if (args[0].equalsIgnoreCase("abandon")) {
-                Chunk chunk = this.dataStore.getChunkAt(player.getLocation(), null);
+                ChunkPlot chunk = this.dataStore.getChunkAt(player.getLocation(), null);
                 PlayerData playerData = this.dataStore.getPlayerData(player.getName());
                 Location location = player.getLocation();
 
@@ -230,10 +223,10 @@ public class ChunkClaim extends JavaPlugin {
                             return true;
                         }
 
-                        ArrayList<Chunk> chunksInRadius = this.getChunksInRadius(chunk, player.getName(), radius);
+                        ArrayList<ChunkPlot> chunksInRadius = this.getChunksInRadius(chunk, player.getName(), radius);
 
-                        for (int i = 0; i < chunksInRadius.size(); i++) {
-                            this.dataStore.deleteChunk(chunksInRadius.get(i));
+                        for (ChunkPlot chunkPlot : chunksInRadius) {
+                            this.dataStore.deleteChunk(chunkPlot);
                             playerData.credits++;
                             abd++;
                         }
@@ -254,11 +247,11 @@ public class ChunkClaim extends JavaPlugin {
                         Visualization visualization = Visualization.FromBukkitChunk(location.getChunk(), location.getBlockY(), VisualizationType.Public, location);
                         Visualization.Apply(player, visualization);
 
-                    } else if (chunk.ownerName.equals(player.getName())) {
+                    } else if (chunk.getOwnerName().equals(player.getName())) {
                         this.dataStore.deleteChunk(chunk);
                         playerData.credits++;
                         this.dataStore.savePlayerData(player.getName(), playerData);
-                        sendMsg(player, "Chunk abandoned. Credits: " + playerData.getCredits());
+                        sendMsg(player, "ChunkPlot abandoned. Credits: " + playerData.getCredits());
 
                         Visualization visualization = Visualization.FromChunk(chunk, location.getBlockY(), VisualizationType.Public, location);
                         Visualization.Apply(player, visualization);
@@ -272,7 +265,7 @@ public class ChunkClaim extends JavaPlugin {
                             Visualization visualization = Visualization.FromChunk(chunk, location.getBlockY(), VisualizationType.ErrorChunk, location);
                             Visualization.Apply(player, visualization);
                         }
-                        sendMsg(player, "You don't own this chunk. Only " + chunk.ownerName + " or the staff can delete it.");
+                        sendMsg(player, "You don't own this chunk. Only " + chunk.getOwnerName() + " or the staff can delete it.");
                         return true;
                     }
 
@@ -306,13 +299,13 @@ public class ChunkClaim extends JavaPlugin {
                     return true;
                 }
 
-                ArrayList<Chunk> chunksInRadius = this.dataStore.getAllChunksForPlayer(player.getName());
+                ArrayList<ChunkPlot> chunksInRadius = this.dataStore.getAllChunksForPlayer(player.getName());
 
                 if (!playerData.builderNames.contains(tName)) {
-                    for (int i = 0; i < chunksInRadius.size(); i++) {
-                        if (!chunksInRadius.get(i).isTrusted(tName)) {
-                            chunksInRadius.get(i).builderNames.add(tName);
-                            dataStore.writeChunkToStorage(chunksInRadius.get(i));
+                    for (ChunkPlot chunkPlot : chunksInRadius) {
+                        if (!chunkPlot.isTrusted(tName)) {
+                            chunkPlot.addBuilder(tName);
+                            dataStore.writeChunkToStorage(chunkPlot);
                         }
                     }
                     playerData.builderNames.add(tName);
@@ -343,14 +336,12 @@ public class ChunkClaim extends JavaPlugin {
                     return true;
                 }
 
-                ArrayList<Chunk> chunksInRadius = this.dataStore.getAllChunksForPlayer(player.getName());
+                ArrayList<ChunkPlot> chunksInRadius = this.dataStore.getAllChunksForPlayer(player.getName());
 
                 if (playerData.builderNames.contains(tName)) {
-                    for (int i = 0; i < chunksInRadius.size(); i++) {
-                        if (chunksInRadius.get(i).isTrusted(tName)) {
-                            chunksInRadius.get(i).builderNames.remove(tName);
-                            dataStore.writeChunkToStorage(chunksInRadius.get(i));
-                        }
+                    for (ChunkPlot chunkPlot : chunksInRadius) {
+                        chunkPlot.removeBuilder(tName);
+                        dataStore.writeChunkToStorage(chunkPlot);
                     }
                     playerData.builderNames.remove(tName);
                     this.dataStore.savePlayerData(player.getName(), playerData);
@@ -406,12 +397,11 @@ public class ChunkClaim extends JavaPlugin {
                         String tName = tp.getName();
                         PlayerData playerData = this.dataStore.getPlayerData(tName);
 
-                        org.bukkit.Chunk bukkitChunk = location.getChunk();
-                        Chunk chunk = new Chunk(bukkitChunk.getX(), bukkitChunk.getZ(), bukkitChunk.getWorld().getName());
-                        ArrayList<Chunk> chunksInRadius = this.getChunksInRadius(chunk, tName, radius);
+                        ChunkPlot chunk = new ChunkPlot(location.getChunk());
+                        ArrayList<ChunkPlot> chunksInRadius = this.getChunksInRadius(chunk, tName, radius);
 
-                        for (int i = 0; i < chunksInRadius.size(); i++) {
-                            this.dataStore.deleteChunk(chunksInRadius.get(i));
+                        for (ChunkPlot chunkPlot : chunksInRadius) {
+                            this.dataStore.deleteChunk(chunkPlot);
                             playerData.credits++;
                             abd++;
                         }
@@ -426,18 +416,18 @@ public class ChunkClaim extends JavaPlugin {
                     }
 
                 } else if (args.length == 1) {
-                    Chunk chunk = this.dataStore.getChunkAt(player.getLocation(), null);
+                    ChunkPlot chunk = this.dataStore.getChunkAt(player.getLocation(), null);
 
                     if (chunk == null) {
                         sendMsg(player, "This chunk is public.");
                         Visualization visualization = Visualization.FromBukkitChunk(location.getChunk(), location.getBlockY(), VisualizationType.Public, location);
                         Visualization.Apply(player, visualization);
                     } else {
-                        PlayerData playerData = this.dataStore.getPlayerData(chunk.ownerName);
+                        PlayerData playerData = this.dataStore.getPlayerData(chunk.getOwnerName());
                         this.dataStore.deleteChunk(chunk);
                         playerData.credits++;
-                        this.dataStore.savePlayerData(chunk.ownerName, playerData);
-                        sendMsg(player, "Chunk deleted.");
+                        this.dataStore.savePlayerData(chunk.getOwnerName(), playerData);
+                        sendMsg(player, "ChunkPlot deleted.");
 
                         Visualization visualization = Visualization.FromChunk(chunk, location.getBlockY(), VisualizationType.Public, location);
                         Visualization.Apply(player, visualization);
@@ -517,7 +507,7 @@ public class ChunkClaim extends JavaPlugin {
                     if (!ChunkClaim.plugin.config_worlds.contains(location.getWorld().getName())) return true;
 
                     PlayerData playerData = dataStore.getPlayerData(player.getName());
-                    Chunk chunk = dataStore.getChunkAt(location, playerData.lastChunk);
+                    ChunkPlot chunk = dataStore.getChunkAt(location, playerData.lastChunk);
 
                     String playerName = player.getName();
 
@@ -529,7 +519,7 @@ public class ChunkClaim extends JavaPlugin {
                         if (playerData.getCredits() > 0) {
 
                             if (config_nextToForce && !player.hasPermission("chunkclaim.admin")) {
-                                ArrayList<Chunk> playerChunks = dataStore.getAllChunksForPlayer(playerName);
+                                ArrayList<ChunkPlot> playerChunks = dataStore.getAllChunksForPlayer(playerName);
 
                                 if (playerChunks.size() > 0) {
                                     if (!dataStore.ownsNear(location, playerName)) {
@@ -539,7 +529,7 @@ public class ChunkClaim extends JavaPlugin {
                                 }
                             }
 
-                            Chunk newChunk = new Chunk(location, playerName, playerData.builderNames);
+                            ChunkPlot newChunk = new ChunkPlot(location.getChunk(), playerName, playerData.builderNames);
 
                             this.dataStore.addChunk(newChunk);
 
@@ -585,24 +575,19 @@ public class ChunkClaim extends JavaPlugin {
                         }
                         String tName = tp.getName();
 
-                        ArrayList<Chunk> chunksInRadius = this.dataStore.getAllChunksForPlayer(tName);
+                        ArrayList<ChunkPlot> chunksInRadius = this.dataStore.getAllChunksForPlayer(tName);
 
                         long loginDays = ((new Date()).getTime() - this.dataStore.getPlayerData(tp.getName()).lastLogin.getTime()) / (1000 * 60 * 60 * 24);
                         long joinDays = ((new Date()).getTime() - this.dataStore.getPlayerData(tp.getName()).firstJoin.getTime()) / (1000 * 60 * 60 * 24);
-                        String adminstring = tp.getName() + " | Last Login: " + loginDays + " days ago. First Join: " + joinDays + " days ago.";
-                        sendMsg(player, adminstring);
+                        String adminString = tp.getName() + " | Last Login: " + loginDays + " days ago. First Join: " + joinDays + " days ago.";
+                        sendMsg(player, adminString);
 
-                        for (int i = 0; i < chunksInRadius.size(); i++) {
+                        for (ChunkPlot chunkPlot : chunksInRadius) {
+                            adminString = "ID: " + chunkPlot.getChunk().getX() + "|" + chunkPlot.getChunk().getZ() + "(" + (chunkPlot.getChunk().getX() * 16) + "|" + (chunkPlot.getChunk().getZ() * 16) + ")";
 
-                            Chunk chunk = chunksInRadius.get(i);
+                            adminString += ", Permanent: " + (chunkPlot.getModifiedBlocks() < 0 ? "true" : ("false (" + chunkPlot.getModifiedBlocks() + ")"));
 
-
-                            adminstring = "ID: " + chunk.x + "|" + chunk.z + "(" + (chunk.x * 16) + "|" + (chunk.z * 16) + ")";
-                            if (chunk != null) {
-                                adminstring += ", Permanent: " + (chunk.modifiedBlocks < 0 ? "true" : ("false (" + chunk.modifiedBlocks + ")"));
-
-                            }
-                            sendMsg(player, adminstring);
+                            sendMsg(player, adminString);
 
 
                         }
@@ -622,13 +607,12 @@ public class ChunkClaim extends JavaPlugin {
                         if (!ChunkClaim.plugin.config_worlds.contains(location.getWorld().getName())) return true;
 
                         PlayerData playerData = dataStore.getPlayerData(player.getName());
-                        Chunk chunk = dataStore.getChunkAt(location, playerData.lastChunk);
+                        ChunkPlot chunk = dataStore.getChunkAt(location, playerData.lastChunk);
 
                         if (chunk != null) {
                             String playerName = player.getName();
-                            ChunkClaim.addLogEntry("Chunk at " + chunk.x + "|" + chunk.z + " has been marked for deletion by " + playerName);
+                            ChunkClaim.addLogEntry("ChunkPlot at " + chunk.getChunk().getX() + "|" + chunk.getChunk().getZ() + " has been marked for deletion by " + playerName);
                             chunk.mark();
-                            chunk.marked = true;
                             sendMsg(player, "Marked chunk for deletion.");
 
                         } else {
@@ -648,14 +632,13 @@ public class ChunkClaim extends JavaPlugin {
                         if (!ChunkClaim.plugin.config_worlds.contains(location.getWorld().getName())) return true;
 
                         PlayerData playerData = dataStore.getPlayerData(player.getName());
-                        Chunk chunk = dataStore.getChunkAt(location, playerData.lastChunk);
+                        ChunkPlot chunk = dataStore.getChunkAt(location, playerData.lastChunk);
 
                         if (chunk != null) {
                             String playerName = player.getName();
-                            ChunkClaim.addLogEntry("Chunk at " + chunk.x + "|" + chunk.z + " has been unmarked by " + playerName);
+                            ChunkClaim.addLogEntry("ChunkPlot at " + chunk.getChunk().getX() + "|" + chunk.getChunk().getZ() + " has been unmarked by " + playerName);
                             chunk.unmark();
                             sendMsg(player, "Unmarked chunk.");
-                            chunk.marked = false;
 
                         } else {
                             sendMsg(player, "This chunk is public.");
@@ -671,13 +654,11 @@ public class ChunkClaim extends JavaPlugin {
 
                     if (args.length == 1) {
                         Location location = player.getLocation();
-                        if (!ChunkClaim.plugin.config_worlds.contains(location.getWorld().getName())) return true;
+                        if (!ChunkClaim.plugin.config_worlds.contains(location.getWorld().getName())) {
+                            return true;
+                        }
 
-                        boolean reset = false;
-
-                        PlayerData playerData = this.dataStore.getPlayerData(player.getName());
-
-                        Chunk chunk = null;
+                        ChunkPlot chunk = null;
                         String worldName = null;
                         boolean inspected = true;
                         boolean marked = true;
@@ -690,10 +671,10 @@ public class ChunkClaim extends JavaPlugin {
                             int j = (r + i) % dataStore.chunks.size();
 
                             chunk = dataStore.chunks.get(j);
-                            worldName = chunk.worldName;
-                            inspected = chunk.inspected;
-                            marked = chunk.marked;
-                            permanent = chunk.modifiedBlocks == -1;
+                            worldName = chunk.getChunk().getWorld().getName();
+                            inspected = chunk.isInspected();
+                            marked = chunk.isMarked();
+                            permanent = chunk.getModifiedBlocks() == -1;
 
                             if (worldName.equals(player.getWorld().getName()) && !inspected && !marked && permanent) {
                                 break;
@@ -704,25 +685,21 @@ public class ChunkClaim extends JavaPlugin {
                             return true;
                         }
 
-                        chunk.inspected = true;
-                        int x = chunk.x * 16 + 8;
-                        int z = chunk.z * 16 + 8;
+                        chunk.setInspected(true);
+                        int x = chunk.getChunk().getX() * 16 + 8;
+                        int z = chunk.getChunk().getZ() * 16 + 8;
                         int y = player.getWorld().getHighestBlockYAt(new Location(player.getWorld(), x, 0, z)) + 15;
 
                         Location l = new Location(player.getWorld(), x, y, z, 0, 90);
 
                         player.teleport(l);
 
-                        String adminstring = "ID: " + chunk.x + "|" + chunk.z;
-                        if (chunk != null) {
-                            adminstring += ", " + chunk.ownerName;
-                            long loginDays = ((new Date()).getTime() - this.dataStore.getPlayerData(chunk.ownerName).lastLogin.getTime()) / (1000 * 60 * 60 * 24);
-                            adminstring += ", Last Login: " + loginDays + " days ago.";
-                        }
-                        sendMsg(player, adminstring);
-                        Visualization visualization = Visualization.FromChunk(
-                                chunk, location.getBlockY(),
-                                VisualizationType.Chunk, location);
+                        String adminString = "ID: " + chunk.getChunk().getX() + "|" + chunk.getChunk().getZ();
+                        adminString += ", " + chunk.getOwnerName();
+                        long loginDays = ((new Date()).getTime() - this.dataStore.getPlayerData(chunk.getOwnerName()).lastLogin.getTime()) / (1000 * 60 * 60 * 24);
+                        adminString += ", Last Login: " + loginDays + " days ago.";
+                        sendMsg(player, adminString);
+                        Visualization visualization = Visualization.FromChunk(chunk, location.getBlockY(), VisualizationType.Chunk, location);
                         Visualization.Apply(player, visualization);
 
                         return true;
@@ -739,16 +716,16 @@ public class ChunkClaim extends JavaPlugin {
         return false;
     }
 
-    public ArrayList<Chunk> getChunksInRadius(Chunk chunk, String playerName, int radius) {
+    public ArrayList<ChunkPlot> getChunksInRadius(ChunkPlot chunk, String playerName, int radius) {
 
-        ArrayList<Chunk> chunksInRadius = new ArrayList<Chunk>();
+        ArrayList<ChunkPlot> chunksInRadius = new ArrayList<ChunkPlot>();
 
-        for (int x = chunk.x - radius; x <= chunk.x + radius; x++) {
-            for (int z = chunk.z - radius; z <= chunk.z + radius; z++) {
+        for (int x = chunk.getChunk().getX() - radius; x <= chunk.getChunk().getZ() + radius; x++) {
+            for (int z = chunk.getChunk().getX() - radius; z <= chunk.getChunk().getZ() + radius; z++) {
 
-                Chunk foundChunk = this.dataStore.getChunkAtPos(x, z, chunk.worldName);
+                ChunkPlot foundChunk = this.dataStore.getChunkAtPos(x, z, chunk.getChunk().getWorld().getName());
 
-                if (foundChunk != null && foundChunk.ownerName.equals(playerName)) {
+                if (foundChunk != null && foundChunk.getOwnerName().equals(playerName)) {
 
                     chunksInRadius.add(foundChunk);
 
@@ -760,10 +737,10 @@ public class ChunkClaim extends JavaPlugin {
         return chunksInRadius;
     }
 
-    public void regenerateChunk(Chunk chunk) {
+    public void regenerateChunk(ChunkPlot chunk) {
         if (config_regenerateChunk) {
-            getServer().getWorld(chunk.worldName).regenerateChunk(chunk.x, chunk.z);
-            getServer().getWorld(chunk.worldName).unloadChunkRequest(chunk.x, chunk.z);
+            getServer().getWorld(chunk.getChunk().getWorld().getName()).regenerateChunk(chunk.getChunk().getX(), chunk.getChunk().getZ());
+            getServer().getWorld(chunk.getChunk().getWorld().getName()).unloadChunkRequest(chunk.getChunk().getX(), chunk.getChunk().getZ());
         }
 
     }
@@ -793,13 +770,5 @@ public class ChunkClaim extends JavaPlugin {
 
     public void sendMsg(Player player, String message) {
         player.sendMessage(ChatColor.YELLOW + message);
-    }
-
-    public void broadcast(String message) {
-        Player[] players = Bukkit.getServer().getOnlinePlayers();
-        for (int i = 0; i < players.length; i++) {
-            Player player = players[i];
-            player.sendMessage(message);
-        }
     }
 }

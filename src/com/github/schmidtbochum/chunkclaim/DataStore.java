@@ -28,12 +28,10 @@ import java.util.*;
 public abstract class DataStore {
 
     public int nextChunkId = 0;
-
     int minModifiedBlocks = 10;
 
-    ArrayList<Chunk> chunks = new ArrayList<Chunk>();
-    ArrayList<Chunk> unusedChunks = new ArrayList<Chunk>();
-
+    ArrayList<ChunkPlot> chunks = new ArrayList<ChunkPlot>();
+    ArrayList<ChunkPlot> unusedChunks = new ArrayList<ChunkPlot>();
     HashMap<String, ChunkWorld> worlds = new HashMap<String, ChunkWorld>();
 
     protected HashMap<String, PlayerData> playerNameToPlayerDataMap = new HashMap<String, PlayerData>();
@@ -49,11 +47,9 @@ public abstract class DataStore {
 
         Vector<String> playerNames = new Vector<String>();
 
-        for (int i = 0; i < this.chunks.size(); i++) {
-            Chunk chunk = this.chunks.get(i);
-
-            if (!playerNames.contains(chunk.ownerName)) {
-                playerNames.add(chunk.ownerName);
+        for (ChunkPlot chunk : chunks) {
+            if (!playerNames.contains(chunk.getOwnerName())) {
+                playerNames.add(chunk.getOwnerName());
             }
         }
 
@@ -75,16 +71,15 @@ public abstract class DataStore {
 
             if (nextChunkId >= this.chunks.size()) nextChunkId = 0;
 
-            Chunk chunk = chunks.get(nextChunkId);
-            if (chunk.modifiedBlocks >= 0) {
-                long diff = now.getTime() - chunk.claimDate.getTime();
-                double chunkDeletionTime = deletionTime;
-                if (diff > chunkDeletionTime) {
-                    PlayerData playerData = this.getPlayerData(chunk.ownerName);
+            ChunkPlot chunk = chunks.get(nextChunkId);
+            if (chunk.getModifiedBlocks() >= 0) {
+                long diff = now.getTime() - chunk.getClaimDate().getTime();
+                if (diff > deletionTime) {
+                    PlayerData playerData = this.getPlayerData(chunk.getOwnerName());
                     playerData.credits++;
-                    this.savePlayerData(chunk.ownerName, playerData);
-                    this.playerNameToPlayerDataMap.remove(chunk.ownerName);
-                    ChunkClaim.addLogEntry("Auto-deleted chunk by " + chunk.ownerName + " at " + (chunk.x * 16) + " | " + (chunk.z * 16));
+                    this.savePlayerData(chunk.getOwnerName(), playerData);
+                    this.playerNameToPlayerDataMap.remove(chunk.getOwnerName());
+                    ChunkClaim.addLogEntry("Auto-deleted chunk by " + chunk.getOwnerName() + " at " + (chunk.getChunk().getX() * 16) + " | " + (chunk.getChunk().getZ() * 16));
                     this.deleteChunk(chunk);
                     r++;
                 }
@@ -99,7 +94,7 @@ public abstract class DataStore {
     synchronized void unloadWorldData(String worldName) {
         this.worlds.remove(worldName);
         for (int i = 0; i < this.chunks.size(); i++) {
-            while (this.chunks.get(i).worldName.equals(worldName)) {
+            while (this.chunks.get(i).getChunk().getWorld().getName().equals(worldName)) {
                 this.chunks.remove(i);
             }
         }
@@ -110,40 +105,22 @@ public abstract class DataStore {
         this.playerNameToPlayerDataMap.remove(playerName);
     }
 
-    synchronized public void changeChunkOwner(Chunk chunk, String newOwnerName) throws Exception {
-        PlayerData ownerData = this.getPlayerData(chunk.ownerName);
-        PlayerData newOwnerData = this.getPlayerData(newOwnerName);
-
-        //modify chunk
-        chunk.ownerName = newOwnerName;
-        this.saveChunk(chunk);
-
-        //modify previous owner data
-        ownerData.credits--;
-        this.savePlayerData(chunk.ownerName, ownerData);
-
-        //modify new owner data
-        newOwnerData.credits++;
-        this.savePlayerData(newOwnerName, newOwnerData);
-
-    }
-
-    synchronized void addChunk(Chunk newChunk) {
+    synchronized void addChunk(ChunkPlot newChunk) {
         this.chunks.add(newChunk);
 
-        if (this.worlds.containsKey(newChunk.worldName)) {
-            this.worlds.get(newChunk.worldName).addChunk(newChunk);
-            newChunk.inDataStore = true;
+        if (this.worlds.containsKey(newChunk.getChunk().getWorld().getName())) {
+            this.worlds.get(newChunk.getChunk().getWorld().getName()).addChunk(newChunk);
+            newChunk.setInDataStore(true);
             this.saveChunk(newChunk);
         }
     }
 
-    private void saveChunk(Chunk chunk) {
+    private void saveChunk(ChunkPlot chunk) {
         this.writeChunkToStorage(chunk);
 
     }
 
-    abstract void writeChunkToStorage(Chunk chunk);
+    abstract void writeChunkToStorage(ChunkPlot chunk);
 
     synchronized public PlayerData getPlayerData(String playerName) {
 
@@ -158,13 +135,13 @@ public abstract class DataStore {
 
     abstract PlayerData getPlayerDataFromStorage(String playerName);
 
-    synchronized public void deleteChunk(Chunk chunk) {
+    synchronized public void deleteChunk(ChunkPlot chunk) {
 
-        for (int i = 0; i < this.chunks.size(); i++) {
-            if (this.chunks.get(i).x == chunk.x && this.chunks.get(i).z == chunk.z && this.chunks.get(i).worldName.equals(chunk.worldName)) {
-                this.chunks.remove(i);
-                this.worlds.get(chunk.worldName).removeChunk(chunk);
-                chunk.inDataStore = false;
+        for (ChunkPlot chunkPlot : this.chunks) {
+            if (chunkPlot.getChunk() == chunk.getChunk()) {
+                this.chunks.remove(chunkPlot);
+                this.worlds.get(chunk.getChunk().getWorld().getName()).removeChunk(chunk);
+                chunk.setInDataStore(false);
                 break;
             }
         }
@@ -173,10 +150,10 @@ public abstract class DataStore {
         ChunkClaim.plugin.regenerateChunk(chunk);
     }
 
-    abstract void deleteChunkFromSecondaryStorage(Chunk chunk);
+    abstract void deleteChunkFromSecondaryStorage(ChunkPlot chunk);
 
-    synchronized public Chunk getChunkAt(Location location, Chunk cachedChunk) {
-        if (cachedChunk != null && cachedChunk.inDataStore && cachedChunk.contains(location)) return cachedChunk;
+    synchronized public ChunkPlot getChunkAt(Location location, ChunkPlot cachedChunk) {
+        if (cachedChunk != null && cachedChunk.isInDataStore() && cachedChunk.contains(location)) return cachedChunk;
 
         if (!worlds.containsKey(location.getWorld().getName())) return null;
 
@@ -186,7 +163,7 @@ public abstract class DataStore {
         return worlds.get(location.getWorld().getName()).getChunk(x, z);
     }
 
-    synchronized public Chunk getChunkAtPos(int x, int z, String worldName) {
+    synchronized public ChunkPlot getChunkAtPos(int x, int z, String worldName) {
 
         if (!worlds.containsKey(worldName)) return null;
 
@@ -195,11 +172,10 @@ public abstract class DataStore {
 
     public abstract void savePlayerData(String playerName, PlayerData playerData);
 
-    synchronized public ArrayList<Chunk> getAllChunksForPlayer(String playerName) {
-        ArrayList<Chunk> playerChunks = new ArrayList<Chunk>();
-        for (int i = 0; i < chunks.size(); i++) {
-            Chunk chunk = chunks.get(i);
-            if (chunk.ownerName.equals(playerName)) {
+    synchronized public ArrayList<ChunkPlot> getAllChunksForPlayer(String playerName) {
+        ArrayList<ChunkPlot> playerChunks = new ArrayList<ChunkPlot>();
+        for (ChunkPlot chunk : chunks) {
+            if (chunk.getOwnerName().equals(playerName)) {
                 playerChunks.add(chunk);
             }
         }
@@ -207,11 +183,10 @@ public abstract class DataStore {
     }
 
     synchronized public int deleteChunksForPlayer(String playerName) {
-        ArrayList<Chunk> playerChunks = getAllChunksForPlayer(playerName);
+        ArrayList<ChunkPlot> playerChunks = getAllChunksForPlayer(playerName);
         PlayerData playerData = this.getPlayerData(playerName);
-        for (int i = 0; i < playerChunks.size(); i++) {
-            Chunk chunk = playerChunks.get(i);
-            this.deleteChunk(chunk);
+        for (ChunkPlot playerChunk : playerChunks) {
+            this.deleteChunk(playerChunk);
             playerData.credits++;
         }
         return playerChunks.size();
@@ -224,14 +199,12 @@ public abstract class DataStore {
         int z = location.getChunk().getZ();
         String worldName = location.getWorld().getName();
 
-        Chunk a = getChunkAtPos(x - 1, z, worldName);
-        Chunk c = getChunkAtPos(x + 1, z, worldName);
-        Chunk b = getChunkAtPos(x, z - 1, worldName);
-        Chunk d = getChunkAtPos(x, z + 1, worldName);
+        ChunkPlot a = getChunkAtPos(x - 1, z, worldName);
+        ChunkPlot c = getChunkAtPos(x + 1, z, worldName);
+        ChunkPlot b = getChunkAtPos(x, z - 1, worldName);
+        ChunkPlot d = getChunkAtPos(x, z + 1, worldName);
 
-        if (a == null && b == null && c == null && d == null) {
-            return false;
-        } else if (a != null && a.isTrusted(playerName)) {
+        if (a != null && a.isTrusted(playerName)) {
             return true;
         } else if (b != null && b.isTrusted(playerName)) {
             return true;
@@ -239,8 +212,7 @@ public abstract class DataStore {
             return true;
         } else if (d != null && d.isTrusted(playerName)) {
             return true;
-        } else {
-            return false;
         }
+        return false;
     }
 }

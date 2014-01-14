@@ -33,7 +33,7 @@ public class PlayerData {
     public ArrayList<String> builderNames = new ArrayList<String>();
     public Date lastLogin = new Date();
     public Date firstJoin = new Date();
-    public Chunk lastChunk = null;
+    public ChunkPlot lastChunk = null;
     public Visualization currentVisualization = null;
     public Location lastAfkCheckLocation = null;
     public boolean ignoreChunks = false;

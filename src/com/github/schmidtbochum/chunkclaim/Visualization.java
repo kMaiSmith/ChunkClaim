@@ -80,7 +80,7 @@ public class Visualization {
 
     //convenience method to build a visualization from a claim
     //visualizationType determines the style (gold blocks, silver, red, diamond, etc)
-    public static Visualization FromChunk(Chunk chunk, int height, VisualizationType visualizationType, Location not) {
+    public static Visualization FromChunk(ChunkPlot chunk, int height, VisualizationType visualizationType, Location not) {
 
         Visualization visualization = new Visualization();
 
@@ -91,7 +91,7 @@ public class Visualization {
 
     public static Visualization FromBukkitChunk(org.bukkit.Chunk bukkitChunk, int height, VisualizationType visualizationType, Location not) {
 
-        Chunk chunk = new Chunk(bukkitChunk.getX(), bukkitChunk.getZ(), bukkitChunk.getWorld().getName());
+        ChunkPlot chunk = new ChunkPlot(bukkitChunk);
 
         Visualization visualization = new Visualization();
 
@@ -100,16 +100,16 @@ public class Visualization {
         return visualization;
     }
 
-    private void addChunkElements(Chunk chunk, int height, VisualizationType visualizationType, Location not) {
+    private void addChunkElements(ChunkPlot chunk, int height, VisualizationType visualizationType, Location not) {
 
 
-        World world = ChunkClaim.plugin.getServer().getWorld(chunk.worldName);
+        World world = ChunkClaim.plugin.getServer().getWorld(chunk.getChunk().getWorld().getName());
 
-        int smallx = chunk.x * 16;
-        int smallz = chunk.z * 16;
+        int smallx = chunk.getChunk().getX() * 16;
+        int smallz = chunk.getChunk().getZ() * 16;
 
-        int bigx = (chunk.x + 1) * 16 - 1;
-        int bigz = (chunk.z + 1) * 16 - 1;
+        int bigx = (chunk.getChunk().getX() + 1) * 16 - 1;
+        int bigz = (chunk.getChunk().getZ() + 1) * 16 - 1;
 
         Material cornerMaterial = Material.SNOW_BLOCK;
         Material accentMaterial = Material.SNOW_BLOCK;
