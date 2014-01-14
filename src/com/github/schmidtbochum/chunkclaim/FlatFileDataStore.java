@@ -137,7 +137,6 @@ public class FlatFileDataStore extends DataStore {
                 Chunk chunkClaimChunk = Bukkit.getWorld(worldName).getChunkAt(x, z);
 
                 ChunkPlot chunk = new ChunkPlot(chunkClaimChunk, ownerName, builderNames, claimDate);
-                chunk.setModifiedDate(new Date(file.lastModified()));
                 chunk.setModifiedBlocks(modifiedBlocks);
                 this.chunks.add(chunk);
 
@@ -188,7 +187,6 @@ public class FlatFileDataStore extends DataStore {
             this.writeChunkData(chunk, outStream);
 
             //update date
-            chunk.setModifiedDate(new Date(chunkFile.lastModified()));
         } catch (Exception e) {
             ChunkClaim.addLogEntry("Unexpected exception saving data for chunk \"" + worldName + "\\" + fileName + "\": " + e.getMessage());
         }

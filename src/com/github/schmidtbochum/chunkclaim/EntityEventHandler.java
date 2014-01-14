@@ -90,9 +90,7 @@ public class EntityEventHandler implements Listener {
         Material material = item.getItemStack().getType();
 
         //allow dropping books. levers for chairs plugin
-        if (material == Material.WRITTEN_BOOK || material == Material.BOOK_AND_QUILL || material == Material.LEVER) {
-            return;
-        } else {
+        if (!(material == Material.WRITTEN_BOOK || material == Material.BOOK_AND_QUILL || material == Material.LEVER)) {
             //ChunkClaim.addLogEntry("Item spawn cancelled.");
             event.setCancelled(true);
         }
@@ -136,7 +134,7 @@ public class EntityEventHandler implements Listener {
 
         //determine which player is attacking, if any
         Player attacker = null;
-        Arrow arrow = null;
+        Arrow arrow;
         Entity damageSource = subEvent.getDamager();
         if (damageSource instanceof Player) {
             attacker = (Player) damageSource;
@@ -151,32 +149,26 @@ public class EntityEventHandler implements Listener {
                 attacker = (Player) potion.getShooter();
             }
         }
-        //FEATURE: protect claimed animals, boats, minecarts
-        if (event instanceof EntityDamageByEntityEvent) {
-            //if the entity is an non-monster creature (remember monsters disqualified above), or a vehicle
-            if ((subEvent.getEntity() instanceof Creature)) {
-                ChunkPlot cachedChunk = null;
-                PlayerData playerData = null;
-                if (attacker != null) {
-                    playerData = this.dataStore.getPlayerData(attacker.getName());
-                    cachedChunk = playerData.lastChunk;
-                }
-                ChunkPlot chunk = dataStore.getChunkAt(event.getEntity().getLocation(), cachedChunk);
+        //if the entity is an non-monster creature (remember monsters disqualified above), or a vehicle
+        if ((subEvent.getEntity() instanceof Creature)) {
+            ChunkPlot cachedChunk = null;
+            PlayerData playerData = null;
+            if (attacker != null) {
+                playerData = this.dataStore.getPlayerData(attacker.getName());
+                cachedChunk = playerData.lastChunk;
+            }
+            ChunkPlot chunk = dataStore.getChunkAt(event.getEntity().getLocation(), cachedChunk);
 
-                //if it's claimed
-                if (chunk != null) {
-                    if (attacker == null) {
+            //if it's claimed
+            if (chunk != null) {
+                if (attacker == null) {
+                    event.setCancelled(true);
+                } else {
+                    if (!chunk.isTrusted(attacker.getName())) {
                         event.setCancelled(true);
-                    } else {
-                        if (!chunk.isTrusted(attacker.getName())) {
-                            event.setCancelled(true);
-                            ChunkClaim.plugin.sendMsg(attacker, "Not permitted.");
-                        }
-                        //cache claim for later
-                        if (playerData != null) {
-                            playerData.lastChunk = chunk;
-                        }
+                        ChunkClaim.plugin.sendMsg(attacker, "Not permitted.");
                     }
+                    playerData.lastChunk = chunk;
                 }
             }
         }
@@ -196,7 +188,7 @@ public class EntityEventHandler implements Listener {
 
         //determine which player is attacking, if any
         Player attacker = null;
-        Arrow arrow = null;
+        Arrow arrow;
         Entity damageSource = event.getAttacker();
         if (damageSource instanceof Player) {
             attacker = (Player) damageSource;
@@ -229,9 +221,7 @@ public class EntityEventHandler implements Listener {
                     ChunkClaim.plugin.sendMsg(attacker, "Not permitted.");
                 }
                 //cache claim for later
-                if (playerData != null) {
-                    playerData.lastChunk = chunk;
-                }
+                playerData.lastChunk = chunk;
             }
         }
     }

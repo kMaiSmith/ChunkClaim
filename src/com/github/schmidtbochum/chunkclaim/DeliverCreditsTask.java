@@ -40,9 +40,7 @@ public class DeliverCreditsTask implements Runnable {
         float accruedCredits = ChunkClaim.plugin.config_creditsPerHour / 12L;
 
         //for each online player
-        for (int i = 0; i < players.length; i++) {
-            Player player = players[i];
-
+        for (Player player : players) {
             PlayerData playerData = dataStore.getPlayerData(player.getName());
 
             Location lastLocation = playerData.lastAfkCheckLocation;
@@ -67,6 +65,7 @@ public class DeliverCreditsTask implements Runnable {
                     //dataStore.savePlayerData(player.getName(), playerData);
                 }
             } catch (Exception e) {
+                ChunkClaim.addLogEntry("Player is not in the world he was origionally in");
             }
 
             //remember current location for next time

@@ -753,9 +753,9 @@ public class ChunkClaim extends JavaPlugin {
 
         // then search offline players
         OfflinePlayer[] offlinePlayers = this.getServer().getOfflinePlayers();
-        for (int i = 0; i < offlinePlayers.length; i++) {
-            if (offlinePlayers[i].getName().equalsIgnoreCase(name)) {
-                return offlinePlayers[i];
+        for (OfflinePlayer offlinePlayer : offlinePlayers) {
+            if (offlinePlayer.getName().equalsIgnoreCase(name)) {
+                return offlinePlayer;
             }
         }
 

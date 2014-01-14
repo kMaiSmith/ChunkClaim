@@ -31,7 +31,6 @@ public class ChunkPlot {
     private String ownerName;
     private int modifiedBlocks;
     private HashSet<String> builderNames;
-    private Date modifiedDate;
     private Date claimDate;
     private boolean inDataStore;
     private Chunk chunk;
@@ -141,10 +140,6 @@ public class ChunkPlot {
 
     public boolean isInDataStore() {
         return inDataStore;
-    }
-
-    public void setModifiedDate(Date lastModifiedDate) {
-        this.modifiedDate = lastModifiedDate;
     }
 
     public void setModifiedBlocks(int modifiedBlocks) {
