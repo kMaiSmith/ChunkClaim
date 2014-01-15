@@ -34,9 +34,9 @@ import java.util.Date;
 
 class PlayerEventHandler implements Listener {
 
-    private final DataStore dataStore;
+    private final IDataStore dataStore;
 
-    public PlayerEventHandler(DataStore dataStore) {
+    public PlayerEventHandler(IDataStore dataStore) {
         this.dataStore = dataStore;
     }
 

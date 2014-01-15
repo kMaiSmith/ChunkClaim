@@ -38,7 +38,7 @@ public class ChunkClaim extends JavaPlugin {
     public static ChunkClaim plugin;
     private static final Logger logger = Logger.getLogger("Minecraft");
 
-    public DataStore dataStore;
+    public IDataStore dataStore;
 
     public List<String> config_worlds;
     public boolean config_protectContainers;
@@ -663,13 +663,13 @@ public class ChunkClaim extends JavaPlugin {
                         boolean marked = true;
                         boolean permanent = false;
 
-                        int r = this.dataStore.nextChunkId;
+                        int r = this.dataStore.getNextChunkId();
 
-                        for (int i = 0; i < dataStore.chunks.size(); i++) {
+                        for (int i = 0; i < dataStore.getAllChunks().size(); i++) {
 
-                            int j = (r + i) % dataStore.chunks.size();
+                            int j = (r + i) % dataStore.getAllChunks().size();
 
-                            chunk = dataStore.chunks.get(j);
+                            chunk = dataStore.getAllChunks().get(j);
                             worldName = chunk.getChunk().getWorld().getName();
                             inspected = chunk.isInspected();
                             marked = chunk.isMarked();
@@ -722,7 +722,7 @@ public class ChunkClaim extends JavaPlugin {
         for (int x = chunk.getChunk().getX() - radius; x <= chunk.getChunk().getZ() + radius; x++) {
             for (int z = chunk.getChunk().getX() - radius; z <= chunk.getChunk().getZ() + radius; z++) {
 
-                ChunkPlot foundChunk = this.dataStore.getChunkAtPos(x, z, chunk.getChunk().getWorld().getName());
+                ChunkPlot foundChunk = this.dataStore.getChunkAt(x, z, chunk.getChunk().getWorld().getName());
 
                 if (foundChunk != null && foundChunk.getOwnerName().equals(playerName)) {
 

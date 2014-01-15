@@ -30,7 +30,7 @@ class DeliverCreditsTask implements Runnable {
     @Override
     public void run() {
 
-        DataStore dataStore = ChunkClaim.plugin.dataStore;
+        IDataStore dataStore = ChunkClaim.plugin.dataStore;
 
         dataStore.cleanUp();
 

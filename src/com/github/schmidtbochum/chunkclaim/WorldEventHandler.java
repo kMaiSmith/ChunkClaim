@@ -27,9 +27,9 @@ import org.bukkit.event.world.WorldUnloadEvent;
 
 class WorldEventHandler implements Listener {
 
-    private DataStore dataStore;
+    private IDataStore dataStore;
 
-    public WorldEventHandler(DataStore dataStore) {
+    public WorldEventHandler(IDataStore dataStore) {
         this.dataStore = dataStore;
     }
 
@@ -40,7 +40,7 @@ class WorldEventHandler implements Listener {
         if (ChunkClaim.plugin.config_worlds.contains(worldName)) {
             try {
                 dataStore.loadWorldData(worldName);
-                int claimedChunks = dataStore.worlds.get(worldName).chunkTable.size();
+                int claimedChunks = dataStore.getAllWorlds().get(worldName).chunkTable.size();
                 ChunkClaim.addLogEntry("Loaded " + claimedChunks + " claimed chunks for world \"" + worldName + "\".");
                 System.gc();
             } catch (Exception e) {

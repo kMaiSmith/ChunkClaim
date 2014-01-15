@@ -40,9 +40,9 @@ import java.util.List;
 
 class BlockEventHandler implements Listener {
 
-    private final DataStore dataStore;
+    private final IDataStore dataStore;
 
-    public BlockEventHandler(DataStore dataStore) {
+    public BlockEventHandler(IDataStore dataStore) {
         this.dataStore = dataStore;
     }
 
