@@ -31,7 +31,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 
 
 class FlatFileDataStore implements IDataStore {
@@ -52,14 +51,21 @@ class FlatFileDataStore implements IDataStore {
         }
     }
 
-    public HashMap<String, WorldData> loadWorldData(String worldName) {
+    private void closeFile(Closeable stream, String filename) {
+        //close the file
+        try {
+            if (stream != null) {
+                stream.close();
+            }
+        } catch (IOException exception) {
+            ChunkClaim.addLogEntry("Failed to close instream of file " + filename);
+        }
+    }
 
-        HashMap<String, WorldData> loadedWorld = new HashMap<String, WorldData>();
+    public WorldData loadWorldData(String worldName) {
 
         //create a new world object and register it
         WorldData world = new WorldData();
-        loadedWorld.put(worldName, world);
-
 
         //load chunks data into memory
         //get a list of all the chunks in the world folder
@@ -72,75 +78,61 @@ class FlatFileDataStore implements IDataStore {
             ChunkClaim.addLogEntry("Created Chunk Data Folder");
         }
 
-        File[] files = chunkDataFolder.listFiles();
+        File[] fileList = chunkDataFolder.listFiles();
+        if (fileList == null) {
+            return world;
+        }
+        ArrayList<File> files = new ArrayList<File>(Arrays.asList(fileList));
 
         for (File file : files) {
-            //avoids folders
-            if (!file.isFile()) {
-                continue;
-            }
-            String fileName = file.getName();
 
-            //get the chunk coordinates from the file name
+            String fileName = file.getName();
             String[] chunkIdSep = fileName.split(";");
 
-            //skip the file if no separator was found
-            if (fileName.equals(chunkIdSep[0])) continue;
-
-            int x;
-            int z;
-
-            try {
-                x = Integer.parseInt(chunkIdSep[0]);
-                z = Integer.parseInt(chunkIdSep[1]);
-            } catch (Exception e) {
-                continue; //skip the file
-            }
-
-            BufferedReader inStream = null;
-
-            try {
-                inStream = new BufferedReader(new FileReader(file.getAbsolutePath()));
-
-                //1. Line: Owner Name
-                String ownerName = inStream.readLine();
-
-                //2. Line: ChunkData Creation timestamp
-                String claimDateString = inStream.readLine();
-
-                //3. Line: Number of modified blocks
-                int modifiedBlocks = Integer.parseInt(inStream.readLine());
-
-                //4. Line: List of Builders
-                ArrayList<String> builderNames = new ArrayList<String>(Arrays.asList(inStream.readLine().split(";")));
-
-                inStream.close();
-
-                DateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
-                Date claimDate = dateFormat.parse(claimDateString);
-
-                Chunk chunkClaimChunk = Bukkit.getWorld(worldName).getChunkAt(x, z);
-
-                ChunkData chunk = new ChunkData(chunkClaimChunk, ownerName, builderNames, claimDate);
-                chunk.setModifiedBlocks(modifiedBlocks);
-
-                loadedWorld.get(chunk.getChunk().getWorld().getName()).addChunk(chunk);
-                chunk.setInDataStore(true);
-            } catch (Exception e) {
-                ChunkClaim.addLogEntry("Unable to load data for chunk \"" + worldName + "\\" + fileName + "\": " + e.getMessage());
-            }
-
-            //close the file
-            try {
-                if (inStream != null) {
-                    inStream.close();
+            if (file.isFile() && !fileName.equals(chunkIdSep[0])) {
+                try {
+                    BufferedReader inStream = new BufferedReader(new FileReader(file.getAbsolutePath()));
+                    world.addChunk(readChunkData(inStream, chunkIdSep, worldName));
+                    closeFile(inStream, fileName);
+                } catch (Exception e) {
+                    ChunkClaim.addLogEntry("Something broke in the loadWorldData.... GLHF");
                 }
-            } catch (IOException exception) {
-                ChunkClaim.addLogEntry("Failed to close instream of file " + fileName);
             }
         }
 
-        return loadedWorld;
+        return world;
+    }
+
+    private ChunkData readChunkData(BufferedReader inStream, String[] chunkIdSep, String worldName) throws Exception {
+
+        int x = Integer.parseInt(chunkIdSep[0]);
+        int z = Integer.parseInt(chunkIdSep[1]);
+
+        //1. Line: Owner Name
+        String ownerName = inStream.readLine();
+
+        //2. Line: ChunkData Creation timestamp
+        String claimDateString = inStream.readLine();
+
+        //3. Line: Number of modified blocks
+        int modifiedBlocks = Integer.parseInt(inStream.readLine());
+
+        //4. Line: List of Builders
+        ArrayList<String> builderNames = new ArrayList<String>(Arrays.asList(inStream.readLine().split(";")));
+
+        inStream.close();
+
+        DateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
+        Date claimDate = dateFormat.parse(claimDateString);
+
+        Chunk chunkClaimChunk = Bukkit.getWorld(worldName).getChunkAt(x, z);
+
+        ChunkData chunk = new ChunkData(chunkClaimChunk, ownerName, builderNames, claimDate);
+        chunk.setModifiedBlocks(modifiedBlocks);
+
+        chunk.setInDataStore(true);
+        return chunk;
+
     }
 
     public synchronized void writeChunkToStorage(ChunkData chunk) {
@@ -164,10 +156,8 @@ class FlatFileDataStore implements IDataStore {
                 ChunkClaim.addLogEntry("Created Chunk File " + fileName);
             }
             outStream = new BufferedWriter(new FileWriter(chunkFile));
-
-            //write chunk to the file
-            this.writeChunkData(chunk, outStream);
-
+            writeChunkData(chunk, outStream);
+            closeFile(outStream, fileName);
             //update date
         } catch (Exception e) {
             ChunkClaim.addLogEntry("Unexpected exception saving data for chunk \"" + worldName + "\\" + fileName + "\": " + e.getMessage());
@@ -181,7 +171,7 @@ class FlatFileDataStore implements IDataStore {
         }
     }
 
-    synchronized private void writeChunkData(ChunkData chunk, BufferedWriter outStream) throws IOException {
+    private void writeChunkData(ChunkData chunk, BufferedWriter outStream) throws IOException {
         //1. Line: Owner Name
         outStream.write(chunk.getOwnerName());
         outStream.newLine();

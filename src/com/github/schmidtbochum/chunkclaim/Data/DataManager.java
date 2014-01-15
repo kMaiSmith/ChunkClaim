@@ -93,10 +93,6 @@ public class DataManager {
         return allChunks;
     }
 
-    public HashMap<String, WorldData> getAllWorlds() {
-        return worlds;
-    }
-
     public void clearCachedPlayerData(String playerName) {
         this.playerNameToPlayerDataMap.remove(playerName);
     }
@@ -181,7 +177,7 @@ public class DataManager {
     }
 
     public void loadWorldData(String world) {
-        this.worlds.putAll(dataStore.loadWorldData(world));
+        this.worlds.put(world, dataStore.loadWorldData(world));
     }
 
 }

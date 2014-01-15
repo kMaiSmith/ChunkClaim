@@ -20,12 +20,9 @@
 
 package com.github.schmidtbochum.chunkclaim.Data;
 
-import java.util.HashMap;
-
 interface IDataStore {
 
-    // part of data store functionality
-    abstract HashMap<String, WorldData> loadWorldData(String worldName);
+    abstract WorldData loadWorldData(String worldName);
 
     abstract void writeChunkToStorage(ChunkData chunk);
 
