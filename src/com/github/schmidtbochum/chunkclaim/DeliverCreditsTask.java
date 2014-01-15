@@ -19,6 +19,8 @@
  */
 package com.github.schmidtbochum.chunkclaim;
 
+import com.github.schmidtbochum.chunkclaim.Data.DataManager;
+import com.github.schmidtbochum.chunkclaim.Data.PlayerData;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -30,9 +32,9 @@ class DeliverCreditsTask implements Runnable {
     @Override
     public void run() {
 
-        IDataStore dataStore = ChunkClaim.plugin.dataStore;
+        DataManager dataManager = ChunkClaim.plugin.dataStore;
 
-        dataStore.cleanUp();
+        dataManager.cleanUp();
 
         Player[] players = ChunkClaim.plugin.getServer().getOnlinePlayers();
 
@@ -41,7 +43,7 @@ class DeliverCreditsTask implements Runnable {
 
         //for each online player
         for (Player player : players) {
-            PlayerData playerData = dataStore.getPlayerData(player.getName());
+            PlayerData playerData = dataManager.readPlayerData(player.getName());
 
             Location lastLocation = playerData.lastAfkCheckLocation;
             try  //distance squared will throw an exception if the player has changed worlds
@@ -62,7 +64,7 @@ class DeliverCreditsTask implements Runnable {
 
                     //intentionally NOT saving data here to reduce overall secondary storage access frequency
                     //many other operations will cause this players data to save, including his eventual logout
-                    //dataStore.savePlayerData(player.getName(), playerData);
+                    //dataManager.savePlayerData(player.getName(), playerData);
                 }
             } catch (Exception e) {
                 ChunkClaim.addLogEntry("Player is not in the world he was origionally in");

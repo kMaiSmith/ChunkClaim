@@ -20,6 +20,7 @@
 
 package com.github.schmidtbochum.chunkclaim;
 
+import com.github.schmidtbochum.chunkclaim.Data.DataManager;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.world.WorldLoadEvent;
@@ -27,9 +28,9 @@ import org.bukkit.event.world.WorldUnloadEvent;
 
 class WorldEventHandler implements Listener {
 
-    private IDataStore dataStore;
+    private DataManager dataStore;
 
-    public WorldEventHandler(IDataStore dataStore) {
+    public WorldEventHandler(DataManager dataStore) {
         this.dataStore = dataStore;
     }
 
@@ -40,8 +41,6 @@ class WorldEventHandler implements Listener {
         if (ChunkClaim.plugin.config_worlds.contains(worldName)) {
             try {
                 dataStore.loadWorldData(worldName);
-                int claimedChunks = dataStore.getAllWorlds().get(worldName).chunkTable.size();
-                ChunkClaim.addLogEntry("Loaded " + claimedChunks + " claimed chunks for world \"" + worldName + "\".");
                 System.gc();
             } catch (Exception e) {
                 ChunkClaim.addLogEntry("Unable to load data for world \"" + worldName + "\": " + e.getMessage());

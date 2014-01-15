@@ -20,6 +20,9 @@
 
 package com.github.schmidtbochum.chunkclaim;
 
+import com.github.schmidtbochum.chunkclaim.Data.ChunkData;
+import com.github.schmidtbochum.chunkclaim.Data.DataManager;
+import com.github.schmidtbochum.chunkclaim.Data.PlayerData;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
@@ -34,9 +37,9 @@ import java.util.Date;
 
 class PlayerEventHandler implements Listener {
 
-    private final IDataStore dataStore;
+    private final DataManager dataStore;
 
-    public PlayerEventHandler(IDataStore dataStore) {
+    public PlayerEventHandler(DataManager dataStore) {
         this.dataStore = dataStore;
     }
 
@@ -47,7 +50,7 @@ class PlayerEventHandler implements Listener {
         String playerName = event.getPlayer().getName();
 
         //note login time
-        PlayerData playerData = this.dataStore.getPlayerData(playerName);
+        PlayerData playerData = this.dataStore.readPlayerData(playerName);
         playerData.lastLogin = new Date();
 
         if (playerData.firstJoin == null)
@@ -63,7 +66,7 @@ class PlayerEventHandler implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-        PlayerData playerData = this.dataStore.getPlayerData(player.getName());
+        PlayerData playerData = this.dataStore.readPlayerData(player.getName());
 
         //make sure his data is all saved
         this.dataStore.savePlayerData(player.getName(), playerData);
@@ -81,7 +84,7 @@ class PlayerEventHandler implements Listener {
         Player player = event.getPlayer();
         Entity entity = event.getRightClicked();
 
-        ChunkPlot chunk = this.dataStore.getChunkAt(entity.getLocation(), null);
+        ChunkData chunk = this.dataStore.getChunkAt(entity.getLocation());
 
         if (chunk != null) {
             if (entity instanceof StorageMinecart || entity instanceof PoweredMinecart || entity instanceof Animals) {
@@ -101,7 +104,7 @@ class PlayerEventHandler implements Listener {
         Player player = bedEvent.getPlayer();
         Block block = bedEvent.getBed();
 
-        ChunkPlot chunk = this.dataStore.getChunkAt(block.getLocation(), null);
+        ChunkData chunk = this.dataStore.getChunkAt(block.getLocation());
 
         if (chunk != null) {
             if (!chunk.isTrusted(player.getName())) {
@@ -121,7 +124,7 @@ class PlayerEventHandler implements Listener {
         Player player = bucketEvent.getPlayer();
         Block block = bucketEvent.getBlockClicked().getRelative(bucketEvent.getBlockFace());
 
-        ChunkPlot chunk = this.dataStore.getChunkAt(block.getLocation(), null);
+        ChunkData chunk = this.dataStore.getChunkAt(block.getLocation());
 
         if (chunk == null) {
             bucketEvent.setCancelled(true);
@@ -141,7 +144,7 @@ class PlayerEventHandler implements Listener {
 
         Player player = bucketEvent.getPlayer();
         Block block = bucketEvent.getBlockClicked();
-        ChunkPlot chunk = this.dataStore.getChunkAt(block.getLocation(), null);
+        ChunkData chunk = this.dataStore.getChunkAt(block.getLocation());
 
         if (chunk == null) {
             bucketEvent.setCancelled(true);
@@ -192,10 +195,10 @@ class PlayerEventHandler implements Listener {
         Material clickedBlockType = clickedBlock.getType();
 
         //apply rules for putting out fires (requires build permission)
-        PlayerData playerData = this.dataStore.getPlayerData(player.getName());
+        PlayerData playerData = this.dataStore.readPlayerData(player.getName());
 
         if (event.getClickedBlock() != null && event.getClickedBlock().getRelative(event.getBlockFace()).getType() == Material.FIRE) {
-            ChunkPlot chunk = this.dataStore.getChunkAt(clickedBlock.getLocation(), playerData.lastChunk);
+            ChunkData chunk = this.dataStore.getChunkAt(clickedBlock.getLocation());
 
             if (chunk != null) {
                 playerData.lastChunk = chunk;
@@ -207,7 +210,7 @@ class PlayerEventHandler implements Listener {
         }
         //apply rules for containers and crafting blocks
         else if (ChunkClaim.plugin.config_protectContainers && (clickedBlock.getState() instanceof InventoryHolder || clickedBlockType == Material.WORKBENCH || clickedBlockType == Material.ENDER_CHEST || clickedBlockType == Material.DISPENSER || clickedBlockType == Material.BREWING_STAND || clickedBlockType == Material.JUKEBOX || clickedBlockType == Material.ENCHANTMENT_TABLE)) {
-            ChunkPlot chunk = this.dataStore.getChunkAt(clickedBlock.getLocation(), playerData.lastChunk);
+            ChunkData chunk = this.dataStore.getChunkAt(clickedBlock.getLocation());
             if (chunk != null) {
                 playerData.lastChunk = chunk;
                 if (!chunk.isTrusted(player.getName())) {
@@ -218,7 +221,7 @@ class PlayerEventHandler implements Listener {
         }
         //otherwise apply rules for buttons and switches
         else if (ChunkClaim.plugin.config_protectSwitches && (clickedBlockType == null || clickedBlockType == Material.STONE_BUTTON || clickedBlockType == Material.LEVER)) {
-            ChunkPlot chunk = this.dataStore.getChunkAt(clickedBlock.getLocation(), playerData.lastChunk);
+            ChunkData chunk = this.dataStore.getChunkAt(clickedBlock.getLocation());
             if (chunk != null) {
                 playerData.lastChunk = chunk;
                 if (!chunk.isTrusted(player.getName())) {
@@ -236,7 +239,7 @@ class PlayerEventHandler implements Listener {
 
         //apply rule for note blocks and repeaters
         else if (clickedBlockType == Material.NOTE_BLOCK || clickedBlockType == Material.DIODE_BLOCK_ON || clickedBlockType == Material.DIODE_BLOCK_OFF) {
-            ChunkPlot chunk = this.dataStore.getChunkAt(clickedBlock.getLocation(), playerData.lastChunk);
+            ChunkData chunk = this.dataStore.getChunkAt(clickedBlock.getLocation());
             if (chunk != null) {
                 playerData.lastChunk = chunk;
                 if (!chunk.isTrusted(player.getName())) {
@@ -256,7 +259,7 @@ class PlayerEventHandler implements Listener {
 
             //check for build permission (ink sac == bone meal, must be a Bukkit bug?)
             if (materialInHand == Material.INK_SACK || materialInHand == Material.BOAT || materialInHand == Material.MINECART || materialInHand == Material.POWERED_MINECART || materialInHand == Material.STORAGE_MINECART || materialInHand == Material.BOAT) {
-                ChunkPlot chunk = this.dataStore.getChunkAt(clickedBlock.getLocation(), playerData.lastChunk);
+                ChunkData chunk = this.dataStore.getChunkAt(clickedBlock.getLocation());
                 if (chunk != null) {
                     playerData.lastChunk = chunk;
                     if (!chunk.isTrusted(player.getName())) {
@@ -270,7 +273,7 @@ class PlayerEventHandler implements Listener {
             } else if (materialInHand == Material.MONSTER_EGG) {
                 if (ChunkClaim.plugin.config_mobsForCredits && (player.getItemInHand().getDurability() == EntityType.WOLF.getTypeId() || player.getItemInHand().getDurability() == EntityType.OCELOT.getTypeId())) {
 
-                    ChunkPlot chunk = this.dataStore.getChunkAt(clickedBlock.getLocation(), playerData.lastChunk);
+                    ChunkData chunk = this.dataStore.getChunkAt(clickedBlock.getLocation());
                     if (chunk != null) {
                         playerData.lastChunk = chunk;
                         if (!chunk.isTrusted(player.getName())) {

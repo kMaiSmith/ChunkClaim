@@ -20,6 +20,7 @@
 
 package com.github.schmidtbochum.chunkclaim;
 
+import com.github.schmidtbochum.chunkclaim.Data.PlayerData;
 import org.bukkit.entity.Player;
 
 class VisualizationApplicationTask implements Runnable {

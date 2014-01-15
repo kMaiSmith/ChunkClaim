@@ -18,22 +18,28 @@
     along with ChunkClaim.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.github.schmidtbochum.chunkclaim;
+package com.github.schmidtbochum.chunkclaim.Data;
 
 import com.google.common.collect.HashBasedTable;
 
-class ChunkWorld {
-    public HashBasedTable<Integer, Integer, ChunkPlot> chunkTable = HashBasedTable.create();
+import java.util.ArrayList;
 
-    public ChunkPlot getChunk(int x, int z) {
+class WorldData {
+    private HashBasedTable<Integer, Integer, ChunkData> chunkTable = HashBasedTable.create();
+
+    public ChunkData getChunk(int x, int z) {
         return chunkTable.get(x, z);
     }
 
-    public void addChunk(ChunkPlot newChunk) {
+    public void addChunk(ChunkData newChunk) {
         chunkTable.put(newChunk.getChunk().getX(), newChunk.getChunk().getZ(), newChunk);
     }
 
-    public void removeChunk(ChunkPlot chunk) {
+    public void removeChunk(ChunkData chunk) {
         chunkTable.remove(chunk.getChunk().getX(), chunk.getChunk().getZ());
+    }
+
+    public ArrayList<ChunkData> getAllChunks() {
+        return new ArrayList<ChunkData>(chunkTable.values());
     }
 }

@@ -18,8 +18,9 @@
     along with ChunkClaim.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.github.schmidtbochum.chunkclaim;
+package com.github.schmidtbochum.chunkclaim.Data;
 
+import com.github.schmidtbochum.chunkclaim.ChunkClaim;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 
@@ -27,7 +28,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 
-public class ChunkPlot {
+public class ChunkData {
     private String ownerName;
     private int modifiedBlocks;
     private HashSet<String> builderNames;
@@ -37,7 +38,7 @@ public class ChunkPlot {
     private boolean marked;
     private boolean inspected;
 
-    ChunkPlot(Chunk chunk) {
+    public ChunkData(Chunk chunk) {
         this.chunk = chunk;
         this.builderNames = new HashSet<String>();
         this.marked = false;
@@ -45,7 +46,7 @@ public class ChunkPlot {
         this.claimDate = new Date();
     }
 
-    ChunkPlot(Chunk chunk, String owner, ArrayList<String> builders) {
+    public ChunkData(Chunk chunk, String owner, ArrayList<String> builders) {
         this(chunk);
         this.ownerName = owner;
         for (String builder : builders) {
@@ -53,7 +54,7 @@ public class ChunkPlot {
         }
     }
 
-    ChunkPlot(Chunk chunk, String owner, ArrayList<String> builders, Date claimDate) {
+    ChunkData(Chunk chunk, String owner, ArrayList<String> builders, Date claimDate) {
         this(chunk, owner, builders);
         this.claimDate = claimDate;
     }
@@ -85,7 +86,7 @@ public class ChunkPlot {
     }
 
     public boolean isTrusted(String playerName) {
-        return this.builderNames.contains(playerName) || this.ownerName.equals(playerName) || ChunkClaim.plugin.dataStore.getPlayerData(playerName).ignoreChunks;
+        return this.builderNames.contains(playerName) || this.ownerName.equals(playerName) || ChunkClaim.plugin.dataStore.readPlayerData(playerName).ignoreChunks;
     }
 
     public Chunk getChunk() {

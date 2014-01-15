@@ -20,6 +20,9 @@
 
 package com.github.schmidtbochum.chunkclaim;
 
+import com.github.schmidtbochum.chunkclaim.Data.ChunkData;
+import com.github.schmidtbochum.chunkclaim.Data.DataManager;
+import com.github.schmidtbochum.chunkclaim.Data.PlayerData;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -40,10 +43,10 @@ import java.util.List;
 
 class BlockEventHandler implements Listener {
 
-    private final IDataStore dataStore;
+    private final DataManager dataManager;
 
-    public BlockEventHandler(IDataStore dataStore) {
-        this.dataStore = dataStore;
+    public BlockEventHandler(DataManager dataManager) {
+        this.dataManager = dataManager;
     }
 
     //when a player breaks a block...
@@ -58,8 +61,8 @@ class BlockEventHandler implements Listener {
         Block block = event.getBlock();
         Location location = block.getLocation();
 
-        PlayerData playerData = this.dataStore.getPlayerData(player.getName());
-        ChunkPlot chunk = dataStore.getChunkAt(location, playerData.lastChunk);
+        PlayerData playerData = this.dataManager.readPlayerData(player.getName());
+        ChunkData chunk = dataManager.getChunkAt(location);
 
         if (playerData.ignoreChunks) {
             return;
@@ -73,12 +76,12 @@ class BlockEventHandler implements Listener {
                 event.setCancelled(true);
                 return;
             }
-            if (!dataStore.ownsNear(location, playerName)) {
+            if (!dataManager.ownsNear(location, playerName)) {
                 if (!ChunkClaim.plugin.config_nextToForce && !player.hasPermission("chunkclaim.admin")) {
                     ChunkClaim.plugin.sendMsg(player, "You don't own a chunk next to this one.");
                     ChunkClaim.plugin.sendMsg(player, "Confirm with /chunk claim. Please don't spam claimed chunks.");
                 } else {
-                    ArrayList<ChunkPlot> playerChunks = ChunkClaim.plugin.dataStore.getAllChunksForPlayer(playerName);
+                    ArrayList<ChunkData> playerChunks = ChunkClaim.plugin.dataStore.getChunksForPlayer(playerName);
                     if (playerChunks.size() > 0) {
                         ChunkClaim.plugin.sendMsg(player, "You can only build next to your first claimed chunk.");
                     } else {
@@ -90,13 +93,13 @@ class BlockEventHandler implements Listener {
                 Visualization visualization = Visualization.FromBukkitChunk(location.getChunk(), location.getBlockY(), VisualizationType.Public, location);
                 Visualization.Apply(player, visualization);
             } else if (playerData.getCredits() > 0) {
-                ChunkPlot newChunk = new ChunkPlot(location.getChunk(), playerName, playerData.builderNames);
+                ChunkData newChunk = new ChunkData(location.getChunk(), playerName, playerData.builderNames);
 
-                this.dataStore.addChunk(newChunk);
+                this.dataManager.addChunk(newChunk);
 
                 playerData.credits--;
                 playerData.lastChunk = newChunk;
-                this.dataStore.savePlayerData(playerName, playerData);
+                this.dataManager.savePlayerData(playerName, playerData);
 
                 ChunkClaim.plugin.sendMsg(player, "You claimed this chunk. Credits left: " + playerData.getCredits());
 
@@ -136,8 +139,8 @@ class BlockEventHandler implements Listener {
         Block block = event.getBlock();
         Location location = block.getLocation();
 
-        PlayerData playerData = this.dataStore.getPlayerData(player.getName());
-        ChunkPlot chunk = dataStore.getChunkAt(location, playerData.lastChunk);
+        PlayerData playerData = this.dataManager.readPlayerData(player.getName());
+        ChunkData chunk = dataManager.getChunkAt(location);
 
         if (playerData.ignoreChunks) {
             return;
@@ -163,12 +166,12 @@ class BlockEventHandler implements Listener {
                 event.setCancelled(true);
                 return;
             }
-            if (!dataStore.ownsNear(location, playerName)) {
+            if (!dataManager.ownsNear(location, playerName)) {
                 if (!ChunkClaim.plugin.config_nextToForce && !player.hasPermission("chunkclaim.admin")) {
                     ChunkClaim.plugin.sendMsg(player, "You don't own a chunk next to this one.");
                     ChunkClaim.plugin.sendMsg(player, "Confirm with /chunk claim. Please don't spam claimed chunks.");
                 } else {
-                    ArrayList<ChunkPlot> playerChunks = ChunkClaim.plugin.dataStore.getAllChunksForPlayer(playerName);
+                    ArrayList<ChunkData> playerChunks = ChunkClaim.plugin.dataStore.getChunksForPlayer(playerName);
                     if (playerChunks.size() > 0) {
                         ChunkClaim.plugin.sendMsg(player, "You can only build next to your first claimed chunk.");
                     } else {
@@ -193,14 +196,14 @@ class BlockEventHandler implements Listener {
                 }
             }
             //claim the chunk
-            ChunkPlot newChunk = new ChunkPlot(location.getChunk(), playerName, playerData.builderNames);
+            ChunkData newChunk = new ChunkData(location.getChunk(), playerName, playerData.builderNames);
 
-            this.dataStore.addChunk(newChunk);
+            this.dataManager.addChunk(newChunk);
 
             playerData.credits--;
             playerData.lastChunk = newChunk;
             newChunk.modify();
-            this.dataStore.savePlayerData(playerName, playerData);
+            this.dataManager.savePlayerData(playerName, playerData);
 
             ChunkClaim.plugin.sendMsg(player, "You claimed this chunk. Credits left: " + playerData.getCredits());
 
@@ -231,7 +234,7 @@ class BlockEventHandler implements Listener {
         List<Block> blocks = event.getBlocks();
 
         Block piston = event.getBlock();
-        ChunkPlot pistonChunk = this.dataStore.getChunkAt(piston.getLocation(), null);
+        ChunkData pistonChunk = this.dataManager.getChunkAt(piston.getLocation());
         String pistonOwnerName = (pistonChunk == null) ? null : pistonChunk.getOwnerName();
 
         //if no blocks moving, then only check to make sure we're not pushing into a claim from outside
@@ -239,7 +242,7 @@ class BlockEventHandler implements Listener {
         if (blocks.size() == 0) {
 
             Block invadedBlock = piston.getRelative(event.getDirection());
-            ChunkPlot invadedBlockChunk = this.dataStore.getChunkAt(invadedBlock.getLocation(), null);
+            ChunkData invadedBlockChunk = this.dataManager.getChunkAt(invadedBlock.getLocation());
             String invadedBlockOwnerName = (invadedBlockChunk == null) ? null : invadedBlockChunk.getOwnerName();
 
             if (pistonOwnerName == null || invadedBlockOwnerName == null || (!invadedBlockChunk.isTrusted(pistonOwnerName))) {
@@ -250,11 +253,11 @@ class BlockEventHandler implements Listener {
         }
 
 
-        ChunkPlot chunk;
+        ChunkData chunk;
         //which blocks are being pushed?
         for (Block block : blocks) {
             //if ANY of the pushed blocks are owned by someone other than the piston owner, cancel the event
-            chunk = this.dataStore.getChunkAt(block.getLocation(), null);
+            chunk = this.dataManager.getChunkAt(block.getLocation());
             if (chunk == null || !chunk.isTrusted(pistonOwnerName)) {
                 event.setCancelled(true);
                 event.getBlock().getWorld().createExplosion(event.getBlock().getLocation(), 0);
@@ -266,7 +269,7 @@ class BlockEventHandler implements Listener {
 
         Block block = blocks.get(blocks.size() - 1).getRelative(event.getDirection());
 
-        chunk = this.dataStore.getChunkAt(block.getLocation(), null);
+        chunk = this.dataManager.getChunkAt(block.getLocation());
         if (chunk == null || !chunk.isTrusted(pistonOwnerName)) {
             event.setCancelled(true);
             event.getBlock().getWorld().createExplosion(event.getBlock().getLocation(), 0);
@@ -285,7 +288,7 @@ class BlockEventHandler implements Listener {
         if (!event.isSticky()) return;
 
         //who owns the moving block, if anyone?
-        ChunkPlot movingBlockChunk = this.dataStore.getChunkAt(event.getRetractLocation(), null);
+        ChunkData movingBlockChunk = this.dataManager.getChunkAt(event.getRetractLocation());
         if (movingBlockChunk == null) {
             event.setCancelled(true);
             return;
@@ -293,7 +296,7 @@ class BlockEventHandler implements Listener {
         String movingBlockOwnerName = movingBlockChunk.getOwnerName();
 
         //who owns the piston, if anyone?
-        ChunkPlot pistonChunk = this.dataStore.getChunkAt(event.getBlock().getLocation(), null);
+        ChunkData pistonChunk = this.dataManager.getChunkAt(event.getBlock().getLocation());
         if (pistonChunk == null) {
             event.setCancelled(true);
             return;
@@ -343,7 +346,7 @@ class BlockEventHandler implements Listener {
     }
 
     //ensures fluids don't flow out of chunks, unless into another chunk where the owner is trusted to build
-    private ChunkPlot lastSpreadChunk = null;
+    private ChunkData lastSpreadChunk = null;
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onBlockFromTo(BlockFromToEvent spreadEvent) {
@@ -359,14 +362,14 @@ class BlockEventHandler implements Listener {
 
         //from where?
         Block fromBlock = spreadEvent.getBlock();
-        ChunkPlot fromChunk = this.dataStore.getChunkAt(fromBlock.getLocation(), this.lastSpreadChunk);
+        ChunkData fromChunk = this.dataManager.getChunkAt(fromBlock.getLocation());
         if (fromChunk != null) {
             this.lastSpreadChunk = fromChunk;
         }
 
         //where to?
         Block toBlock = spreadEvent.getToBlock();
-        ChunkPlot toChunk = this.dataStore.getChunkAt(toBlock.getLocation(), fromChunk);
+        ChunkData toChunk = this.dataManager.getChunkAt(toBlock.getLocation());
 
         //if it's within the same claim or wilderness to wilderness, allow it
         if (fromChunk == toChunk) {
@@ -421,8 +424,8 @@ class BlockEventHandler implements Listener {
 
         Block toBlock = fromBlock.getRelative(xChange, 0, zChange);
 
-        ChunkPlot fromChunk = this.dataStore.getChunkAt(fromBlock.getLocation(), null);
-        ChunkPlot toChunk = this.dataStore.getChunkAt(toBlock.getLocation(), fromChunk);
+        ChunkData fromChunk = this.dataManager.getChunkAt(fromBlock.getLocation());
+        ChunkData toChunk = this.dataManager.getChunkAt(toBlock.getLocation());
 
         Material materialDispensed = dispenseEvent.getItem().getType();
         if (materialDispensed == Material.WATER_BUCKET || materialDispensed == Material.LAVA_BUCKET) {
@@ -454,13 +457,13 @@ class BlockEventHandler implements Listener {
         }
 
         Location rootLocation = growEvent.getLocation();
-        ChunkPlot rootChunk = this.dataStore.getChunkAt(rootLocation, null);
+        ChunkData rootChunk = this.dataManager.getChunkAt(rootLocation);
         String rootOwnerName = (rootChunk == null) ? null : rootChunk.getOwnerName();
 
         //for each block growing
         for (int i = 0; i < growEvent.getBlocks().size(); i++) {
             BlockState block = growEvent.getBlocks().get(i);
-            ChunkPlot blockChunk = this.dataStore.getChunkAt(block.getLocation(), rootChunk);
+            ChunkData blockChunk = this.dataManager.getChunkAt(block.getLocation());
             if (blockChunk != null) {
                 if (rootOwnerName == null || !blockChunk.isTrusted(rootOwnerName)) {
                     growEvent.getBlocks().remove(i--);

@@ -20,6 +20,9 @@
 
 package com.github.schmidtbochum.chunkclaim;
 
+import com.github.schmidtbochum.chunkclaim.Data.ChunkData;
+import com.github.schmidtbochum.chunkclaim.Data.DataManager;
+import com.github.schmidtbochum.chunkclaim.Data.PlayerData;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
@@ -33,9 +36,9 @@ import org.bukkit.event.vehicle.VehicleDamageEvent;
 import java.util.List;
 
 class EntityEventHandler implements Listener {
-    private final IDataStore dataStore;
+    private final DataManager dataStore;
 
-    public EntityEventHandler(IDataStore dataStore) {
+    public EntityEventHandler(DataManager dataStore) {
         this.dataStore = dataStore;
     }
 
@@ -151,13 +154,11 @@ class EntityEventHandler implements Listener {
         }
         //if the entity is an non-monster creature (remember monsters disqualified above), or a vehicle
         if ((subEvent.getEntity() instanceof Creature)) {
-            ChunkPlot cachedChunk = null;
             PlayerData playerData = null;
             if (attacker != null) {
-                playerData = this.dataStore.getPlayerData(attacker.getName());
-                cachedChunk = playerData.lastChunk;
+                playerData = this.dataStore.readPlayerData(attacker.getName());
             }
-            ChunkPlot chunk = dataStore.getChunkAt(event.getEntity().getLocation(), cachedChunk);
+            ChunkData chunk = dataStore.getChunkAt(event.getEntity().getLocation());
 
             //if it's claimed
             if (chunk != null) {
@@ -203,13 +204,11 @@ class EntityEventHandler implements Listener {
                 attacker = (Player) potion.getShooter();
             }
         }
-        ChunkPlot cachedChunk = null;
         PlayerData playerData = null;
         if (attacker != null) {
-            playerData = this.dataStore.getPlayerData(attacker.getName());
-            cachedChunk = playerData.lastChunk;
+            playerData = this.dataStore.readPlayerData(attacker.getName());
         }
-        ChunkPlot chunk = dataStore.getChunkAt(event.getVehicle().getLocation(), cachedChunk);
+        ChunkData chunk = dataStore.getChunkAt(event.getVehicle().getLocation());
 
         //if it's claimed
         if (chunk != null) {

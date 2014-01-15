@@ -18,28 +18,21 @@
     along with ChunkClaim.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.github.schmidtbochum.chunkclaim;
+package com.github.schmidtbochum.chunkclaim.Data;
 
-import org.bukkit.Location;
+import java.util.HashMap;
 
-import java.util.ArrayList;
-import java.util.Date;
+interface IDataStore {
 
-public class PlayerData {
-    // String[] builderNames zu arraylist constructor
-    public float credits = ChunkClaim.plugin.config_startCredits;
-    public float bonus = 0L;
-    public String playerName;
-    public ArrayList<String> builderNames = new ArrayList<String>();
-    public Date lastLogin = new Date();
-    public Date firstJoin = new Date();
-    public ChunkPlot lastChunk = null;
-    public Visualization currentVisualization = null;
-    public Location lastAfkCheckLocation = null;
-    public boolean ignoreChunks = false;
+    // part of data store functionality
+    abstract HashMap<String, WorldData> loadWorldData(String worldName);
 
-    public int getCredits() {
-        return (int) credits;
+    abstract void writeChunkToStorage(ChunkData chunk);
 
-    }
+    abstract void savePlayerData(String playerName, PlayerData playerData);
+
+    abstract PlayerData getPlayerDataFromStorage(String playerName);
+
+    abstract void deleteChunkFromStorage(ChunkData chunk);
+
 }

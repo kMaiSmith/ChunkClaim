@@ -20,6 +20,8 @@
 
 package com.github.schmidtbochum.chunkclaim;
 
+import com.github.schmidtbochum.chunkclaim.Data.ChunkData;
+import com.github.schmidtbochum.chunkclaim.Data.PlayerData;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -38,7 +40,7 @@ public class Visualization {
     //sends a visualization to a player
     public static void Apply(Player player, Visualization visualization) {
 
-        PlayerData playerData = ChunkClaim.plugin.dataStore.getPlayerData(player.getName());
+        PlayerData playerData = ChunkClaim.plugin.dataStore.readPlayerData(player.getName());
 
         //if he has any current visualization, clear it first
         if (playerData.currentVisualization != null) {
@@ -57,7 +59,7 @@ public class Visualization {
     //reverts a visualization by sending another block change list, this time with the real world block values
     public static void Revert(Player player) {
 
-        PlayerData playerData = ChunkClaim.plugin.dataStore.getPlayerData(player.getName());
+        PlayerData playerData = ChunkClaim.plugin.dataStore.readPlayerData(player.getName());
 
         Visualization visualization = playerData.currentVisualization;
 
@@ -80,7 +82,7 @@ public class Visualization {
 
     //convenience method to build a visualization from a claim
     //visualizationType determines the style (gold blocks, silver, red, diamond, etc)
-    public static Visualization FromChunk(ChunkPlot chunk, int height, VisualizationType visualizationType, Location not) {
+    public static Visualization FromChunk(ChunkData chunk, int height, VisualizationType visualizationType, Location not) {
 
         Visualization visualization = new Visualization();
 
@@ -91,7 +93,7 @@ public class Visualization {
 
     public static Visualization FromBukkitChunk(org.bukkit.Chunk bukkitChunk, int height, VisualizationType visualizationType, Location not) {
 
-        ChunkPlot chunk = new ChunkPlot(bukkitChunk);
+        ChunkData chunk = new ChunkData(bukkitChunk);
 
         Visualization visualization = new Visualization();
 
@@ -100,7 +102,7 @@ public class Visualization {
         return visualization;
     }
 
-    private void addChunkElements(ChunkPlot chunk, int height, VisualizationType visualizationType, Location not) {
+    private void addChunkElements(ChunkData chunk, int height, VisualizationType visualizationType, Location not) {
 
 
         World world = ChunkClaim.plugin.getServer().getWorld(chunk.getChunk().getWorld().getName());
