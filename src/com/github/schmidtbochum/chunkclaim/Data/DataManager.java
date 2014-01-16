@@ -1,25 +1,16 @@
 package com.github.schmidtbochum.chunkclaim.Data;
 
 import com.github.schmidtbochum.chunkclaim.ChunkClaim;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
+import java.io.File;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 
-/**
- * Created with IntelliJ IDEA.
- * User: kyle
- * Date: 1/15/14
- * Time: 11:11 AM
- * To change this template use File | Settings | File Templates.
- */
 public class DataManager {
 
-    private HashMap<String, WorldData> worlds = new HashMap<String, WorldData>();
-
+    private HashMap<String, ChunkData> chunks = new HashMap<String, ChunkData>();
     private HashMap<String, PlayerData> playerNameToPlayerDataMap = new HashMap<String, PlayerData>();
 
     private IDataStore dataStore;
@@ -27,90 +18,59 @@ public class DataManager {
     public DataManager() {
         this.dataStore = new FlatFileDataStore();
 
-        try {
-            initialize();
-        } catch (Exception e) {
-            ChunkClaim.addLogEntry("Fatal exception " + e);
-        }
+        initialize();
+
     }
 
-    void initialize() throws Exception {
+    void initialize() {
+        File[] chunkDataDir = new File(ChunkData.chunkDataFolderPath).listFiles();
 
-        //load worlds
-        List<String> worldNameList = ChunkClaim.plugin.config_worlds;
+        if (chunkDataDir == null) {
+            return;
+        }
 
-        for (String worldName : worldNameList) {
-            if (Bukkit.getServer().getWorld(worldName) != null) {
-                dataStore.loadWorldData(worldName);
-            }
+        for (File file : chunkDataDir) {
+
+            ChunkData loadedChunk = new ChunkData(file);
+
+            ChunkClaim.addLogEntry("found chunk at " + file.getName());
+
+            dataStore.loadDataFromFile(loadedChunk);
+
+            String chunkAddress = loadedChunk.getChunk().getWorld().getName() +
+                    Integer.toString(loadedChunk.getChunk().getX()) +
+                    Integer.toString(loadedChunk.getChunk().getZ());
+
+            chunks.put(chunkAddress, loadedChunk);
+
+            ChunkClaim.addLogEntry("chunks now has " + String.valueOf(chunks.values().size()) + " elements.. now including " + chunkAddress);
         }
 
         System.gc();
     }
 
-    public void cleanUp() {
-
-        Date now = new Date();
-        double deletionTime = (1000 * 60 * 60 * 24) * ChunkClaim.plugin.config_autoDeleteDays;
-        int r = 0;
-        for (WorldData world : worlds.values()) {
-            for (ChunkData chunkPlot : world.getAllChunks()) {
-                long diff = now.getTime() - chunkPlot.getClaimDate().getTime();
-                if (diff > deletionTime) {
-                    PlayerData playerData = this.readPlayerData(chunkPlot.getOwnerName());
-                    playerData.credits++;
-                    dataStore.savePlayerData(chunkPlot.getOwnerName(), playerData);
-                    this.playerNameToPlayerDataMap.remove(chunkPlot.getOwnerName());
-                    ChunkClaim.addLogEntry("Auto-deleted chunk by " + chunkPlot.getOwnerName() + " at " + (chunkPlot.getChunk().getX() * 16) + " | " + (chunkPlot.getChunk().getZ() * 16));
-                    this.deleteChunk(chunkPlot);
-                    r++;
-                }
-            }
-        }
-    }
-
     public ChunkData getChunkAt(int x, int z, String worldName) {
+        String addressString = worldName + Integer.toString(x) + Integer.toString(z);
 
-        if (!worlds.containsKey(worldName)) return null;
-
-        return worlds.get(worldName).getChunk(x, z);
+        return chunks.get(addressString);
     }
 
     public ChunkData getChunkAt(Location location) {
 
         int x = location.getChunk().getX();
+
         int z = location.getChunk().getZ();
         String world = location.getWorld().getName();
 
         return getChunkAt(x, z, world);
     }
 
-    private ArrayList<ChunkData> getAllChunks() {
-        ArrayList<ChunkData> allChunks = new ArrayList<ChunkData>();
-        for (WorldData world : worlds.values()) {
-            allChunks.addAll(world.getAllChunks());
-        }
-        return allChunks;
+    private Collection<ChunkData> getAllChunks() {
+        return chunks.values();
     }
 
     public void clearCachedPlayerData(String playerName) {
         this.playerNameToPlayerDataMap.remove(playerName);
-    }
-
-    public boolean ownsNear(Location location, String playerName) {
-        int x = location.getChunk().getX();
-        int z = location.getChunk().getZ();
-        String worldName = location.getWorld().getName();
-
-        ChunkData a = getChunkAt(x - 1, z, worldName);
-        ChunkData c = getChunkAt(x + 1, z, worldName);
-        ChunkData b = getChunkAt(x, z - 1, worldName);
-        ChunkData d = getChunkAt(x, z + 1, worldName);
-
-        return a != null && a.isTrusted(playerName) ||
-                b != null && b.isTrusted(playerName) ||
-                c != null && c.isTrusted(playerName) ||
-                d != null && d.isTrusted(playerName);
     }
 
     public ArrayList<ChunkData> getChunksForPlayer(String playerName) {
@@ -127,7 +87,12 @@ public class DataManager {
 
         PlayerData playerData = this.playerNameToPlayerDataMap.get(playerName);
         if (playerData == null) {
-            playerData = dataStore.getPlayerDataFromStorage(playerName);
+            playerData = new PlayerData(playerName);
+            if (!dataStore.loadDataFromFile(playerData)) {
+                dataStore.writeDataToFile(playerData);
+            }
+
+
             this.playerNameToPlayerDataMap.put(playerName, playerData);
         }
 
@@ -139,45 +104,39 @@ public class DataManager {
         PlayerData playerData = this.readPlayerData(playerName);
         for (ChunkData playerChunk : playerChunks) {
             this.deleteChunk(playerChunk);
-            playerData.credits++;
+            playerData.addCredit();
         }
         return playerChunks.size();
     }
 
     public void deleteChunk(ChunkData chunk) {
 
-        this.worlds.get(chunk.getChunk().getWorld().getName()).removeChunk(chunk);
-        dataStore.deleteChunkFromStorage(chunk);
-        chunk.setInDataStore(false);
+        dataStore.deleteData(chunk);
 
         // @TODO: figure out if regenerating of the chunk is necessary
         //ChunkClaim.plugin.regenerateChunk(chunk);
     }
 
-    public void addChunk(ChunkData newChunk) {
-        if (this.worlds.containsKey(newChunk.getChunk().getWorld().getName())) {
-            this.worlds.get(newChunk.getChunk().getWorld().getName()).addChunk(newChunk);
-            newChunk.setInDataStore(true);
-            dataStore.writeChunkToStorage(newChunk);
-        }
-    }
+    public ChunkData addChunk(ChunkData newChunk) {
+        String addressString = newChunk.getChunk().getWorld().getName() +
+                Integer.toString(newChunk.getChunk().getX()) +
+                Integer.toString(newChunk.getChunk().getZ());
 
-    public void unloadWorldData(String worldName) {
-        this.worlds.remove(worldName);
+        if (!this.chunks.containsKey(addressString)) {
+            newChunk = new ChunkData(new File(ChunkData.chunkDataFolderPath + File.separator + addressString + ".dat"), newChunk);
+            dataStore.writeDataToFile(newChunk);
+            chunks.put(addressString, newChunk);
+        }
+        return newChunk;
     }
 
     // @TODO: modify functionality of dataManager to not need clients to manually write to dataStore
-    public void savePlayerData(String playerName, PlayerData playerData) {
-        dataStore.savePlayerData(playerName, playerData);
+    public void savePlayerData(PlayerData playerData) {
+        dataStore.writeDataToFile(playerData);
     }
 
     // @TODO: modify functionality of dataManager to not need clients to manually write to dataStore
     public void writeChunkToStorage(ChunkData chunkPlot) {
-        dataStore.writeChunkToStorage(chunkPlot);
+        dataStore.writeDataToFile(chunkPlot);
     }
-
-    public void loadWorldData(String world) {
-        this.worlds.put(world, dataStore.loadWorldData(world));
-    }
-
 }

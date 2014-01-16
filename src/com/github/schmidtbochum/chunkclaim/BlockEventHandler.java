@@ -22,7 +22,6 @@ package com.github.schmidtbochum.chunkclaim;
 
 import com.github.schmidtbochum.chunkclaim.Data.ChunkData;
 import com.github.schmidtbochum.chunkclaim.Data.DataManager;
-import com.github.schmidtbochum.chunkclaim.Data.PlayerData;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -38,7 +37,6 @@ import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
-import java.util.ArrayList;
 import java.util.List;
 
 class BlockEventHandler implements Listener {
@@ -53,76 +51,24 @@ class BlockEventHandler implements Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onBlockBreak(BlockBreakEvent event) {
 
-        if (!ChunkClaim.plugin.config_worlds.contains(event.getBlock().getWorld().getName())) {
-            return;
-        }
-
         Player player = event.getPlayer();
         Block block = event.getBlock();
         Location location = block.getLocation();
 
-        PlayerData playerData = this.dataManager.readPlayerData(player.getName());
         ChunkData chunk = dataManager.getChunkAt(location);
 
-        if (playerData.ignoreChunks) {
+        ChunkClaim.addLogEntry("event is currently " + String.valueOf(event.isCancelled()));
+
+        if (chunk == null) {
             return;
         }
 
-        if (chunk == null) {
-            String playerName = player.getName();
+        ChunkClaim.addLogEntry("Chunk " + Integer.valueOf(chunk.getChunk().getX()) + ", " + Integer.valueOf(chunk.getChunk().getZ()) + " is owned by " + chunk.getOwnerName());
 
-            if (!player.hasPermission("chunkclaim.claim")) {
-                ChunkClaim.plugin.sendMsg(player, "You don't have permissions for claiming chunks.");
-                event.setCancelled(true);
-                return;
-            }
-            if (!dataManager.ownsNear(location, playerName)) {
-                if (!ChunkClaim.plugin.config_nextToForce && !player.hasPermission("chunkclaim.admin")) {
-                    ChunkClaim.plugin.sendMsg(player, "You don't own a chunk next to this one.");
-                    ChunkClaim.plugin.sendMsg(player, "Confirm with /chunk claim. Please don't spam claimed chunks.");
-                } else {
-                    ArrayList<ChunkData> playerChunks = ChunkClaim.plugin.dataStore.getChunksForPlayer(playerName);
-                    if (playerChunks.size() > 0) {
-                        ChunkClaim.plugin.sendMsg(player, "You can only build next to your first claimed chunk.");
-                    } else {
-                        ChunkClaim.plugin.sendMsg(player, "You don't own a chunk next to this one.");
-                        ChunkClaim.plugin.sendMsg(player, "Confirm with /chunk claim. Please don't spam claimed chunks.");
-                    }
-                }
-                event.setCancelled(true);
-                Visualization visualization = Visualization.FromBukkitChunk(location.getChunk(), location.getBlockY(), VisualizationType.Public, location);
-                Visualization.Apply(player, visualization);
-            } else if (playerData.getCredits() > 0) {
-                ChunkData newChunk = new ChunkData(location.getChunk(), playerName, playerData.builderNames);
+        if (!chunk.isTrusted(player.getName())) {
 
-                this.dataManager.addChunk(newChunk);
-
-                playerData.credits--;
-                playerData.lastChunk = newChunk;
-                this.dataManager.savePlayerData(playerName, playerData);
-
-                ChunkClaim.plugin.sendMsg(player, "You claimed this chunk. Credits left: " + playerData.getCredits());
-
-                Visualization visualization = Visualization.FromChunk(newChunk, location.getBlockY(), VisualizationType.Chunk, location);
-                Visualization.Apply(player, visualization);
-
-            } else {
-                ChunkClaim.plugin.sendMsg(player, "Not enough credits to claim this chunk.");
-
-                if (playerData.lastChunk != chunk) {
-                    playerData.lastChunk = chunk;
-                    Visualization visualization = Visualization.FromBukkitChunk(location.getChunk(), location.getBlockY(), VisualizationType.Public, location);
-                    Visualization.Apply(player, visualization);
-                }
-                event.setCancelled(true);
-            }
-        } else {
             ChunkClaim.plugin.sendMsg(player, "You don't have " + chunk.getOwnerName() + "'s permission to build here.");
-            if (playerData.lastChunk != chunk) {
-                playerData.lastChunk = chunk;
-                Visualization visualization = Visualization.FromChunk(chunk, location.getBlockY(), VisualizationType.ErrorChunk, location);
-                Visualization.Apply(player, visualization);
-            }
+
             event.setCancelled(true);
         }
     }
@@ -139,88 +85,13 @@ class BlockEventHandler implements Listener {
         Block block = event.getBlock();
         Location location = block.getLocation();
 
-        PlayerData playerData = this.dataManager.readPlayerData(player.getName());
         ChunkData chunk = dataManager.getChunkAt(location);
-
-        if (playerData.ignoreChunks) {
-            return;
+        if (chunk == null) {
+            event.setCancelled(false);
         }
 
-        if (chunk == null) {
-
-            if (!player.hasPermission("chunkclaim.claim")) {
-                ChunkClaim.plugin.sendMsg(player, "You don't have permissions for claiming chunks.");
-                event.setCancelled(true);
-            }
-
-            String playerName = player.getName();
-
-            //prevent fire spam
-            if (block.getType() == Material.FIRE) {
-                event.setCancelled(true);
-                return;
-            }
-            //prevent tree spam
-            if (block.getType() == Material.SAPLING) {
-                ChunkClaim.plugin.sendMsg(player, "Please dont spam chunks with trees.");
-                event.setCancelled(true);
-                return;
-            }
-            if (!dataManager.ownsNear(location, playerName)) {
-                if (!ChunkClaim.plugin.config_nextToForce && !player.hasPermission("chunkclaim.admin")) {
-                    ChunkClaim.plugin.sendMsg(player, "You don't own a chunk next to this one.");
-                    ChunkClaim.plugin.sendMsg(player, "Confirm with /chunk claim. Please don't spam claimed chunks.");
-                } else {
-                    ArrayList<ChunkData> playerChunks = ChunkClaim.plugin.dataStore.getChunksForPlayer(playerName);
-                    if (playerChunks.size() > 0) {
-                        ChunkClaim.plugin.sendMsg(player, "You can only build next to your first claimed chunk.");
-                    } else {
-                        ChunkClaim.plugin.sendMsg(player, "You don't own a chunk next to this one.");
-                        ChunkClaim.plugin.sendMsg(player, "Confirm with /chunk claim. Please don't spam claimed chunks.");
-                    }
-                }
-                event.setCancelled(true);
-                Visualization visualization = Visualization.FromBukkitChunk(location.getChunk(), location.getBlockY(), VisualizationType.Public, location);
-                Visualization.Apply(player, visualization);
-                return;
-            } else {
-                //check credits
-                if (playerData.getCredits() <= 0) {
-                    ChunkClaim.plugin.sendMsg(player, "Not enough credits to claim this chunk.");
-
-                    Visualization visualization = Visualization.FromBukkitChunk(location.getChunk(), location.getBlockY(), VisualizationType.Public, location);
-                    Visualization.Apply(player, visualization);
-
-                    event.setCancelled(true);
-                    return;
-                }
-            }
-            //claim the chunk
-            ChunkData newChunk = new ChunkData(location.getChunk(), playerName, playerData.builderNames);
-
-            this.dataManager.addChunk(newChunk);
-
-            playerData.credits--;
-            playerData.lastChunk = newChunk;
-            newChunk.modify();
-            this.dataManager.savePlayerData(playerName, playerData);
-
-            ChunkClaim.plugin.sendMsg(player, "You claimed this chunk. Credits left: " + playerData.getCredits());
-
-            Visualization visualization = Visualization.FromChunk(newChunk, location.getBlockY(), VisualizationType.Chunk, location);
-            Visualization.Apply(player, visualization);
-
-        } else if (chunk.isTrusted(player.getName())) {
-            chunk.modify();
-
-        } else {
+        if (!chunk.isTrusted(player.getName())) {
             ChunkClaim.plugin.sendMsg(player, "You don't have " + chunk.getOwnerName() + "'s permission to build here.");
-
-            if (playerData.lastChunk != chunk) {
-                playerData.lastChunk = chunk;
-                Visualization visualization = Visualization.FromChunk(chunk, location.getBlockY(), VisualizationType.ErrorChunk, location);
-                Visualization.Apply(player, visualization);
-            }
             event.setCancelled(true);
         }
     }
@@ -345,9 +216,6 @@ class BlockEventHandler implements Listener {
         burnEvent.setCancelled(true);
     }
 
-    //ensures fluids don't flow out of chunks, unless into another chunk where the owner is trusted to build
-    private ChunkData lastSpreadChunk = null;
-
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onBlockFromTo(BlockFromToEvent spreadEvent) {
 
@@ -363,9 +231,6 @@ class BlockEventHandler implements Listener {
         //from where?
         Block fromBlock = spreadEvent.getBlock();
         ChunkData fromChunk = this.dataManager.getChunkAt(fromBlock.getLocation());
-        if (fromChunk != null) {
-            this.lastSpreadChunk = fromChunk;
-        }
 
         //where to?
         Block toBlock = spreadEvent.getToBlock();

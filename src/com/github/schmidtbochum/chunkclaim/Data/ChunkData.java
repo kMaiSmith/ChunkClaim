@@ -21,28 +21,49 @@
 package com.github.schmidtbochum.chunkclaim.Data;
 
 import com.github.schmidtbochum.chunkclaim.ChunkClaim;
+import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
-import java.util.HashSet;
 
-public class ChunkData {
+public class ChunkData implements IData {
+    private static final DateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
+
+    final static String chunkDataFolderPath = dataLayerFolderPath + File.separator + "ChunkData";
+
+    private File chunkFile;
     private String ownerName;
     private int modifiedBlocks;
-    private HashSet<String> builderNames;
+    private ArrayList<String> builderNames;
     private Date claimDate;
-    private boolean inDataStore;
     private Chunk chunk;
-    private boolean marked;
-    private boolean inspected;
+
+    ChunkData(File chunkDataFile) {
+        this.chunkFile = chunkDataFile;
+    }
+
+    ChunkData(File chunkDataFile, ChunkData chunkData) {
+        this(chunkDataFile);
+        this.ownerName = chunkData.ownerName;
+        this.modifiedBlocks = chunkData.modifiedBlocks;
+        this.builderNames = chunkData.builderNames;
+        this.claimDate = chunkData.claimDate;
+        this.chunk = chunkData.chunk;
+    }
 
     public ChunkData(Chunk chunk) {
         this.chunk = chunk;
-        this.builderNames = new HashSet<String>();
-        this.marked = false;
-        this.inspected = false;
+        this.builderNames = new ArrayList<String>();
         this.claimDate = new Date();
     }
 
@@ -73,36 +94,12 @@ public class ChunkData {
         }
     }
 
-    public void mark() {
-        this.modifiedBlocks = 0;
-        this.marked = true;
-        ChunkClaim.plugin.dataStore.writeChunkToStorage(this);
-    }
-
-    public void unmark() {
-        this.modifiedBlocks = -1;
-        this.marked = false;
-        ChunkClaim.plugin.dataStore.writeChunkToStorage(this);
-    }
-
     public boolean isTrusted(String playerName) {
-        return this.builderNames.contains(playerName) || this.ownerName.equals(playerName) || ChunkClaim.plugin.dataStore.readPlayerData(playerName).ignoreChunks;
+        return this.builderNames.contains(playerName) || this.ownerName.equals(playerName);
     }
 
     public Chunk getChunk() {
         return this.chunk;
-    }
-
-    public boolean isInspected() {
-        return inspected;
-    }
-
-    public void setInspected() {
-        this.inspected = true;
-    }
-
-    public boolean isMarked() {
-        return marked;
     }
 
     public int getModifiedBlocks() {
@@ -113,7 +110,7 @@ public class ChunkData {
         return this.ownerName;
     }
 
-    public HashSet<String> getBuilderNames() {
+    public ArrayList<String> getBuilderNames() {
         return this.builderNames;
     }
 
@@ -131,15 +128,72 @@ public class ChunkData {
         return this.claimDate;
     }
 
-    public void setInDataStore(boolean isInDataStore) {
-        this.inDataStore = isInDataStore;
-    }
-
-    public boolean isInDataStore() {
-        return inDataStore;
-    }
-
     public void setModifiedBlocks(int modifiedBlocks) {
         this.modifiedBlocks = modifiedBlocks;
+    }
+
+    public void writeDataToFile(BufferedWriter outStream) throws IOException {
+        //1. Line: Owner Name
+        outStream.write(this.getOwnerName());
+        outStream.newLine();
+
+        //2. Line: ChunkData Creation timestamp
+        DateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
+        outStream.write(dateFormat.format(claimDate));
+        outStream.newLine();
+
+        //3. Line: Number of modified blocks
+        outStream.write(String.valueOf(modifiedBlocks));
+        outStream.newLine();
+
+        //4. Line: List of Builders
+        for (String builder : builderNames) {
+            outStream.write(builder + ";");
+        }
+        outStream.newLine();
+
+        outStream.write(String.valueOf(chunk.getX()));
+        outStream.newLine();
+        outStream.write(String.valueOf(chunk.getZ()));
+        outStream.newLine();
+        outStream.write(chunk.getWorld().getName());
+        outStream.newLine();
+
+        //filled line to prevent null
+        outStream.write("==========");
+        outStream.newLine();
+    }
+
+    public void readDataFromFile(BufferedReader inStream) throws IOException {
+        //1. Line: Owner Name
+        this.ownerName = inStream.readLine();
+
+        //2. Line: ChunkData Creation timestamp
+        String claimDateString = inStream.readLine();
+
+        //3. Line: Number of modified blocks
+        this.modifiedBlocks = Integer.parseInt(inStream.readLine());
+
+        //4. Line: List of Builders
+        this.builderNames = new ArrayList<String>(Arrays.asList(inStream.readLine().split(";")));
+
+        int chunkX = Integer.parseInt(inStream.readLine());
+        int chunkZ = Integer.parseInt(inStream.readLine());
+        String world = inStream.readLine();
+
+        inStream.close();
+
+        try {
+            this.claimDate = dateFormat.parse(claimDateString);
+        } catch (ParseException e) {
+            ChunkClaim.addLogEntry("Failed to parse Claim Date for chunk file " + this.getFile().getName() + "... falling back to today's date");
+            this.claimDate = new Date();
+        }
+
+        chunk = Bukkit.getWorld(world).getChunkAt(chunkX, chunkZ);
+    }
+
+    public File getFile() {
+        return chunkFile;
     }
 }

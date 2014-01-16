@@ -61,7 +61,7 @@ public class ChunkClaim extends JavaPlugin {
         for (Player player : players) {
             String playerName = player.getName();
             PlayerData playerData = this.dataStore.readPlayerData(playerName);
-            this.dataStore.savePlayerData(playerName, playerData);
+            this.dataStore.savePlayerData(playerData);
         }
 
         plugin = null;
@@ -109,15 +109,7 @@ public class ChunkClaim extends JavaPlugin {
         EntityEventHandler entityEventHandler = new EntityEventHandler(dataStore);
         pluginManager.registerEvents(entityEventHandler, this);
 
-        // register world events
-        WorldEventHandler worldEventHandler = new WorldEventHandler(dataStore);
-        pluginManager.registerEvents(worldEventHandler, this);
-
-        if (this.config_creditsPerHour > 0) {
-            DeliverCreditsTask task = new DeliverCreditsTask();
-            this.getServer().getScheduler().scheduleSyncRepeatingTask(this, task, 20L * 60 * 60, 20L * 60 * 60);
-        }
-
+        addLogEntry("YAY I'VE INITILIZED");
     }
 
     // handles slash commands
@@ -135,13 +127,12 @@ public class ChunkClaim extends JavaPlugin {
 
                 ChunkData chunk = this.dataStore.getChunkAt(player.getLocation());
                 Location location = player.getLocation();
-                PlayerData playerData = this.dataStore.readPlayerData(player.getName());
 
                 if (player.hasPermission("chunkclaim.admin")) {
                     String adminString = "ID: " + location.getChunk().getX() + "|" + location.getChunk().getZ();
                     if (chunk != null) {
                         adminString += ", Permanent: " + (chunk.getModifiedBlocks() < 0 ? "true" : ("false (" + chunk.getModifiedBlocks() + ")"));
-                        long loginDays = ((new Date()).getTime() - this.dataStore.readPlayerData(chunk.getOwnerName()).lastLogin.getTime()) / (1000 * 60 * 60 * 24);
+                        long loginDays = ((new Date()).getTime() - this.dataStore.readPlayerData(chunk.getOwnerName()).getLastLogin().getTime()) / (1000 * 60 * 60 * 24);
                         adminString += ", Last Login: " + loginDays + " days ago.";
                     }
                     sendMsg(player, adminString);
@@ -151,8 +142,6 @@ public class ChunkClaim extends JavaPlugin {
                             builders.append(builder);
                             builders.append(" ");
                         }
-                        Visualization visualization = Visualization.FromChunk(chunk, location.getBlockY(), VisualizationType.Chunk, location);
-                        Visualization.Apply(player, visualization);
                         sendMsg(player, "Trusted Builders:");
                         sendMsg(player, builders.toString());
                     }
@@ -160,8 +149,6 @@ public class ChunkClaim extends JavaPlugin {
 
                 if (chunk == null) {
                     sendMsg(player, "This chunk is public.");
-                    Visualization visualization = Visualization.FromBukkitChunk(location.getChunk(), location.getBlockY(), VisualizationType.Public, location);
-                    Visualization.Apply(player, visualization);
                     return true;
 
                 } else if (chunk.getOwnerName().equals(player.getName())) {
@@ -171,35 +158,22 @@ public class ChunkClaim extends JavaPlugin {
                             builders.append(builder);
                             builders.append(" ");
                         }
-                        Visualization visualization = Visualization.FromChunk(chunk, location.getBlockY(), VisualizationType.Chunk, location);
-                        Visualization.Apply(player, visualization);
                         sendMsg(player, "You own this chunk. Trusted Builders:");
                         sendMsg(player, builders.toString());
 
                     } else {
                         sendMsg(player, "You own this chunk. Use /chunk trust <player> to add other builders.");
                     }
-                    Visualization visualization = Visualization.FromChunk(chunk, location.getBlockY(), VisualizationType.Chunk, location);
-                    Visualization.Apply(player, visualization);
                     return true;
 
                 } else {
 
                     if (chunk.isTrusted(player.getName())) {
                         sendMsg(player, chunk.getOwnerName() + " owns this chunk. You have build rights!");
-                        if (playerData.lastChunk != chunk) {
-                            playerData.lastChunk = chunk;
-                            Visualization visualization = Visualization.FromChunk(chunk, location.getBlockY(), VisualizationType.Chunk, location);
-                            Visualization.Apply(player, visualization);
-                        }
                     } else {
 
                         sendMsg(player, chunk.getOwnerName() + " owns this chunk. You can't build here.");
-                        if (playerData.lastChunk != chunk) {
-                            playerData.lastChunk = chunk;
-                            Visualization visualization = Visualization.FromChunk(chunk, location.getBlockY(), VisualizationType.ErrorChunk, location);
-                            Visualization.Apply(player, visualization);
-                        }
+
                     }
                     return true;
                 }
@@ -229,11 +203,11 @@ public class ChunkClaim extends JavaPlugin {
 
                         for (ChunkData chunkPlot : chunksInRadius) {
                             this.dataStore.deleteChunk(chunkPlot);
-                            playerData.credits++;
+                            playerData.addCredit();
                             abd++;
                         }
 
-                        this.dataStore.savePlayerData(player.getName(), playerData);
+                        this.dataStore.savePlayerData(playerData);
                         sendMsg(player, abd + " Chunks abandoned in radius " + radius + ". Credits: " + playerData.getCredits());
                         return true;
 
@@ -246,27 +220,17 @@ public class ChunkClaim extends JavaPlugin {
                 } else if (args.length == 1) {
                     if (chunk == null) {
                         sendMsg(player, "This chunk is public.");
-                        Visualization visualization = Visualization.FromBukkitChunk(location.getChunk(), location.getBlockY(), VisualizationType.Public, location);
-                        Visualization.Apply(player, visualization);
+
 
                     } else if (chunk.getOwnerName().equals(player.getName())) {
                         this.dataStore.deleteChunk(chunk);
-                        playerData.credits++;
-                        this.dataStore.savePlayerData(player.getName(), playerData);
+                        playerData.addCredit();
+                        this.dataStore.savePlayerData(playerData);
                         sendMsg(player, "ChunkData abandoned. Credits: " + playerData.getCredits());
-
-                        Visualization visualization = Visualization.FromChunk(chunk, location.getBlockY(), VisualizationType.Public, location);
-                        Visualization.Apply(player, visualization);
-
                         return true;
 
                     } else {
 
-                        if (playerData.lastChunk != chunk) {
-                            playerData.lastChunk = chunk;
-                            Visualization visualization = Visualization.FromChunk(chunk, location.getBlockY(), VisualizationType.ErrorChunk, location);
-                            Visualization.Apply(player, visualization);
-                        }
                         sendMsg(player, "You don't own this chunk. Only " + chunk.getOwnerName() + " or the staff can delete it.");
                         return true;
                     }
@@ -303,15 +267,15 @@ public class ChunkClaim extends JavaPlugin {
 
                 ArrayList<ChunkData> chunksInRadius = this.dataStore.getChunksForPlayer(player.getName());
 
-                if (!playerData.builderNames.contains(tName)) {
+                if (!playerData.getBuilderNames().contains(tName)) {
                     for (ChunkData chunkPlot : chunksInRadius) {
                         if (!chunkPlot.isTrusted(tName)) {
                             chunkPlot.addBuilder(tName);
                             dataStore.writeChunkToStorage(chunkPlot);
                         }
                     }
-                    playerData.builderNames.add(tName);
-                    this.dataStore.savePlayerData(player.getName(), playerData);
+                    playerData.getBuilderNames().add(tName);
+                    this.dataStore.savePlayerData(playerData);
                 }
                 sendMsg(player, "Trusted " + tName + " in all your chunks.");
                 return true;
@@ -340,31 +304,17 @@ public class ChunkClaim extends JavaPlugin {
 
                 ArrayList<ChunkData> chunksInRadius = this.dataStore.getChunksForPlayer(player.getName());
 
-                if (playerData.builderNames.contains(tName)) {
+                if (playerData.getBuilderNames().contains(tName)) {
                     for (ChunkData chunkPlot : chunksInRadius) {
                         chunkPlot.removeBuilder(tName);
                         dataStore.writeChunkToStorage(chunkPlot);
                     }
-                    playerData.builderNames.remove(tName);
-                    this.dataStore.savePlayerData(player.getName(), playerData);
+                    playerData.getBuilderNames().remove(tName);
+                    this.dataStore.savePlayerData(playerData);
 
                 }
 
                 sendMsg(player, "Untrusted " + tName + " in all your chunks.");
-                return true;
-
-            } else if (args[0].equalsIgnoreCase("ignore")) {
-                if (!player.hasPermission("chunkclaim.admin")) {
-                    sendMsg(player, "No permission.");
-                    return true;
-                }
-                PlayerData playerData = this.dataStore.readPlayerData(player.getName());
-                playerData.ignoreChunks = !playerData.ignoreChunks;
-                if (playerData.ignoreChunks) {
-                    sendMsg(player, "You now ignore chunks.");
-                } else {
-                    sendMsg(player, "You now respect chunks.");
-                }
                 return true;
 
             } else if (args[0].equalsIgnoreCase("delete")) {
@@ -404,11 +354,11 @@ public class ChunkClaim extends JavaPlugin {
 
                         for (ChunkData chunkPlot : chunksInRadius) {
                             this.dataStore.deleteChunk(chunkPlot);
-                            playerData.credits++;
+                            playerData.addCredit();
                             abd++;
                         }
 
-                        this.dataStore.savePlayerData(tName, playerData);
+                        this.dataStore.savePlayerData(playerData);
                         sendMsg(player, abd + " Chunks deleted in radius " + radius + ".");
                         return true;
 
@@ -422,17 +372,12 @@ public class ChunkClaim extends JavaPlugin {
 
                     if (chunk == null) {
                         sendMsg(player, "This chunk is public.");
-                        Visualization visualization = Visualization.FromBukkitChunk(location.getChunk(), location.getBlockY(), VisualizationType.Public, location);
-                        Visualization.Apply(player, visualization);
                     } else {
                         PlayerData playerData = this.dataStore.readPlayerData(chunk.getOwnerName());
                         this.dataStore.deleteChunk(chunk);
-                        playerData.credits++;
-                        this.dataStore.savePlayerData(chunk.getOwnerName(), playerData);
+                        playerData.addCredit();
+                        this.dataStore.savePlayerData(playerData);
                         sendMsg(player, "ChunkData deleted.");
-
-                        Visualization visualization = Visualization.FromChunk(chunk, location.getBlockY(), VisualizationType.Public, location);
-                        Visualization.Apply(player, visualization);
 
                         return true;
                     }
@@ -463,45 +408,6 @@ public class ChunkClaim extends JavaPlugin {
                     return true;
                 }
 
-            } else if (args[0].equalsIgnoreCase("bonus")) {
-                if (!player.hasPermission("chunkclaim.admin")) {
-                    sendMsg(player, "No permission.");
-                    return true;
-                }
-                if (args.length == 3) {
-                    try {
-
-                        int bonus = Integer.parseInt(args[2]);
-
-                        OfflinePlayer tp = resolvePlayer(args[1]);
-                        if (tp == null) {
-
-                            sendMsg(player, "Player not found.");
-                            return true;
-                        }
-                        String tName = tp.getName();
-                        PlayerData playerData = this.dataStore.readPlayerData(tName);
-
-                        playerData.credits += bonus;
-                        playerData.bonus += bonus;
-
-
-                        sendMsg(player, "Adjusted " + tName + "'s bonus by " + bonus + " credits. Total credits: " + playerData.getCredits());
-
-                        this.dataStore.savePlayerData(player.getName(), playerData);
-
-                        return true;
-
-                    } catch (Exception e) {
-
-                        sendMsg(player, "Usage: /chunk bonus <player> <credits>");
-                        return true;
-                    }
-                } else {
-                    sendMsg(player, "Usage: /chunk bonus <player> <credits>");
-                    return true;
-                }
-
             } else if (args[0].equalsIgnoreCase("claim")) {
                 if (args.length == 1) {
 
@@ -514,46 +420,21 @@ public class ChunkClaim extends JavaPlugin {
                     String playerName = player.getName();
 
                     if (chunk == null) {
-                        if (!player.hasPermission("chunkclaim.claim")) {
-                            sendMsg(player, "You don't have permissions for claiming chunks.");
-                            return true;
-                        }
                         if (playerData.getCredits() > 0) {
 
-                            if (config_nextToForce && !player.hasPermission("chunkclaim.admin")) {
-                                ArrayList<ChunkData> playerChunks = dataStore.getChunksForPlayer(playerName);
-
-                                if (playerChunks.size() > 0) {
-                                    if (!dataStore.ownsNear(location, playerName)) {
-                                        sendMsg(player, "You can only claim a new chunk next to your existing chunks.");
-                                        return true;
-                                    }
-                                }
-                            }
-
-                            ChunkData newChunk = new ChunkData(location.getChunk(), playerName, playerData.builderNames);
+                            ChunkData newChunk = new ChunkData(location.getChunk(), playerName, playerData.getBuilderNames());
 
                             this.dataStore.addChunk(newChunk);
 
-                            playerData.credits--;
-                            playerData.lastChunk = newChunk;
-                            //newChunk.modify();
-                            this.dataStore.savePlayerData(playerName, playerData);
+                            playerData.subtractCredit();
+                            this.dataStore.savePlayerData(playerData);
 
                             sendMsg(player, "You claimed this chunk. Credits left: " + playerData.getCredits());
-
-                            Visualization visualization = Visualization.FromChunk(newChunk, location.getBlockY(), VisualizationType.Chunk, location);
-                            Visualization.Apply(player, visualization);
 
                         } else {
 
                             sendMsg(player, "Not enough credits to claim this chunk.");
 
-                            if (playerData.lastChunk != chunk) {
-                                playerData.lastChunk = chunk;
-                                Visualization visualization = Visualization.FromBukkitChunk(location.getChunk(), location.getBlockY(), VisualizationType.Public, location);
-                                Visualization.Apply(player, visualization);
-                            }
                         }
                         return true;
                     } else {
@@ -579,8 +460,8 @@ public class ChunkClaim extends JavaPlugin {
 
                         ArrayList<ChunkData> chunksInRadius = this.dataStore.getChunksForPlayer(tName);
 
-                        long loginDays = ((new Date()).getTime() - this.dataStore.readPlayerData(tp.getName()).lastLogin.getTime()) / (1000 * 60 * 60 * 24);
-                        long joinDays = ((new Date()).getTime() - this.dataStore.readPlayerData(tp.getName()).firstJoin.getTime()) / (1000 * 60 * 60 * 24);
+                        long loginDays = ((new Date()).getTime() - this.dataStore.readPlayerData(tp.getName()).getLastLogin().getTime()) / (1000 * 60 * 60 * 24);
+                        long joinDays = ((new Date()).getTime() - this.dataStore.readPlayerData(tp.getName()).getFirstJoin().getTime()) / (1000 * 60 * 60 * 24);
                         String adminString = tp.getName() + " | Last Login: " + loginDays + " days ago. First Join: " + joinDays + " days ago.";
                         sendMsg(player, adminString);
 
@@ -600,56 +481,6 @@ public class ChunkClaim extends JavaPlugin {
                     }
                 } else {
                     return false;
-                }
-            } else if (args[0].equalsIgnoreCase("mark")) {
-                if (player.hasPermission("chunkclaim.admin")) {
-                    if (args.length == 1) {
-
-                        Location location = player.getLocation();
-                        if (!ChunkClaim.plugin.config_worlds.contains(location.getWorld().getName())) return true;
-
-                        PlayerData playerData = dataStore.readPlayerData(player.getName());
-                        ChunkData chunk = dataStore.getChunkAt(location);
-
-                        if (chunk != null) {
-                            String playerName = player.getName();
-                            ChunkClaim.addLogEntry("ChunkData at " + chunk.getChunk().getX() + "|" + chunk.getChunk().getZ() + " has been marked for deletion by " + playerName);
-                            chunk.mark();
-                            sendMsg(player, "Marked chunk for deletion.");
-
-                        } else {
-                            sendMsg(player, "This chunk is public.");
-                        }
-                        return true;
-                    } else {
-                        sendMsg(player, "Usage: /chunk mark");
-                        return true;
-                    }
-                } else return false;
-            } else if (args[0].equalsIgnoreCase("unmark")) {
-                if (player.hasPermission("chunkclaim.admin")) {
-                    if (args.length == 1) {
-
-                        Location location = player.getLocation();
-                        if (!ChunkClaim.plugin.config_worlds.contains(location.getWorld().getName())) return true;
-
-                        PlayerData playerData = dataStore.readPlayerData(player.getName());
-                        ChunkData chunk = dataStore.getChunkAt(location);
-
-                        if (chunk != null) {
-                            String playerName = player.getName();
-                            ChunkClaim.addLogEntry("ChunkData at " + chunk.getChunk().getX() + "|" + chunk.getChunk().getZ() + " has been unmarked by " + playerName);
-                            chunk.unmark();
-                            sendMsg(player, "Unmarked chunk.");
-
-                        } else {
-                            sendMsg(player, "This chunk is public.");
-                        }
-                        return true;
-                    } else {
-                        sendMsg(player, "Usage: /chunk unmark");
-                        return true;
-                    }
                 }
             }
         }

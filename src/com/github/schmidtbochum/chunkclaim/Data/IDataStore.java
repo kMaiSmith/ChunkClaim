@@ -22,14 +22,10 @@ package com.github.schmidtbochum.chunkclaim.Data;
 
 interface IDataStore {
 
-    abstract WorldData loadWorldData(String worldName);
+    abstract boolean loadDataFromFile(IData data);
 
-    abstract void writeChunkToStorage(ChunkData chunk);
+    abstract void writeDataToFile(IData data);
 
-    abstract void savePlayerData(String playerName, PlayerData playerData);
-
-    abstract PlayerData getPlayerDataFromStorage(String playerName);
-
-    abstract void deleteChunkFromStorage(ChunkData chunk);
+    abstract void deleteData(IData data);
 
 }

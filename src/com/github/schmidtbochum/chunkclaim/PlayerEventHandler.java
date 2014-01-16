@@ -23,17 +23,13 @@ package com.github.schmidtbochum.chunkclaim;
 import com.github.schmidtbochum.chunkclaim.Data.ChunkData;
 import com.github.schmidtbochum.chunkclaim.Data.DataManager;
 import com.github.schmidtbochum.chunkclaim.Data.PlayerData;
-import org.bukkit.Material;
+import org.bukkit.ChatColor;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.player.*;
-import org.bukkit.inventory.InventoryHolder;
-
-import java.util.Date;
 
 class PlayerEventHandler implements Listener {
 
@@ -51,15 +47,12 @@ class PlayerEventHandler implements Listener {
 
         //note login time
         PlayerData playerData = this.dataStore.readPlayerData(playerName);
-        playerData.lastLogin = new Date();
 
-        if (playerData.firstJoin == null)
-            playerData.firstJoin = new Date();
         //if (!event.getPlayer().hasPlayedBefore())
         //ChunkClaim.plugin.broadcast(ChatColor.LIGHT_PURPLE + "[GLaDOS] " + ChatColor.GREEN +"Welcome " + playerName + ChatColor.GREEN +" to The Colony!");
 
-        //event.getPlayer().sendMessage(ChatColor.DARK_RED + "Running ChunkClaim Alpha. ONLY FOR TESTING!");
-        this.dataStore.savePlayerData(playerName, playerData);
+        event.getPlayer().sendMessage(ChatColor.DARK_RED + "Running ChunkClaim Alpha. ONLY FOR TESTING!");
+        this.dataStore.savePlayerData(playerData);
     }
 
     //when a player quits...
@@ -69,7 +62,7 @@ class PlayerEventHandler implements Listener {
         PlayerData playerData = this.dataStore.readPlayerData(player.getName());
 
         //make sure his data is all saved
-        this.dataStore.savePlayerData(player.getName(), playerData);
+        this.dataStore.savePlayerData(playerData);
 
         //drop data about this player
         this.dataStore.clearCachedPlayerData(player.getName());
@@ -156,20 +149,6 @@ class PlayerEventHandler implements Listener {
         }
     }
 
-    //when a player drops an item
-    @EventHandler(priority = EventPriority.LOWEST)
-    public void onPlayerDrop(PlayerDropItemEvent event) {
-        if (!ChunkClaim.plugin.config_worlds.contains(event.getPlayer().getWorld().getName())) return;
-
-        Item item = event.getItemDrop();
-        Material material = item.getItemStack().getType();
-
-        if (!(material == Material.WRITTEN_BOOK || material == Material.BOOK_AND_QUILL)) {
-            event.setCancelled(true);
-        }
-
-    }
-
     //when a player interacts with the world
     @EventHandler(priority = EventPriority.LOWEST)
     void onPlayerInteract(PlayerInteractEvent event) {
@@ -192,112 +171,13 @@ class PlayerEventHandler implements Listener {
             return;
         }
 
-        Material clickedBlockType = clickedBlock.getType();
+        ChunkData chunk = this.dataStore.getChunkAt(clickedBlock.getLocation());
 
-        //apply rules for putting out fires (requires build permission)
-        PlayerData playerData = this.dataStore.readPlayerData(player.getName());
-
-        if (event.getClickedBlock() != null && event.getClickedBlock().getRelative(event.getBlockFace()).getType() == Material.FIRE) {
-            ChunkData chunk = this.dataStore.getChunkAt(clickedBlock.getLocation());
-
-            if (chunk != null) {
-                playerData.lastChunk = chunk;
-                if (!chunk.isTrusted(player.getName())) {
-                    event.setCancelled(true);
-                    ChunkClaim.plugin.sendMsg(player, "You don't have " + chunk.getOwnerName() + "'s permission to build here.");
-                }
-            }
-        }
-        //apply rules for containers and crafting blocks
-        else if (ChunkClaim.plugin.config_protectContainers && (clickedBlock.getState() instanceof InventoryHolder || clickedBlockType == Material.WORKBENCH || clickedBlockType == Material.ENDER_CHEST || clickedBlockType == Material.DISPENSER || clickedBlockType == Material.BREWING_STAND || clickedBlockType == Material.JUKEBOX || clickedBlockType == Material.ENCHANTMENT_TABLE)) {
-            ChunkData chunk = this.dataStore.getChunkAt(clickedBlock.getLocation());
-            if (chunk != null) {
-                playerData.lastChunk = chunk;
-                if (!chunk.isTrusted(player.getName())) {
-                    event.setCancelled(true);
-                    ChunkClaim.plugin.sendMsg(player, "Not permitted.");
-                }
-            }
-        }
-        //otherwise apply rules for buttons and switches
-        else if (ChunkClaim.plugin.config_protectSwitches && (clickedBlockType == null || clickedBlockType == Material.STONE_BUTTON || clickedBlockType == Material.LEVER)) {
-            ChunkData chunk = this.dataStore.getChunkAt(clickedBlock.getLocation());
-            if (chunk != null) {
-                playerData.lastChunk = chunk;
-                if (!chunk.isTrusted(player.getName())) {
-                    event.setCancelled(true);
-                    ChunkClaim.plugin.sendMsg(player, "Not permitted.");
-                }
-            }
-
-        }
-        //apply rule for players trampling tilled soil back to dirt (never allow it)
-        //NOTE: that this event applies only to players. monsters and animals can still trample.
-        else if (event.getAction() == Action.PHYSICAL && clickedBlockType == Material.SOIL) {
-            event.setCancelled(true);
-        }
-
-        //apply rule for note blocks and repeaters
-        else if (clickedBlockType == Material.NOTE_BLOCK || clickedBlockType == Material.DIODE_BLOCK_ON || clickedBlockType == Material.DIODE_BLOCK_OFF) {
-            ChunkData chunk = this.dataStore.getChunkAt(clickedBlock.getLocation());
-            if (chunk != null) {
-                playerData.lastChunk = chunk;
-                if (!chunk.isTrusted(player.getName())) {
-                    event.setCancelled(true);
-                    ChunkClaim.plugin.sendMsg(player, "Not permitted.");
-                }
-            }
-        }
-        //otherwise handle right click (shovel, string, bonemeal)
-        else {
-            //ignore all actions except right-click on a block or in the air
-            Action action = event.getAction();
-            if (action != Action.RIGHT_CLICK_BLOCK && action != Action.RIGHT_CLICK_AIR) return;
-
-            //what's the player holding?
-            Material materialInHand = player.getItemInHand().getType();
-
-            //check for build permission (ink sac == bone meal, must be a Bukkit bug?)
-            if (materialInHand == Material.INK_SACK || materialInHand == Material.BOAT || materialInHand == Material.MINECART || materialInHand == Material.POWERED_MINECART || materialInHand == Material.STORAGE_MINECART || materialInHand == Material.BOAT) {
-                ChunkData chunk = this.dataStore.getChunkAt(clickedBlock.getLocation());
-                if (chunk != null) {
-                    playerData.lastChunk = chunk;
-                    if (!chunk.isTrusted(player.getName())) {
-                        event.setCancelled(true);
-                        ChunkClaim.plugin.sendMsg(player, "Not permitted.");
-                    }
-                } else {
-                    event.setCancelled(true);
-                    ChunkClaim.plugin.sendMsg(player, "Not permitted.");
-                }
-            } else if (materialInHand == Material.MONSTER_EGG) {
-                if (ChunkClaim.plugin.config_mobsForCredits && (player.getItemInHand().getDurability() == EntityType.WOLF.getTypeId() || player.getItemInHand().getDurability() == EntityType.OCELOT.getTypeId())) {
-
-                    ChunkData chunk = this.dataStore.getChunkAt(clickedBlock.getLocation());
-                    if (chunk != null) {
-                        playerData.lastChunk = chunk;
-                        if (!chunk.isTrusted(player.getName())) {
-                            event.setCancelled(true);
-                            ChunkClaim.plugin.sendMsg(player, "Not permitted.");
-                        } else {
-                            if (playerData.getCredits() >= ChunkClaim.plugin.config_mobPrice) {
-                                playerData.credits -= 30;
-                                ChunkClaim.plugin.sendMsg(player, "You spawned this mob for " + ChunkClaim.plugin.config_mobPrice + " credits. Credits left: " + playerData.getCredits());
-
-                            } else {
-                                event.setCancelled(true);
-                                ChunkClaim.plugin.sendMsg(player, "Not enough credits to spawn a mob (" + ChunkClaim.plugin.config_mobPrice + ").");
-                            }
-                        }
-                    } else {
-                        event.setCancelled(true);
-                        ChunkClaim.plugin.sendMsg(player, "Not permitted.");
-                    }
-                } else {
-                    event.setCancelled(true);
-                }
+        if (chunk != null) {
+            if (!chunk.isTrusted(player.getName())) {
+                event.setCancelled(true);
+                ChunkClaim.plugin.sendMsg(player, "You don't have " + chunk.getOwnerName() + "'s permission to build here.");
             }
         }
     }
-
 }
