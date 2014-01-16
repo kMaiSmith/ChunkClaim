@@ -72,8 +72,6 @@ class PlayerEventHandler implements Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
 
-        if (!ChunkClaim.plugin.config_worlds.contains(event.getPlayer().getLocation().getWorld().getName())) return;
-
         Player player = event.getPlayer();
         Entity entity = event.getRightClicked();
 
@@ -110,10 +108,6 @@ class PlayerEventHandler implements Listener {
     //block use of buckets within other players' claims
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onPlayerBucketEmpty(PlayerBucketEmptyEvent bucketEvent) {
-        if (!ChunkClaim.plugin.config_worlds.contains(bucketEvent.getBlockClicked().getWorld().getName())) {
-            return;
-        }
-
         Player player = bucketEvent.getPlayer();
         Block block = bucketEvent.getBlockClicked().getRelative(bucketEvent.getBlockFace());
 
@@ -152,9 +146,6 @@ class PlayerEventHandler implements Listener {
     //when a player interacts with the world
     @EventHandler(priority = EventPriority.LOWEST)
     void onPlayerInteract(PlayerInteractEvent event) {
-
-        if (!ChunkClaim.plugin.config_worlds.contains(event.getPlayer().getWorld().getName())) return;
-
         Player player = event.getPlayer();
 
         //determine target block. FEATURE: shovel and string can be used from a distance away

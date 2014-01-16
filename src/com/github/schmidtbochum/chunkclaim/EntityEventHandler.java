@@ -41,8 +41,6 @@ class EntityEventHandler implements Listener {
     //when an entity is damaged
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void onEntityDamage(EntityDamageEvent event) {
-
-        if (!ChunkClaim.plugin.config_worlds.contains(event.getEntity().getWorld().getName())) return;
         //only actually interested in entities damaging entities (ignoring environmental damage)
         if (!(event instanceof EntityDamageByEntityEvent)) return;
 
@@ -88,8 +86,6 @@ class EntityEventHandler implements Listener {
     //when a vehicle is damaged
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onVehicleDamage(VehicleDamageEvent event) {
-        if (!ChunkClaim.plugin.config_worlds.contains(event.getVehicle().getWorld().getName())) return;
-
         //determine which player is attacking, if any
         Player attacker = null;
         Arrow arrow;

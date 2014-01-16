@@ -32,7 +32,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
-import org.bukkit.event.block.BlockIgniteEvent.IgniteCause;
 import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
@@ -57,13 +56,9 @@ class BlockEventHandler implements Listener {
 
         ChunkData chunk = dataManager.getChunkAt(location);
 
-        ChunkClaim.addLogEntry("event is currently " + String.valueOf(event.isCancelled()));
-
         if (chunk == null) {
             return;
         }
-
-        ChunkClaim.addLogEntry("Chunk " + Integer.valueOf(chunk.getChunk().getX()) + ", " + Integer.valueOf(chunk.getChunk().getZ()) + " is owned by " + chunk.getOwnerName());
 
         if (!chunk.isTrusted(player.getName())) {
 
@@ -77,17 +72,14 @@ class BlockEventHandler implements Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onBlockPlace(BlockPlaceEvent event) {
 
-        if (!ChunkClaim.plugin.config_worlds.contains(event.getBlock().getWorld().getName())) {
-            return;
-        }
-
         Player player = event.getPlayer();
         Block block = event.getBlock();
         Location location = block.getLocation();
 
         ChunkData chunk = dataManager.getChunkAt(location);
+
         if (chunk == null) {
-            event.setCancelled(false);
+            return;
         }
 
         if (!chunk.isTrusted(player.getName())) {
@@ -99,8 +91,6 @@ class BlockEventHandler implements Listener {
     //blocks "pushing" other players' blocks around (pistons)
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onBlockPistonExtend(BlockPistonExtendEvent event) {
-
-        if (!ChunkClaim.plugin.config_worlds.contains(event.getBlock().getWorld().getName())) return;
 
         List<Block> blocks = event.getBlocks();
 
@@ -153,8 +143,6 @@ class BlockEventHandler implements Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onBlockPistonRetract(BlockPistonRetractEvent event) {
 
-        if (!ChunkClaim.plugin.config_worlds.contains(event.getBlock().getWorld().getName())) return;
-
         //we only care about sticky pistons
         if (!event.isSticky()) return;
 
@@ -179,32 +167,6 @@ class BlockEventHandler implements Listener {
         }
     }
 
-    //blocks are ignited ONLY by flint and steel
-    @EventHandler(priority = EventPriority.LOWEST)
-    public void onBlockIgnite(BlockIgniteEvent igniteEvent) {
-
-        if (!ChunkClaim.plugin.config_worlds.contains(igniteEvent.getBlock().getWorld().getName())) {
-            return;
-        }
-
-        if (igniteEvent.getCause() != IgniteCause.FLINT_AND_STEEL) {
-            igniteEvent.setCancelled(true);
-        }
-    }
-
-    //fire doesn't spread, but other blocks still do (mushrooms and vines, for example)
-    @EventHandler(priority = EventPriority.LOWEST)
-    public void onBlockSpread(BlockSpreadEvent spreadEvent) {
-
-        if (!ChunkClaim.plugin.config_worlds.contains(spreadEvent.getBlock().getWorld().getName())) {
-            return;
-        }
-
-        if (spreadEvent.getSource().getType() == Material.FIRE) {
-            spreadEvent.setCancelled(true);
-        }
-    }
-
     //blocks are not destroyed by fire
     @EventHandler(priority = EventPriority.LOWEST)
     public void onBlockBurn(BlockBurnEvent burnEvent) {
@@ -218,10 +180,6 @@ class BlockEventHandler implements Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onBlockFromTo(BlockFromToEvent spreadEvent) {
-
-        if (!ChunkClaim.plugin.config_worlds.contains(spreadEvent.getBlock().getWorld().getName())) {
-            return;
-        }
 
         //always allow fluids to flow straight down
         if (spreadEvent.getFace() == BlockFace.DOWN) {
@@ -263,9 +221,6 @@ class BlockEventHandler implements Listener {
     //ensures dispensers can't be used to dispense a block(like water or lava) or item across a claim boundary
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onDispense(BlockDispenseEvent dispenseEvent) {
-
-        if (!ChunkClaim.plugin.config_worlds.contains(dispenseEvent.getBlock().getWorld().getName())) return;
-
         //from where?
         Block fromBlock = dispenseEvent.getBlock();
 
@@ -316,10 +271,6 @@ class BlockEventHandler implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onTreeGrow(StructureGrowEvent growEvent) {
-
-        if (!ChunkClaim.plugin.config_worlds.contains(growEvent.getLocation().getBlock().getWorld().getName())) {
-            return;
-        }
 
         Location rootLocation = growEvent.getLocation();
         ChunkData rootChunk = this.dataManager.getChunkAt(rootLocation);

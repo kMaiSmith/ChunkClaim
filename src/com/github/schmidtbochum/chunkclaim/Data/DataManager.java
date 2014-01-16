@@ -37,8 +37,8 @@ public class DataManager {
 
             dataStore.loadDataFromFile(loadedChunk);
 
-            String chunkAddress = loadedChunk.getChunk().getWorld().getName() +
-                    Integer.toString(loadedChunk.getChunk().getX()) +
+            String chunkAddress = loadedChunk.getChunk().getWorld().getName() + ":" +
+                    Integer.toString(loadedChunk.getChunk().getX()) + ":" +
                     Integer.toString(loadedChunk.getChunk().getZ());
 
             chunks.put(chunkAddress, loadedChunk);
@@ -50,7 +50,7 @@ public class DataManager {
     }
 
     public ChunkData getChunkAt(int x, int z, String worldName) {
-        String addressString = worldName + Integer.toString(x) + Integer.toString(z);
+        String addressString = worldName + ":" + Integer.toString(x) + ":" + Integer.toString(z);
 
         return chunks.get(addressString);
     }
@@ -118,8 +118,8 @@ public class DataManager {
     }
 
     public ChunkData addChunk(ChunkData newChunk) {
-        String addressString = newChunk.getChunk().getWorld().getName() +
-                Integer.toString(newChunk.getChunk().getX()) +
+        String addressString = newChunk.getChunk().getWorld().getName() + ":" +
+                Integer.toString(newChunk.getChunk().getX()) + ":" +
                 Integer.toString(newChunk.getChunk().getZ());
 
         if (!this.chunks.containsKey(addressString)) {
