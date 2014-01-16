@@ -114,7 +114,6 @@ class PlayerEventHandler implements Listener {
         ChunkData chunk = this.dataStore.getChunkAt(block.getLocation());
 
         if (chunk == null) {
-            bucketEvent.setCancelled(true);
             return;
         }
         if (!chunk.isTrusted(player.getName())) {
@@ -126,15 +125,11 @@ class PlayerEventHandler implements Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onPlayerBucketFill(PlayerBucketFillEvent bucketEvent) {
-
-        if (!ChunkClaim.plugin.config_worlds.contains(bucketEvent.getBlockClicked().getWorld().getName())) return;
-
         Player player = bucketEvent.getPlayer();
         Block block = bucketEvent.getBlockClicked();
         ChunkData chunk = this.dataStore.getChunkAt(block.getLocation());
 
         if (chunk == null) {
-            bucketEvent.setCancelled(true);
             return;
         }
         if (!chunk.isTrusted(player.getName())) {
@@ -144,7 +139,7 @@ class PlayerEventHandler implements Listener {
     }
 
     //when a player interacts with the world
-    @EventHandler(priority = EventPriority.LOWEST)
+    @EventHandler(priority = EventPriority.HIGH)
     void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 

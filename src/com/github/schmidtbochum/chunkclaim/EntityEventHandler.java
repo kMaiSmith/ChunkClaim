@@ -22,7 +22,6 @@ package com.github.schmidtbochum.chunkclaim;
 
 import com.github.schmidtbochum.chunkclaim.Data.ChunkData;
 import com.github.schmidtbochum.chunkclaim.Data.DataManager;
-import com.github.schmidtbochum.chunkclaim.Data.PlayerData;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -102,10 +101,6 @@ class EntityEventHandler implements Listener {
             if (potion.getShooter() instanceof Player) {
                 attacker = (Player) potion.getShooter();
             }
-        }
-        PlayerData playerData = null;
-        if (attacker != null) {
-            playerData = this.dataStore.readPlayerData(attacker.getName());
         }
         ChunkData chunk = dataStore.getChunkAt(event.getVehicle().getLocation());
 

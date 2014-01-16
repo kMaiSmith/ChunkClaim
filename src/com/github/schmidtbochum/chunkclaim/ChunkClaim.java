@@ -34,7 +34,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.logging.Logger;
 
 public class ChunkClaim extends JavaPlugin {
@@ -43,18 +42,9 @@ public class ChunkClaim extends JavaPlugin {
 
     public DataManager dataStore;
 
-    public List<String> config_worlds;
-    public boolean config_protectContainers;
-    public boolean config_protectSwitches;
-    public boolean config_mobsForCredits;
-    public int config_mobPrice;
-    public float config_creditsPerHour;
     public float config_maxCredits;
     public float config_startCredits;
-    public int config_minModBlocks;
     public float config_autoDeleteDays;
-    public boolean config_nextToForce;
-    private boolean config_regenerateChunk;
 
     public void onDisable() {
         Player[] players = this.getServer().getOnlinePlayers();
@@ -74,18 +64,9 @@ public class ChunkClaim extends JavaPlugin {
         this.getConfig().options().copyDefaults(true);
         this.saveConfig();
 
-        this.config_worlds = this.getConfig().getStringList("worlds");
-        this.config_protectSwitches = this.getConfig().getBoolean("protectSwitches");
-        this.config_protectContainers = this.getConfig().getBoolean("protectContainers");
-        this.config_mobsForCredits = this.getConfig().getBoolean("mobsForCredits");
-        this.config_mobPrice = this.getConfig().getInt("mobPrice");
         this.config_startCredits = (float) this.getConfig().getDouble("startCredits");
-        this.config_creditsPerHour = (float) this.getConfig().getDouble("creditsPerHour");
         this.config_maxCredits = (float) this.getConfig().getDouble("maxCredits");
-        this.config_minModBlocks = this.getConfig().getInt("minModBlocks");
         this.config_autoDeleteDays = (float) this.getConfig().getDouble("autoDeleteDays");
-        this.config_nextToForce = this.getConfig().getBoolean("nextToForce");
-        this.config_regenerateChunk = this.getConfig().getBoolean("regenerateChunk");
 
         try {
             this.dataStore = new DataManager();
@@ -108,8 +89,6 @@ public class ChunkClaim extends JavaPlugin {
         // register entity events
         EntityEventHandler entityEventHandler = new EntityEventHandler(dataStore);
         pluginManager.registerEvents(entityEventHandler, this);
-
-        addLogEntry("YAY I'VE INITILIZED");
     }
 
     // handles slash commands
@@ -119,10 +98,6 @@ public class ChunkClaim extends JavaPlugin {
             player = (Player) sender;
         }
         if (cmd.getName().equalsIgnoreCase("chunk") && player != null) {
-            if (!ChunkClaim.plugin.config_worlds.contains(player.getWorld().getName())) {
-                return true;
-            }
-
             if (args.length == 0) {
 
                 ChunkData chunk = this.dataStore.getChunkAt(player.getLocation());
@@ -180,7 +155,6 @@ public class ChunkClaim extends JavaPlugin {
             } else if (args[0].equalsIgnoreCase("abandon")) {
                 ChunkData chunk = this.dataStore.getChunkAt(player.getLocation());
                 PlayerData playerData = this.dataStore.readPlayerData(player.getName());
-                Location location = player.getLocation();
 
                 if (args.length == 2) {
                     int radius;
@@ -412,7 +386,6 @@ public class ChunkClaim extends JavaPlugin {
                 if (args.length == 1) {
 
                     Location location = player.getLocation();
-                    if (!ChunkClaim.plugin.config_worlds.contains(location.getWorld().getName())) return true;
 
                     PlayerData playerData = dataStore.readPlayerData(player.getName());
                     ChunkData chunk = dataStore.getChunkAt(location);
@@ -506,14 +479,6 @@ public class ChunkClaim extends JavaPlugin {
         }
 
         return chunksInRadius;
-    }
-
-    public void regenerateChunk(ChunkData chunk) {
-        if (config_regenerateChunk) {
-            getServer().getWorld(chunk.getChunk().getWorld().getName()).regenerateChunk(chunk.getChunk().getX(), chunk.getChunk().getZ());
-            getServer().getWorld(chunk.getChunk().getWorld().getName()).unloadChunkRequest(chunk.getChunk().getX(), chunk.getChunk().getZ());
-        }
-
     }
 
     OfflinePlayer resolvePlayer(String name) {

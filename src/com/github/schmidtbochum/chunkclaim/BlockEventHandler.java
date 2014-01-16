@@ -167,17 +167,6 @@ class BlockEventHandler implements Listener {
         }
     }
 
-    //blocks are not destroyed by fire
-    @EventHandler(priority = EventPriority.LOWEST)
-    public void onBlockBurn(BlockBurnEvent burnEvent) {
-
-        if (!ChunkClaim.plugin.config_worlds.contains(burnEvent.getBlock().getWorld().getName())) {
-            return;
-        }
-
-        burnEvent.setCancelled(true);
-    }
-
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onBlockFromTo(BlockFromToEvent spreadEvent) {
 

@@ -75,23 +75,8 @@ public class ChunkData implements IData {
         }
     }
 
-    ChunkData(Chunk chunk, String owner, ArrayList<String> builders, Date claimDate) {
-        this(chunk, owner, builders);
-        this.claimDate = claimDate;
-    }
-
     public boolean contains(Location location) {
         return this.chunk == location.getChunk();
-    }
-
-    public void modify() {
-        if (this.modifiedBlocks > 0) {
-            this.modifiedBlocks++;
-            if (this.modifiedBlocks >= ChunkClaim.plugin.config_minModBlocks) {
-                this.modifiedBlocks = -1;
-            }
-            ChunkClaim.plugin.dataStore.writeChunkToStorage(this);
-        }
     }
 
     public boolean isTrusted(String playerName) {
@@ -122,14 +107,6 @@ public class ChunkData implements IData {
         if (this.isTrusted(name)) {
             this.builderNames.remove(name);
         }
-    }
-
-    public Date getClaimDate() {
-        return this.claimDate;
-    }
-
-    public void setModifiedBlocks(int modifiedBlocks) {
-        this.modifiedBlocks = modifiedBlocks;
     }
 
     public void writeDataToFile(BufferedWriter outStream) throws IOException {
