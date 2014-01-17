@@ -142,18 +142,12 @@ class PlayerEventHandler implements Listener {
     @EventHandler(priority = EventPriority.HIGH)
     void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
-
         //determine target block. FEATURE: shovel and string can be used from a distance away
         Block clickedBlock;
 
         try {
             clickedBlock = event.getClickedBlock(); //null returned here means interacting with air
         } catch (Exception e) {//an exception intermittently comes from getTargetBlock(). when it does, just ignore the event
-            return;
-        }
-
-        //if no block, stop here
-        if (clickedBlock == null) {
             return;
         }
 

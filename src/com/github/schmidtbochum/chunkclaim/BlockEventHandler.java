@@ -25,7 +25,6 @@ import com.github.schmidtbochum.chunkclaim.Data.DataManager;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -169,12 +168,6 @@ class BlockEventHandler implements Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onBlockFromTo(BlockFromToEvent spreadEvent) {
-
-        //always allow fluids to flow straight down
-        if (spreadEvent.getFace() == BlockFace.DOWN) {
-            return;
-        }
-
         //from where?
         Block fromBlock = spreadEvent.getBlock();
         ChunkData fromChunk = this.dataManager.getChunkAt(fromBlock.getLocation());
@@ -189,21 +182,8 @@ class BlockEventHandler implements Listener {
         }
 
         //block any spread into the wilderness from a claim
-        if (fromChunk != null && toChunk == null) {
+        if (fromChunk == null) {
             spreadEvent.setCancelled(true);
-        }
-        //if spreading into a claim
-        else {
-            //who owns the spreading block, if anyone?
-            String fromOwner = null;
-            if (fromChunk != null) {
-                fromOwner = fromChunk.getOwnerName();
-            }
-
-            //cancel unless the owner of the spreading block is allowed to build in the receiving claim
-            if (fromOwner == null || !toChunk.isTrusted(fromOwner)) {
-                spreadEvent.setCancelled(true);
-            }
         }
     }
 
