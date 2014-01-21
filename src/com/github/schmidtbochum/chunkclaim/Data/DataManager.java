@@ -113,6 +113,12 @@ public class DataManager {
 
         dataStore.deleteData(chunk);
 
+        String chunkAddress = chunk.getChunk().getWorld().getName() + ":" +
+                Integer.toString(chunk.getChunk().getX()) + ":" +
+                Integer.toString(chunk.getChunk().getZ());
+
+        this.chunks.remove(chunkAddress);
+
         // @TODO: figure out if regenerating of the chunk is necessary
         //ChunkClaim.plugin.regenerateChunk(chunk);
     }

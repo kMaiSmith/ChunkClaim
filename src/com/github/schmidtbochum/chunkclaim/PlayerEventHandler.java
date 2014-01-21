@@ -151,7 +151,7 @@ class PlayerEventHandler implements Listener {
             return;
         }
 
-        ChunkData chunk = this.dataStore.getChunkAt(clickedBlock.getLocation());
+        ChunkData chunk = clickedBlock != null ? this.dataStore.getChunkAt(clickedBlock.getLocation()) : null;
 
         if (chunk != null) {
             if (!chunk.isTrusted(player.getName())) {
