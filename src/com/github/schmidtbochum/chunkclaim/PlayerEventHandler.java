@@ -79,7 +79,7 @@ class PlayerEventHandler implements Listener {
 
         if (chunk != null) {
             if (entity instanceof StorageMinecart || entity instanceof PoweredMinecart || entity instanceof Animals) {
-                if (!chunk.isTrusted(player.getName())) {
+                if (!player.isOp() && !chunk.isTrusted(player.getName())) {
                     ChunkClaim.plugin.sendMsg(player, "Not permitted.");
                     event.setCancelled(true);
                 }
@@ -98,7 +98,7 @@ class PlayerEventHandler implements Listener {
         ChunkData chunk = this.dataStore.getChunkAt(block.getLocation());
 
         if (chunk != null) {
-            if (!chunk.isTrusted(player.getName())) {
+            if (!player.isOp() && !chunk.isTrusted(player.getName())) {
                 ChunkClaim.plugin.sendMsg(player, "Not permitted.");
                 bedEvent.setCancelled(true);
             }
@@ -116,7 +116,7 @@ class PlayerEventHandler implements Listener {
         if (chunk == null) {
             return;
         }
-        if (!chunk.isTrusted(player.getName())) {
+        if (!player.isOp() && !chunk.isTrusted(player.getName())) {
             ChunkClaim.plugin.sendMsg(player, "You don't have " + chunk.getOwnerName() + "'s permission to build here.");
             bucketEvent.setCancelled(true);
         }
@@ -132,7 +132,7 @@ class PlayerEventHandler implements Listener {
         if (chunk == null) {
             return;
         }
-        if (!chunk.isTrusted(player.getName())) {
+        if (!player.isOp() && !chunk.isTrusted(player.getName())) {
             ChunkClaim.plugin.sendMsg(player, "You don't have " + chunk.getOwnerName() + "'s permission.");
             bucketEvent.setCancelled(true);
         }
@@ -154,7 +154,7 @@ class PlayerEventHandler implements Listener {
         ChunkData chunk = clickedBlock != null ? this.dataStore.getChunkAt(clickedBlock.getLocation()) : null;
 
         if (chunk != null) {
-            if (!chunk.isTrusted(player.getName())) {
+            if (!player.isOp() && !chunk.isTrusted(player.getName())) {
                 event.setCancelled(true);
                 ChunkClaim.plugin.sendMsg(player, "You don't have " + chunk.getOwnerName() + "'s permission to build here.");
             }

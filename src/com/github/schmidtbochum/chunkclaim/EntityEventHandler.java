@@ -73,7 +73,7 @@ class EntityEventHandler implements Listener {
                 if (attacker == null) {
                     event.setCancelled(true);
                 } else {
-                    if (!chunk.isTrusted(attacker.getName())) {
+                    if (!attacker.isOp() && !chunk.isTrusted(attacker.getName())) {
                         event.setCancelled(true);
                         ChunkClaim.plugin.sendMsg(attacker, "Not permitted.");
                     }
@@ -109,7 +109,7 @@ class EntityEventHandler implements Listener {
             if (attacker == null) {
                 event.setCancelled(true);
             } else {
-                if (!chunk.isTrusted(attacker.getName())) {
+                if (!attacker.isOp() && !chunk.isTrusted(attacker.getName())) {
                     event.setCancelled(true);
                     ChunkClaim.plugin.sendMsg(attacker, "Not permitted.");
                 }

@@ -439,7 +439,7 @@ public class ChunkClaim extends JavaPlugin {
                         sendMsg(player, adminString);
 
                         for (ChunkData chunkPlot : chunksInRadius) {
-                            adminString = "ID: " + chunkPlot.getChunk().getX() + "|" + chunkPlot.getChunk().getZ() + "(" + (chunkPlot.getChunk().getX() * 16) + "|" + (chunkPlot.getChunk().getZ() * 16) + ")";
+                            adminString = "ID: " + chunkPlot.getChunkX() + "|" + chunkPlot.getChunkZ() + "(" + (chunkPlot.getChunkX() * 16) + "|" + (chunkPlot.getChunkZ() * 16) + ")";
 
                             adminString += ", Permanent: " + (chunkPlot.getModifiedBlocks() < 0 ? "true" : ("false (" + chunkPlot.getModifiedBlocks() + ")"));
 
@@ -464,10 +464,10 @@ public class ChunkClaim extends JavaPlugin {
 
         ArrayList<ChunkData> chunksInRadius = new ArrayList<ChunkData>();
 
-        for (int x = chunk.getChunk().getX() - radius; x <= chunk.getChunk().getZ() + radius; x++) {
-            for (int z = chunk.getChunk().getX() - radius; z <= chunk.getChunk().getZ() + radius; z++) {
+        for (int x = chunk.getChunkX() - radius; x <= chunk.getChunkZ() + radius; x++) {
+            for (int z = chunk.getChunkX() - radius; z <= chunk.getChunkZ() + radius; z++) {
 
-                ChunkData foundChunk = this.dataStore.getChunkAt(x, z, chunk.getChunk().getWorld().getName());
+                ChunkData foundChunk = this.dataStore.getChunkAt(x, z, chunk.getChunkWorld());
 
                 if (foundChunk != null && foundChunk.getOwnerName().equals(playerName)) {
 

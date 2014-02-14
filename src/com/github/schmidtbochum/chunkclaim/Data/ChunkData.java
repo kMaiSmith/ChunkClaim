@@ -21,7 +21,6 @@
 package com.github.schmidtbochum.chunkclaim.Data;
 
 import com.github.schmidtbochum.chunkclaim.ChunkClaim;
-import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 
@@ -46,7 +45,9 @@ public class ChunkData implements IData {
     private int modifiedBlocks;
     private ArrayList<String> builderNames;
     private Date claimDate;
-    private Chunk chunk;
+    private int chunkX;
+    private int chunkZ;
+    private String chunkWorld;
 
     ChunkData(File chunkDataFile) {
         this.chunkFile = chunkDataFile;
@@ -58,11 +59,15 @@ public class ChunkData implements IData {
         this.modifiedBlocks = chunkData.modifiedBlocks;
         this.builderNames = chunkData.builderNames;
         this.claimDate = chunkData.claimDate;
-        this.chunk = chunkData.chunk;
+        this.chunkX = chunkData.getChunkX();
+        this.chunkZ = chunkData.getChunkZ();
+        this.chunkWorld = chunkData.getChunkWorld();
     }
 
     public ChunkData(Chunk chunk) {
-        this.chunk = chunk;
+        this.chunkX = chunk.getX();
+        this.chunkZ = chunk.getZ();
+        this.chunkWorld = chunk.getWorld().getName();
         this.builderNames = new ArrayList<String>();
         this.claimDate = new Date();
     }
@@ -76,15 +81,25 @@ public class ChunkData implements IData {
     }
 
     public boolean contains(Location location) {
-        return this.chunk == location.getChunk();
+        return this.chunkX == location.getChunk().getX() &&
+                this.chunkZ == location.getChunk().getZ() &&
+                this.chunkWorld.equals(location.getWorld());
     }
 
     public boolean isTrusted(String playerName) {
         return this.builderNames.contains(playerName) || this.ownerName.equals(playerName);
     }
 
-    public Chunk getChunk() {
-        return this.chunk;
+    public int getChunkX() {
+        return chunkZ;
+    }
+
+    public int getChunkZ() {
+        return chunkZ;
+    }
+
+    public String getChunkWorld() {
+        return chunkWorld;
     }
 
     public int getModifiedBlocks() {
@@ -129,11 +144,11 @@ public class ChunkData implements IData {
         }
         outStream.newLine();
 
-        outStream.write(String.valueOf(chunk.getX()));
+        outStream.write(String.valueOf(chunkX));
         outStream.newLine();
-        outStream.write(String.valueOf(chunk.getZ()));
+        outStream.write(String.valueOf(chunkZ));
         outStream.newLine();
-        outStream.write(chunk.getWorld().getName());
+        outStream.write(chunkWorld);
         outStream.newLine();
 
         //filled line to prevent null
@@ -167,7 +182,9 @@ public class ChunkData implements IData {
             this.claimDate = new Date();
         }
 
-        chunk = Bukkit.getWorld(world).getChunkAt(chunkX, chunkZ);
+        this.chunkX = chunkX;
+        this.chunkZ = chunkZ;
+        this.chunkWorld = world;
     }
 
     public File getFile() {
