@@ -94,9 +94,11 @@ public class ChunkClaim extends JavaPlugin {
     // handles slash commands
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
         Player player = null;
+
         if (sender instanceof Player) {
             player = (Player) sender;
         }
+
         if (cmd.getName().equalsIgnoreCase("chunk") && player != null) {
             if (args.length == 0) {
 
@@ -104,21 +106,18 @@ public class ChunkClaim extends JavaPlugin {
                 Location location = player.getLocation();
 
                 if (player.hasPermission("chunkclaim.admin")) {
-                    String adminString = "ID: " + location.getChunk().getX() + "|" + location.getChunk().getZ();
-                    if (chunk != null) {
-                        adminString += ", Permanent: " + (chunk.getModifiedBlocks() < 0 ? "true" : ("false (" + chunk.getModifiedBlocks() + ")"));
-                        long loginDays = ((new Date()).getTime() - this.dataStore.readPlayerData(chunk.getOwnerName()).getLastLogin().getTime()) / (1000 * 60 * 60 * 24);
-                        adminString += ", Last Login: " + loginDays + " days ago.";
-                    }
-                    sendMsg(player, adminString);
+                    sendMsg(player, "ID: " + location.getChunk().getX() + "," + location.getChunk().getZ());
                     if (chunk != null && !chunk.getOwnerName().equals(player.getName())) {
+                        long loginDays = ((new Date()).getTime() - this.dataStore.readPlayerData(chunk.getOwnerName()).getLastLogin().getTime()) / (1000 * 60 * 60 * 24);
+                        sendMsg(player, "Last Login: " + loginDays + " days ago.");
                         StringBuilder builders = new StringBuilder();
                         for (String builder : chunk.getBuilderNames()) {
                             builders.append(builder);
                             builders.append(" ");
                         }
-                        sendMsg(player, "Trusted Builders:");
-                        sendMsg(player, builders.toString());
+                        sendMsg(player, "Trusted Builders: " + builders.toString());
+                        sendMsg(player, chunk.getOwnerName() + " owns this chunk.");
+                        return true;
                     }
                 }
 
@@ -133,8 +132,8 @@ public class ChunkClaim extends JavaPlugin {
                             builders.append(builder);
                             builders.append(" ");
                         }
-                        sendMsg(player, "You own this chunk. Trusted Builders:");
-                        sendMsg(player, builders.toString());
+                        sendMsg(player, "You own this chunk.");
+                        sendMsg(player, "Trusted Builders: " + builders.toString());
 
                     } else {
                         sendMsg(player, "You own this chunk. Use /chunk trust <player> to add other builders.");
