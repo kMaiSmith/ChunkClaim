@@ -155,63 +155,24 @@ public class ChunkClaim extends JavaPlugin {
                 ChunkData chunk = this.dataStore.getChunkAt(player.getLocation());
                 PlayerData playerData = this.dataStore.readPlayerData(player.getName());
 
-                if (args.length == 2) {
-                    int radius;
-                    int abd = 0;
-
-                    try {
-                        radius = Integer.parseInt(args[1]);
-
-                        if (radius < 0) {
-                            sendMsg(player, "Error: Negative Radius");
-                            return true;
-                        }
-
-                        if (radius > 10) {
-                            sendMsg(player, "Error: Max Radius is 10.");
-                            return true;
-                        }
-
-                        ArrayList<ChunkData> chunksInRadius = this.getChunksInRadius(chunk, player.getName(), radius);
-
-                        for (ChunkData chunkPlot : chunksInRadius) {
-                            this.dataStore.deleteChunk(chunkPlot);
-                            playerData.addCredit();
-                            abd++;
-                        }
-
-                        this.dataStore.savePlayerData(playerData);
-                        sendMsg(player, abd + " Chunks abandoned in radius " + radius + ". Credits: " + playerData.getCredits());
-                        return true;
-
-                    } catch (Exception e) {
-
-                        sendMsg(player, "Usage: /chunk abandon [radius]");
-                        return true;
-                    }
-
-                } else if (args.length == 1) {
-                    if (chunk == null) {
-                        sendMsg(player, "This chunk is public.");
+                if (chunk == null) {
+                    sendMsg(player, "This chunk is public.");
 
 
-                    } else if (chunk.getOwnerName().equals(player.getName())) {
-                        this.dataStore.deleteChunk(chunk);
-                        playerData.addCredit();
-                        this.dataStore.savePlayerData(playerData);
-                        sendMsg(player, "ChunkData abandoned. Credits: " + playerData.getCredits());
-                        return true;
-
-                    } else {
-
-                        sendMsg(player, "You don't own this chunk. Only " + chunk.getOwnerName() + " or the staff can delete it.");
-                        return true;
-                    }
+                } else if (chunk.getOwnerName().equals(player.getName()) || player.hasPermission("chunkclaim.admin")) {
+                    this.dataStore.deleteChunk(chunk);
+                    playerData.addCredit();
+                    this.dataStore.savePlayerData(playerData);
+                    sendMsg(player, "ChunkData abandoned. Credits: " + playerData.getCredits());
+                    return true;
 
                 } else {
-                    sendMsg(player, "Usage: /chunk abandon [radius]");
+
+                    sendMsg(player, "You don't own this chunk. Only " + chunk.getOwnerName() + " or the staff can delete it.");
                     return true;
                 }
+
+
             } else if (args[0].equalsIgnoreCase("credits")) {
 
                 PlayerData playerData = this.dataStore.readPlayerData(player.getName());
@@ -290,76 +251,6 @@ public class ChunkClaim extends JavaPlugin {
                 sendMsg(player, "Untrusted " + tName + " in all your chunks.");
                 return true;
 
-            } else if (args[0].equalsIgnoreCase("delete")) {
-                if (!player.hasPermission("chunkclaim.admin")) {
-                    sendMsg(player, "No permission.");
-                    return true;
-                }
-
-                Location location = player.getLocation();
-
-                if (args.length == 3) {
-                    int radius;
-                    int abd = 0;
-
-                    try {
-                        radius = Integer.parseInt(args[2]);
-
-                        if (radius < 0) {
-                            sendMsg(player, "Error: Negative Radius");
-                            return true;
-                        }
-                        if (radius > 10) {
-                            sendMsg(player, "Error: Max Radius is 10.");
-                            return true;
-                        }
-                        OfflinePlayer tp = resolvePlayer(args[1]);
-                        if (tp == null) {
-
-                            sendMsg(player, "Player not found.");
-                            return true;
-                        }
-                        String tName = tp.getName();
-                        PlayerData playerData = this.dataStore.readPlayerData(tName);
-
-                        ChunkData chunk = new ChunkData(location.getChunk());
-                        ArrayList<ChunkData> chunksInRadius = this.getChunksInRadius(chunk, tName, radius);
-
-                        for (ChunkData chunkPlot : chunksInRadius) {
-                            this.dataStore.deleteChunk(chunkPlot);
-                            playerData.addCredit();
-                            abd++;
-                        }
-
-                        this.dataStore.savePlayerData(playerData);
-                        sendMsg(player, abd + " Chunks deleted in radius " + radius + ".");
-                        return true;
-
-                    } catch (Exception e) {
-                        sendMsg(player, "Usage: /chunk delete [<player> <radius>]");
-                        return true;
-                    }
-
-                } else if (args.length == 1) {
-                    ChunkData chunk = this.dataStore.getChunkAt(player.getLocation());
-
-                    if (chunk == null) {
-                        sendMsg(player, "This chunk is public.");
-                    } else {
-                        PlayerData playerData = this.dataStore.readPlayerData(chunk.getOwnerName());
-                        this.dataStore.deleteChunk(chunk);
-                        playerData.addCredit();
-                        this.dataStore.savePlayerData(playerData);
-                        sendMsg(player, "ChunkData deleted.");
-
-                        return true;
-                    }
-
-                } else {
-                    sendMsg(player, "Usage: /chunk delete [<player> <radius>]");
-                    return true;
-                }
-
             } else if (args[0].equalsIgnoreCase("deleteall")) {
                 if (!player.hasPermission("chunkclaim.admin")) {
                     sendMsg(player, "No permission.");
@@ -420,7 +311,6 @@ public class ChunkClaim extends JavaPlugin {
             } else if (args[0].equalsIgnoreCase("list")) {
                 if (player.hasPermission("chunkclaim.admin")) {
                     if (args.length == 2) {
-
 
                         OfflinePlayer tp = resolvePlayer(args[1]);
                         if (tp == null) {

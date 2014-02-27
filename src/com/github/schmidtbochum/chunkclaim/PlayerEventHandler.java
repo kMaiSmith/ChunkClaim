@@ -31,7 +31,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.*;
 
-class PlayerEventHandler implements Listener {
+public class PlayerEventHandler implements Listener {
 
     private final DataManager dataStore;
 
@@ -140,7 +140,7 @@ class PlayerEventHandler implements Listener {
 
     //when a player interacts with the world
     @EventHandler(priority = EventPriority.HIGH)
-    void onPlayerInteract(PlayerInteractEvent event) {
+    public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         //determine target block. FEATURE: shovel and string can be used from a distance away
         Block clickedBlock;
@@ -156,7 +156,7 @@ class PlayerEventHandler implements Listener {
         if (chunk != null) {
             if (!(player.isOp() || player.hasPermission("chunkclaim.admin")) && !chunk.isTrusted(player.getName())) {
                 event.setCancelled(true);
-                ChunkClaim.plugin.sendMsg(player, "You don't have " + chunk.getOwnerName() + "'s permission to build here.");
+                player.sendMessage(ChatColor.YELLOW + "You don't have " + chunk.getOwnerName() + "'s permission to build here.");
             }
         }
     }

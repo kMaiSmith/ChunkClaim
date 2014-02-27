@@ -30,7 +30,7 @@ public class ChunkCommandTest {
     private Player mockPlayer;
     private Command mockCommand;
     private String commandLabel;
-    private String[] args = {};
+    private String[] args;
 
     private static int dayInMilliseconds = 1000 * 60 * 60 * 24;
 
@@ -45,6 +45,7 @@ public class ChunkCommandTest {
         when(mockCommand.getName()).thenReturn("chunk");
 
         commandLabel = "";
+        args = new String[]{};
     }
 
     private Location setupLocation(int x, int z) {
@@ -62,7 +63,7 @@ public class ChunkCommandTest {
         when(mockPlayer.hasPermission("chunkclaim.admin")).thenReturn(true);
     }
 
-    private void setupChunk(String playerName, final ArrayList<String> trustedBuilders, Location mockLocation) {
+    private ChunkData setupChunk(String playerName, final ArrayList<String> trustedBuilders, Location mockLocation) {
         ChunkData chunk = mock(ChunkData.class);
         when(chunk.getOwnerName()).thenReturn(playerName);
         when(systemUnderTest.dataStore.getChunkAt(mockLocation)).thenReturn(chunk);
@@ -75,13 +76,16 @@ public class ChunkCommandTest {
                 return trustedBuilders.contains(args[0]);
             }
         });
+
+        return chunk;
     }
 
-    private void setupPlayer(String playerName, int daysSinceLogin) {
+    private PlayerData setupPlayer(String playerName, int daysSinceLogin) {
         PlayerData player = mock(PlayerData.class);
         when(systemUnderTest.dataStore.readPlayerData(playerName)).thenReturn(player);
         Date lastLogin = new Date((new Date()).getTime() - daysSinceLogin);
         when(player.getLastLogin()).thenReturn(lastLogin);
+        return player;
     }
 
     @Test
@@ -116,7 +120,27 @@ public class ChunkCommandTest {
     }
 
     @Test
-    public void testChunkCommandTellsTheChunkIdWhenPlayerHasAdminRights() {
+    public void testChunkCommandGivesAListOfTrustedBuildersWhenYouOwnTheChunk() {
+        basicSetup("SamplePlayer");
+
+        // Super awesome setup stuff, prone to changing with flow changes
+
+        Location mockLocation = setupLocation(12, -34);
+        setupChunk("SamplePlayer",
+                new ArrayList<String>(Arrays.asList(new String[]{"PlayerA", "PlayerB"})),
+                mockLocation);
+        setupPlayer("SamplePlayer", 2 * dayInMilliseconds);
+
+        // End of super awesome setup stuff
+
+        systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
+
+        verify(mockPlayer).sendMessage("§eYou own this chunk.");
+        verify(mockPlayer).sendMessage("§eTrusted Builders: PlayerA PlayerB ");
+    }
+
+    @Test
+    public void testChunkCommandTellsTheChunkIdWhenPlayerHasAdminRightsAndTheChunkIsntClaimed() {
         basicSetup("");
 
         setupLocation(12, -34);
@@ -172,5 +196,95 @@ public class ChunkCommandTest {
         verify(mockPlayer).sendMessage("§eID: 12,-34");
         verify(mockPlayer).sendMessage("§eYou own this chunk.");
         verify(mockPlayer).sendMessage("§eTrusted Builders: PlayerA PlayerB ");
+    }
+
+    @Test
+    public void testChunkAbandonCommandAbandonsTheChunkBeingStoodIn() {
+        basicSetup("SamplePlayer");
+        args = new String[]{"abandon"};
+
+        Location mockLocation = setupLocation(12, -34);
+        ChunkData mockChunk = setupChunk("SamplePlayer",
+                new ArrayList<String>(),
+                mockLocation);
+        setupPlayer("SamplePlayer", 0);
+
+        systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
+
+        verify(systemUnderTest.dataStore).deleteChunk(mockChunk);
+        verify(mockPlayer).sendMessage("§eChunkData abandoned. Credits: 0");
+    }
+
+    @Test
+    public void testChunkAbandonCommandAbandonsTheChunkIfAdminAndNotOwnedByPlayer() {
+        basicSetup("AdminPlayer");
+        args = new String[]{"abandon"};
+
+        Location mockLocation = setupLocation(12, -34);
+        ChunkData mockChunk = setupChunk("SamplePlayer",
+                new ArrayList<String>(),
+                mockLocation);
+        setupPlayer("SamplePlayer", 0);
+        setupPlayer("AdminPlayer", 0);
+        setPlayerAsAdmin();
+
+        systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
+
+        verify(systemUnderTest.dataStore).deleteChunk(mockChunk);
+        verify(mockPlayer).sendMessage("§eChunkData abandoned. Credits: 0");
+    }
+
+    @Test
+    public void testChunkAbandonCommandDoesNotAbandonIfNonAdminAndPlayerDoesntOwnChunk() {
+        basicSetup("OtherPlayer");
+        args = new String[]{"abandon"};
+
+        Location mockLocation = setupLocation(12, -34);
+        ChunkData mockChunk = setupChunk("SamplePlayer",
+                new ArrayList<String>(),
+                mockLocation);
+        setupPlayer("SamplePlayer", 0);
+
+        systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
+
+        verify(systemUnderTest.dataStore, never()).deleteChunk(mockChunk);
+        verify(mockPlayer).sendMessage("§eYou don't own this chunk. Only SamplePlayer or the staff can delete it.");
+    }
+
+    @Test
+    public void testChunkAbandonCommandSpitsOutAnError() {
+        basicSetup("OtherPlayer");
+        args = new String[]{"abandon"};
+
+        systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
+
+        verify(systemUnderTest.dataStore, never()).deleteChunk((ChunkData) anyObject());
+        verify(mockPlayer).sendMessage("§eThis chunk is public.");
+    }
+
+    @Test
+    public void testChunkAbandonReturnsACreditForAbandoning() {
+        basicSetup("SamplePlayer");
+        args = new String[]{"abandon"};
+
+        Location mockLocation = setupLocation(12, -34);
+        setupChunk("SamplePlayer",
+                new ArrayList<String>(),
+                mockLocation);
+        PlayerData playerMock = setupPlayer("SamplePlayer", 0);
+
+        systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
+        verify(playerMock).addCredit();
+    }
+
+    @Test
+    public void testChunkCreditsShowsHowManyCreditsAPlayerHas() {
+        basicSetup("SamplePlayer");
+        args = new String[]{"credits"};
+        PlayerData playerMock = setupPlayer("SamplePlayer", 0);
+        when(playerMock.getCredits()).thenReturn(7);
+
+        systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
+        verify(mockPlayer).sendMessage("§eYou have 7 credits.");
     }
 }
