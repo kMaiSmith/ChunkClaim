@@ -5,18 +5,12 @@ import com.github.schmidtbochum.chunkclaim.Data.PlayerData;
 import com.github.schmidtbochum.chunkclaim.PlayerEventHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.junit.Before;
 import org.junit.Test;
 
 import static org.mockito.Mockito.*;
 
-/**
- * Created with IntelliJ IDEA.
- * User: kyle
- * Date: 2/28/14
- * Time: 6:03 PM
- * To change this template use File | Settings | File Templates.
- */
 public class PlayerJoinHandlerTest {
 
     private Player mockPlayer;
@@ -33,6 +27,8 @@ public class PlayerJoinHandlerTest {
         when(mockDataManager.readPlayerData("PlayerPerson")).thenReturn(chunkPlayer);
         systemUnderTest = new PlayerEventHandler(mockDataManager);
     }
+
+    // onPlayerJoin
 
     @Test
     public void testWhenPlayerJoinsPlayerDataIsLoadedFromDataStore() {
@@ -51,4 +47,15 @@ public class PlayerJoinHandlerTest {
         verify(mockPlayer).sendMessage(
                 "§eServer Running §4ChunkClaim Beta§e. Have fun and report any bugs to an admin");
     }
+
+    // onPlayerQuit
+    @Test
+    public void testWhenPlayerQuitsDataIsSavedAndCacheIsCleared() {
+        PlayerQuitEvent event = new PlayerQuitEvent(mockPlayer, "Player has quit");
+
+        systemUnderTest.onPlayerQuit(event);
+        verify(mockDataManager).savePlayerData(chunkPlayer);
+        verify(mockDataManager).clearCachedPlayerData("PlayerPerson");
+    }
+
 }

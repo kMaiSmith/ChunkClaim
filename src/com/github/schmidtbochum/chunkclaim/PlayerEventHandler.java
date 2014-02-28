@@ -43,10 +43,10 @@ public class PlayerEventHandler implements Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void onPlayerJoin(PlayerJoinEvent event) {
-        String playerName = event.getPlayer().getName();
-        PlayerData playerData = this.dataStore.readPlayerData(playerName);
+        Player player = event.getPlayer();
+        PlayerData playerData = this.dataStore.readPlayerData(player.getName());
 
-        event.getPlayer().sendMessage(ChatColor.YELLOW +
+        player.sendMessage(ChatColor.YELLOW +
                 "Server Running " + ChatColor.DARK_RED + "ChunkClaim Beta" + ChatColor.YELLOW +
                 ". Have fun and report any bugs to an admin");
         this.dataStore.savePlayerData(playerData);
