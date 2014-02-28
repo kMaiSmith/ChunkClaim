@@ -5,7 +5,6 @@ import com.github.schmidtbochum.chunkclaim.Data.DataManager;
 import com.github.schmidtbochum.chunkclaim.PlayerEventHandler;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
@@ -59,7 +58,6 @@ public class PlayerHandlerTest {
         mockEntity = mock(Entity.class);
         when(mockDataStore.getChunkAt(mockLocation)).thenReturn(mockChunk);
         when(mockBlock.getLocation()).thenReturn(mockLocation);
-        when(mockBlock.getRelative((BlockFace.DOWN))).thenReturn(mockBlock);
         when(mockEntity.getLocation()).thenReturn(mockLocation);
     }
 
@@ -133,7 +131,7 @@ public class PlayerHandlerTest {
 
     @Test
     public void testUntrustedPlayerCannotEmptyBucketsInClaimedChunk() {
-        PlayerBucketEmptyEvent event = new PlayerBucketEmptyEvent(mockPlayer, mockBlock, BlockFace.DOWN, null, null);
+        PlayerBucketEmptyEvent event = new PlayerBucketEmptyEvent(mockPlayer, mockBlock, null, null, null);
 
         playerIsNotTrusted();
 
@@ -144,7 +142,7 @@ public class PlayerHandlerTest {
 
     @Test
     public void testAdminCanEmptyBucketsInNonOwnedChunkClaimedChunk() {
-        PlayerBucketEmptyEvent event = new PlayerBucketEmptyEvent(mockPlayer, mockBlock, BlockFace.DOWN, null, null);
+        PlayerBucketEmptyEvent event = new PlayerBucketEmptyEvent(mockPlayer, mockBlock, null, null, null);
 
         playerIsAdmin();
 
@@ -154,7 +152,7 @@ public class PlayerHandlerTest {
 
     @Test
     public void testTrustedPlayerCanEmptyBucketsInClaimedChunk() {
-        PlayerBucketEmptyEvent event = new PlayerBucketEmptyEvent(mockPlayer, mockBlock, BlockFace.DOWN, null, null);
+        PlayerBucketEmptyEvent event = new PlayerBucketEmptyEvent(mockPlayer, mockBlock, null, null, null);
 
         playerIsAdmin();
 

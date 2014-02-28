@@ -27,6 +27,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -40,104 +41,67 @@ public class PlayerEventHandler implements Listener {
         this.dataStore = dataStore;
     }
 
-    //when a player successfully joins the server...
+    private void revokeIfNotPermitted(Player player, ChunkData chunk, Cancellable cancellable) {
+        if (chunk == null) {
+            return;
+        }
+        if (!player.hasPermission("chunkclaim.admin") && !chunk.isTrusted(player.getName())) {
+            cancellable.setCancelled(true);
+            player.sendMessage(ChatColor.YELLOW + "You don't have " + chunk.getOwnerName() + "'s permission to build here.");
+        }
+    }
+
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     void onPlayerJoin(PlayerJoinEvent event) {
-
         String playerName = event.getPlayer().getName();
-
-        //note login time
         PlayerData playerData = this.dataStore.readPlayerData(playerName);
-
-        //if (!event.getPlayer().hasPlayedBefore())
-        //ChunkClaim.plugin.broadcast(ChatColor.LIGHT_PURPLE + "[GLaDOS] " + ChatColor.GREEN +"Welcome " + playerName + ChatColor.GREEN +" to The Colony!");
 
         event.getPlayer().sendMessage(ChatColor.DARK_RED + "Running ChunkClaim Alpha. ONLY FOR TESTING!");
         this.dataStore.savePlayerData(playerData);
     }
 
-    //when a player quits...
     @EventHandler(priority = EventPriority.HIGHEST)
     void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
         PlayerData playerData = this.dataStore.readPlayerData(player.getName());
 
-        //make sure his data is all saved
         this.dataStore.savePlayerData(playerData);
-
-        //drop data about this player
         this.dataStore.clearCachedPlayerData(player.getName());
     }
 
-    //when a player interacts with an entity...
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
-
         Player player = event.getPlayer();
         Entity entity = event.getRightClicked();
-
         ChunkData chunk = this.dataStore.getChunkAt(entity.getLocation());
 
-        if (chunk != null) {
-            if (!(player.isOp() || player.hasPermission("chunkclaim.admin")) && !chunk.isTrusted(player.getName())) {
-                player.sendMessage(ChatColor.YELLOW + "You don't have " + chunk.getOwnerName() + "'s permission to build here.");
-                event.setCancelled(true);
-            }
-        }
-    }
-
-    //block use of buckets within other players' claims
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-    public void onPlayerBucketEmpty(PlayerBucketEmptyEvent bucketEvent) {
-        Player player = bucketEvent.getPlayer();
-        Block block = bucketEvent.getBlockClicked().getRelative(bucketEvent.getBlockFace());
-        ChunkData chunk = this.dataStore.getChunkAt(block.getLocation());
-
-        if (chunk == null) {
-            return;
-        }
-        if (!(player.isOp() || player.hasPermission("chunkclaim.admin")) && !chunk.isTrusted(player.getName())) {
-            player.sendMessage(ChatColor.YELLOW + "You don't have " + chunk.getOwnerName() + "'s permission to build here.");
-            bucketEvent.setCancelled(true);
-        }
-
+        revokeIfNotPermitted(player, chunk, event);
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-    public void onPlayerBucketFill(PlayerBucketFillEvent bucketEvent) {
-        Player player = bucketEvent.getPlayer();
-        Block block = bucketEvent.getBlockClicked();
+    public void onPlayerBucketEmpty(PlayerBucketEmptyEvent event) {
+        Player player = event.getPlayer();
+        Block block = event.getBlockClicked();
         ChunkData chunk = this.dataStore.getChunkAt(block.getLocation());
 
-        if (chunk == null) {
-            return;
-        }
-        if (!(player.isOp() || player.hasPermission("chunkclaim.admin")) && !chunk.isTrusted(player.getName())) {
-            player.sendMessage(ChatColor.YELLOW + "You don't have " + chunk.getOwnerName() + "'s permission to build here.");
-            bucketEvent.setCancelled(true);
-        }
+        revokeIfNotPermitted(player, chunk, event);
     }
 
-    //when a player interacts with the world
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+    public void onPlayerBucketFill(PlayerBucketFillEvent event) {
+        Player player = event.getPlayer();
+        Block block = event.getBlockClicked();
+        ChunkData chunk = this.dataStore.getChunkAt(block.getLocation());
+
+        revokeIfNotPermitted(player, chunk, event);
+    }
+
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
-        //determine target block. FEATURE: shovel and string can be used from a distance away
-        Block clickedBlock;
+        Block clickedBlock = event.getClickedBlock();
+        ChunkData chunk = this.dataStore.getChunkAt(clickedBlock.getLocation());
 
-        try {
-            clickedBlock = event.getClickedBlock(); //null returned here means interacting with air
-        } catch (Exception e) {//an exception intermittently comes from getTargetBlock(). when it does, just ignore the event
-            return;
-        }
-
-        ChunkData chunk = clickedBlock != null ? this.dataStore.getChunkAt(clickedBlock.getLocation()) : null;
-
-        if (chunk != null) {
-            if (!(player.isOp() || player.hasPermission("chunkclaim.admin")) && !chunk.isTrusted(player.getName())) {
-                event.setCancelled(true);
-                player.sendMessage(ChatColor.YELLOW + "You don't have " + chunk.getOwnerName() + "'s permission to build here.");
-            }
-        }
+        revokeIfNotPermitted(player, chunk, event);
     }
 }
