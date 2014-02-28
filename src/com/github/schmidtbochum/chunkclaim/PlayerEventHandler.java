@@ -89,35 +89,18 @@ public class PlayerEventHandler implements Listener {
         }
     }
 
-    //block players from entering beds they don't have permission for
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-    public void onPlayerBedEnter(PlayerBedEnterEvent bedEvent) {
-        Player player = bedEvent.getPlayer();
-        Block block = bedEvent.getBed();
-
-        ChunkData chunk = this.dataStore.getChunkAt(block.getLocation());
-
-        if (chunk != null) {
-            if (!player.isOp() && !chunk.isTrusted(player.getName())) {
-                ChunkClaim.plugin.sendMsg(player, "Not permitted.");
-                bedEvent.setCancelled(true);
-            }
-        }
-    }
-
     //block use of buckets within other players' claims
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onPlayerBucketEmpty(PlayerBucketEmptyEvent bucketEvent) {
         Player player = bucketEvent.getPlayer();
         Block block = bucketEvent.getBlockClicked().getRelative(bucketEvent.getBlockFace());
-
         ChunkData chunk = this.dataStore.getChunkAt(block.getLocation());
 
         if (chunk == null) {
             return;
         }
         if (!(player.isOp() || player.hasPermission("chunkclaim.admin")) && !chunk.isTrusted(player.getName())) {
-            ChunkClaim.plugin.sendMsg(player, "You don't have " + chunk.getOwnerName() + "'s permission to build here.");
+            player.sendMessage(ChatColor.YELLOW + "You don't have " + chunk.getOwnerName() + "'s permission to build here.");
             bucketEvent.setCancelled(true);
         }
 
@@ -133,7 +116,7 @@ public class PlayerEventHandler implements Listener {
             return;
         }
         if (!(player.isOp() || player.hasPermission("chunkclaim.admin")) && !chunk.isTrusted(player.getName())) {
-            ChunkClaim.plugin.sendMsg(player, "You don't have " + chunk.getOwnerName() + "'s permission.");
+            player.sendMessage(ChatColor.YELLOW + "You don't have " + chunk.getOwnerName() + "'s permission to build here.");
             bucketEvent.setCancelled(true);
         }
     }
