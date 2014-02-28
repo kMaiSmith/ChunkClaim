@@ -41,32 +41,35 @@ public class PlayerEventHandler implements Listener {
         this.dataStore = dataStore;
     }
 
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        String playerName = event.getPlayer().getName();
+        PlayerData playerData = this.dataStore.readPlayerData(playerName);
+
+        event.getPlayer().sendMessage(ChatColor.YELLOW +
+                "Server Running " + ChatColor.DARK_RED + "ChunkClaim Beta" + ChatColor.YELLOW +
+                ". Have fun and report any bugs to an admin");
+        this.dataStore.savePlayerData(playerData);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        Player player = event.getPlayer();
+        PlayerData playerData = this.dataStore.readPlayerData(player.getName());
+
+        this.dataStore.savePlayerData(playerData);
+        this.dataStore.clearCachedPlayerData(player.getName());
+    }
+
     private void revokeIfNotPermitted(Player player, ChunkData chunk, Cancellable cancellable) {
         if (chunk == null) {
             return;
         }
         if (!player.hasPermission("chunkclaim.admin") && !chunk.isTrusted(player.getName())) {
             cancellable.setCancelled(true);
-            player.sendMessage(ChatColor.YELLOW + "You don't have " + chunk.getOwnerName() + "'s permission to build here.");
+            player.sendMessage(ChatColor.YELLOW +
+                    "You don't have " + chunk.getOwnerName() + "'s permission to build here.");
         }
-    }
-
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
-    void onPlayerJoin(PlayerJoinEvent event) {
-        String playerName = event.getPlayer().getName();
-        PlayerData playerData = this.dataStore.readPlayerData(playerName);
-
-        event.getPlayer().sendMessage(ChatColor.DARK_RED + "Running ChunkClaim Alpha. ONLY FOR TESTING!");
-        this.dataStore.savePlayerData(playerData);
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST)
-    void onPlayerQuit(PlayerQuitEvent event) {
-        Player player = event.getPlayer();
-        PlayerData playerData = this.dataStore.readPlayerData(player.getName());
-
-        this.dataStore.savePlayerData(playerData);
-        this.dataStore.clearCachedPlayerData(player.getName());
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
