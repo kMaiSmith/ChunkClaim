@@ -349,27 +349,6 @@ public class ChunkClaim extends JavaPlugin {
         return false;
     }
 
-    ArrayList<ChunkData> getChunksInRadius(ChunkData chunk, String playerName, int radius) {
-
-        ArrayList<ChunkData> chunksInRadius = new ArrayList<ChunkData>();
-
-        for (int x = chunk.getChunkX() - radius; x <= chunk.getChunkZ() + radius; x++) {
-            for (int z = chunk.getChunkX() - radius; z <= chunk.getChunkZ() + radius; z++) {
-
-                ChunkData foundChunk = this.dataStore.getChunkAt(x, z, chunk.getChunkWorld());
-
-                if (foundChunk != null && foundChunk.getOwnerName().equals(playerName)) {
-
-                    chunksInRadius.add(foundChunk);
-
-                }
-
-            }
-        }
-
-        return chunksInRadius;
-    }
-
     OfflinePlayer resolvePlayer(String name) {
 
         Player player = this.getServer().getPlayer(name);
