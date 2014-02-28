@@ -137,7 +137,7 @@ public class PlayerHandlerTest {
         verify(mockPlayer).sendMessage("§eYou don't have NotYou's permission to build here.");
     }
 
-    //@Test
+    @Test
     public void testAdminCanEmptyBucketsInNonOwnedChunkClaimedChunk() {
         PlayerBucketEmptyEvent event = new PlayerBucketEmptyEvent(mockPlayer, mockBlock, BlockFace.DOWN, null, null);
 
@@ -147,7 +147,7 @@ public class PlayerHandlerTest {
         Assert.assertFalse(event.isCancelled());
     }
 
-    //@Test
+    @Test
     public void testTrustedPlayerCanEmptyBucketsInClaimedChunk() {
         PlayerBucketEmptyEvent event = new PlayerBucketEmptyEvent(mockPlayer, mockBlock, BlockFace.DOWN, null, null);
 
