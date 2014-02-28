@@ -17,7 +17,7 @@ import org.junit.Test;
 
 import static org.mockito.Mockito.*;
 
-public class PlayerHandlerTest {
+public class PlayerBlockHandlerTest {
 
     private PlayerEventHandler systemUnderTest;
     private DataManager mockDataStore;
