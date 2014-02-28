@@ -25,7 +25,8 @@ import com.github.schmidtbochum.chunkclaim.Data.DataManager;
 import com.github.schmidtbochum.chunkclaim.Data.PlayerData;
 import org.bukkit.ChatColor;
 import org.bukkit.block.Block;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -78,14 +79,10 @@ public class PlayerEventHandler implements Listener {
         ChunkData chunk = this.dataStore.getChunkAt(entity.getLocation());
 
         if (chunk != null) {
-            if (entity instanceof StorageMinecart || entity instanceof PoweredMinecart || entity instanceof Animals) {
-                if (!(player.isOp() || player.hasPermission("chunkclaim.admin")) && !chunk.isTrusted(player.getName())) {
-                    ChunkClaim.plugin.sendMsg(player, "Not permitted.");
-                    event.setCancelled(true);
-                }
-
+            if (!(player.isOp() || player.hasPermission("chunkclaim.admin")) && !chunk.isTrusted(player.getName())) {
+                player.sendMessage(ChatColor.YELLOW + "You don't have " + chunk.getOwnerName() + "'s permission to build here.");
+                event.setCancelled(true);
             }
-
         }
     }
 

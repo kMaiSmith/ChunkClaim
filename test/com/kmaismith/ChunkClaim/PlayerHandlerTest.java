@@ -6,9 +6,11 @@ import com.github.schmidtbochum.chunkclaim.PlayerEventHandler;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.junit.Assert;
 import org.junit.Before;
@@ -24,6 +26,7 @@ public class PlayerHandlerTest {
     private Player mockPlayer;
     private Location mockLocation;
     private ChunkData mockChunk;
+    private Entity mockEntity;
 
     private void playerIsAdmin() {
         when(mockChunk.isTrusted("Admin")).thenReturn(false);
@@ -52,16 +55,18 @@ public class PlayerHandlerTest {
         mockPlayer = mock(Player.class);
         mockBlock = mock(Block.class);
         mockLocation = mock(Location.class);
-        when(mockBlock.getLocation()).thenReturn(mockLocation);
         mockChunk = mock(ChunkData.class);
+        mockEntity = mock(Entity.class);
         when(mockDataStore.getChunkAt(mockLocation)).thenReturn(mockChunk);
+        when(mockBlock.getLocation()).thenReturn(mockLocation);
         when(mockBlock.getRelative((BlockFace.DOWN))).thenReturn(mockBlock);
+        when(mockEntity.getLocation()).thenReturn(mockLocation);
     }
 
     // onPlayerInteract
 
     @Test
-    public void testPlayersCannotInteractWithBlocksThatAreClaimedBySomeoneElse() {
+    public void testUntrustedPlayerCannotInteractWithBlocksInClaimedChunk() {
         PlayerInteractEvent event = new PlayerInteractEvent(mockPlayer, null, null, mockBlock, null);
 
         playerIsNotTrusted();
@@ -72,20 +77,20 @@ public class PlayerHandlerTest {
     }
 
     @Test
-    public void testOwnerOfChunkCanInteractWithBlocksThatAreInTheirClaim() {
+    public void testAdminCanInteractWithBlocksInClaimedChunk() {
         PlayerInteractEvent event = new PlayerInteractEvent(mockPlayer, null, null, mockBlock, null);
 
-        playerIsTrusted();
+        playerIsAdmin();
 
         systemUnderTest.onPlayerInteract(event);
         Assert.assertFalse(event.isCancelled());
     }
 
     @Test
-    public void testAdminCanInteractWithNonOwnedChunk() {
+    public void testTrustedPlayerCanInteractWithBlocksInClaimedChunk() {
         PlayerInteractEvent event = new PlayerInteractEvent(mockPlayer, null, null, mockBlock, null);
 
-        playerIsAdmin();
+        playerIsTrusted();
 
         systemUnderTest.onPlayerInteract(event);
         Assert.assertFalse(event.isCancelled());
@@ -154,6 +159,39 @@ public class PlayerHandlerTest {
         playerIsAdmin();
 
         systemUnderTest.onPlayerBucketEmpty(event);
+        Assert.assertFalse(event.isCancelled());
+    }
+
+    // onPlayerInteractWithEntity
+
+    @Test
+    public void testUntrustedPlayerCannotInteractWithEntitiesInClaimedChunk() {
+        PlayerInteractEntityEvent event = new PlayerInteractEntityEvent(mockPlayer, mockEntity);
+
+        playerIsNotTrusted();
+
+        systemUnderTest.onPlayerInteractEntity(event);
+        Assert.assertTrue(event.isCancelled());
+        verify(mockPlayer).sendMessage("§eYou don't have NotYou's permission to build here.");
+    }
+
+    @Test
+    public void testAdminCanInteractWithEntitiesInNonOwnedChunkClaimedChunk() {
+        PlayerInteractEntityEvent event = new PlayerInteractEntityEvent(mockPlayer, mockEntity);
+
+        playerIsAdmin();
+
+        systemUnderTest.onPlayerInteractEntity(event);
+        Assert.assertFalse(event.isCancelled());
+    }
+
+    @Test
+    public void testTrustedPlayerCanInteractWithEntitiesInClaimedChunk() {
+        PlayerInteractEntityEvent event = new PlayerInteractEntityEvent(mockPlayer, mockEntity);
+
+        playerIsAdmin();
+
+        systemUnderTest.onPlayerInteractEntity(event);
         Assert.assertFalse(event.isCancelled());
     }
 
