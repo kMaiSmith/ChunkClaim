@@ -61,14 +61,14 @@ public class PlayerEventHandler implements Listener {
         this.dataStore.clearCachedPlayerData(player.getName());
     }
 
-    private void revokeIfNotPermitted(Player player, ChunkData chunk, Cancellable cancellable) {
+    private void revokeIfNotPermitted(Player player, ChunkData chunk, Cancellable cancellable, String message) {
         if (chunk == null) {
             return;
         }
         if (!player.hasPermission("chunkclaim.admin") && !chunk.isTrusted(player.getName())) {
             cancellable.setCancelled(true);
             player.sendMessage(ChatColor.YELLOW +
-                    "You don't have " + chunk.getOwnerName() + "'s permission to build here.");
+                    "You don't have " + chunk.getOwnerName() + "'s permission to " + message + " here.");
         }
     }
 
@@ -78,7 +78,7 @@ public class PlayerEventHandler implements Listener {
         Entity entity = event.getRightClicked();
         ChunkData chunk = this.dataStore.getChunkAt(entity.getLocation());
 
-        revokeIfNotPermitted(player, chunk, event);
+        revokeIfNotPermitted(player, chunk, event, "interact with entities");
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
@@ -87,7 +87,7 @@ public class PlayerEventHandler implements Listener {
         Block block = event.getBlockClicked();
         ChunkData chunk = this.dataStore.getChunkAt(block.getLocation());
 
-        revokeIfNotPermitted(player, chunk, event);
+        revokeIfNotPermitted(player, chunk, event, "build");
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
@@ -96,7 +96,7 @@ public class PlayerEventHandler implements Listener {
         Block block = event.getBlockClicked();
         ChunkData chunk = this.dataStore.getChunkAt(block.getLocation());
 
-        revokeIfNotPermitted(player, chunk, event);
+        revokeIfNotPermitted(player, chunk, event, "build");
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -105,6 +105,6 @@ public class PlayerEventHandler implements Listener {
         Block clickedBlock = event.getClickedBlock();
         ChunkData chunk = this.dataStore.getChunkAt(clickedBlock.getLocation());
 
-        revokeIfNotPermitted(player, chunk, event);
+        revokeIfNotPermitted(player, chunk, event, "build");
     }
 }

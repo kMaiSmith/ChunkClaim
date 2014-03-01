@@ -22,6 +22,7 @@ package com.github.schmidtbochum.chunkclaim;
 
 import com.github.schmidtbochum.chunkclaim.Data.ChunkData;
 import com.github.schmidtbochum.chunkclaim.Data.DataManager;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -30,7 +31,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
 
-class EntityEventHandler implements Listener {
+public class EntityEventHandler implements Listener {
     private final DataManager dataStore;
 
     public EntityEventHandler(DataManager dataStore) {
@@ -87,32 +88,28 @@ class EntityEventHandler implements Listener {
     public void onVehicleDamage(VehicleDamageEvent event) {
         //determine which player is attacking, if any
         Player attacker = null;
-        Arrow arrow;
         Entity damageSource = event.getAttacker();
         if (damageSource instanceof Player) {
             attacker = (Player) damageSource;
-        } else if (damageSource instanceof Arrow) {
-            arrow = (Arrow) damageSource;
-            if (arrow.getShooter() instanceof Player) {
-                attacker = (Player) arrow.getShooter();
+        } else if (damageSource instanceof Projectile) {
+            Projectile projectile = (Projectile) damageSource;
+            if (projectile.getShooter() instanceof Player) {
+                attacker = (Player) projectile.getShooter();
+            } else {
+                return;
             }
-        } else if (damageSource instanceof ThrownPotion) {
-            ThrownPotion potion = (ThrownPotion) damageSource;
-            if (potion.getShooter() instanceof Player) {
-                attacker = (Player) potion.getShooter();
-            }
+        } else {
+            return;
         }
+
         ChunkData chunk = dataStore.getChunkAt(event.getVehicle().getLocation());
 
-        //if it's claimed
         if (chunk != null) {
-            if (attacker == null) {
+            if (!attacker.hasPermission("chunkclaim.admin") && !chunk.isTrusted(attacker.getName())) {
                 event.setCancelled(true);
-            } else {
-                if (!attacker.isOp() && !chunk.isTrusted(attacker.getName())) {
-                    event.setCancelled(true);
-                    ChunkClaim.plugin.sendMsg(attacker, "Not permitted.");
-                }
+                attacker.sendMessage(
+                        ChatColor.YELLOW + "You do not have " +
+                                chunk.getOwnerName() + "'s permission to break vehicles here.");
             }
         }
     }

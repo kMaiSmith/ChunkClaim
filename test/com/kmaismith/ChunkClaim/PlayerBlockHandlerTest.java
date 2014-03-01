@@ -170,7 +170,7 @@ public class PlayerBlockHandlerTest {
 
         systemUnderTest.onPlayerInteractEntity(event);
         Assert.assertTrue(event.isCancelled());
-        verify(mockPlayer).sendMessage("§eYou don't have NotYou's permission to build here.");
+        verify(mockPlayer).sendMessage("§eYou don't have NotYou's permission to interact with entities here.");
     }
 
     @Test
