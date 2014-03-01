@@ -91,7 +91,7 @@ public class ChunkData implements IData {
     }
 
     public int getChunkX() {
-        return chunkZ;
+        return chunkX;
     }
 
     public int getChunkZ() {

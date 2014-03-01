@@ -49,20 +49,15 @@ public class DataManager {
         System.gc();
     }
 
-    public ChunkData getChunkAt(int x, int z, String worldName) {
-        String addressString = worldName + ":" + Integer.toString(x) + ":" + Integer.toString(z);
-
-        return chunks.get(addressString);
-    }
-
     public ChunkData getChunkAt(Location location) {
 
         int x = location.getChunk().getX();
-
         int z = location.getChunk().getZ();
         String world = location.getWorld().getName();
 
-        return getChunkAt(x, z, world);
+        String addressString = world + ":" + Integer.toString(x) + ":" + Integer.toString(z);
+
+        return chunks.get(addressString);
     }
 
     private Collection<ChunkData> getAllChunks() {
