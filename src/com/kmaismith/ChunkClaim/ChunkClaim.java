@@ -26,6 +26,7 @@ import com.kmaismith.ChunkClaim.Data.PlayerData;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.Server;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -242,38 +243,49 @@ public class ChunkClaim extends JavaPlugin {
                 }
 
             } else if (args[0].equalsIgnoreCase("list")) {
-                if (player.hasPermission("chunkclaim.admin")) {
-                    if (args.length == 2) {
 
-                        OfflinePlayer tp = resolvePlayer(args[1]);
-                        if (tp == null) {
+                if (args.length == 1) {
+                    String tName = player.getName();
 
-                            sendMsg(player, "Player not found.");
-                            return true;
-                        }
-                        String tName = tp.getName();
+                    ArrayList<ChunkData> chunksInRadius = this.dataStore.getChunksForPlayer(tName);
 
-                        ArrayList<ChunkData> chunksInRadius = this.dataStore.getChunksForPlayer(tName);
+                    String adminString = "Here are your chunks:";
+                    sendMsg(player, adminString);
 
-                        long loginDays = ((new Date()).getTime() - this.dataStore.readPlayerData(tp.getName()).getLastLogin().getTime()) / (1000 * 60 * 60 * 24);
-                        long joinDays = ((new Date()).getTime() - this.dataStore.readPlayerData(tp.getName()).getFirstJoin().getTime()) / (1000 * 60 * 60 * 24);
-                        String adminString = tp.getName() + " | Last Login: " + loginDays + " days ago. First Join: " + joinDays + " days ago.";
+                    for (ChunkData chunkPlot : chunksInRadius) {
+                        adminString = "ID: " + chunkPlot.getChunkX() + "|" + chunkPlot.getChunkZ() + ", World Location: " + (chunkPlot.getChunkX() * 16) + "|" + (chunkPlot.getChunkZ() * 16);
+
                         sendMsg(player, adminString);
 
-                        for (ChunkData chunkPlot : chunksInRadius) {
-                            adminString = "ID: " + chunkPlot.getChunkX() + "|" + chunkPlot.getChunkZ() + "(" + (chunkPlot.getChunkX() * 16) + "|" + (chunkPlot.getChunkZ() * 16) + ")";
 
-                            adminString += ", Permanent: " + (chunkPlot.getModifiedBlocks() < 0 ? "true" : ("false (" + chunkPlot.getModifiedBlocks() + ")"));
+                    }
+                    return true;
+                } else if (args.length == 2 && player.hasPermission("chunkclaim.admin")) {
 
-                            sendMsg(player, adminString);
+                    OfflinePlayer tp = resolvePlayer(args[1]);
+                    if (tp == null) {
 
-
-                        }
-                        return true;
-                    } else {
-                        sendMsg(player, "Usage: /chunk list <player>");
+                        sendMsg(player, "Player not found.");
                         return true;
                     }
+                    String tName = args[1];
+
+                    ArrayList<ChunkData> chunksInRadius = this.dataStore.getChunksForPlayer(tName);
+
+                    long loginDays = ((new Date()).getTime() - this.dataStore.readPlayerData(tName).getLastLogin().getTime()) / (1000 * 60 * 60 * 24);
+                    long joinDays = ((new Date()).getTime() - this.dataStore.readPlayerData(tName).getFirstJoin().getTime()) / (1000 * 60 * 60 * 24);
+                    String adminString = tName + " | Last Login: " + loginDays + " days ago. First Join: " + joinDays + " days ago.";
+                    sendMsg(player, adminString);
+
+                    for (ChunkData chunkPlot : chunksInRadius) {
+                        adminString = "ID: " + chunkPlot.getChunkX() + "|" + chunkPlot.getChunkZ() + ", World Location: " + (chunkPlot.getChunkX() * 16) + "|" + (chunkPlot.getChunkZ() * 16);
+
+                        sendMsg(player, adminString);
+
+
+                    }
+                    return true;
+
                 } else {
                     return false;
                 }
@@ -365,21 +377,17 @@ public class ChunkClaim extends JavaPlugin {
 
     OfflinePlayer resolvePlayer(String name) {
 
-        Player player = this.getServer().getPlayer(name);
+        Player player = this.getServerWrapper().getPlayer(name);
         if (player != null)
             return player;
 
         // then search offline players
-        OfflinePlayer[] offlinePlayers = this.getServer().getOfflinePlayers();
-        for (OfflinePlayer offlinePlayer : offlinePlayers) {
-            if (offlinePlayer.getName().equalsIgnoreCase(name)) {
-                return offlinePlayer;
-            }
-        }
+        return this.getServerWrapper().getOfflinePlayer(name);
 
-        // if none found, return null
-        return null;
+    }
 
+    Server getServerWrapper() {
+        return this.getServer();
     }
 
     public static void addLogEntry(String entry) {

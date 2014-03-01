@@ -5,6 +5,8 @@ import com.kmaismith.ChunkClaim.Data.DataManager;
 import com.kmaismith.ChunkClaim.Data.PlayerData;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.Server;
 import org.bukkit.command.Command;
 import org.bukkit.entity.Player;
 import org.junit.Before;
@@ -29,7 +31,7 @@ public class ChunkCommandTest {
 
     @Before
     public void setupTestCase() {
-        systemUnderTest = new ChunkClaim();
+        systemUnderTest = spy(new ChunkClaim());
         systemUnderTest.dataStore = mock(DataManager.class);
 
         mockPlayer = mock(Player.class);
@@ -48,6 +50,10 @@ public class ChunkCommandTest {
         when(bukkitChunk.getZ()).thenReturn(z);
 
         Location mockLocation = mock(Location.class);
+
+        when(mockLocation.getBlockX()).thenReturn(x * 16);
+        when(mockLocation.getBlockZ()).thenReturn(z * 16);
+
         when(mockLocation.getChunk()).thenReturn(bukkitChunk);
         when(mockPlayer.getLocation()).thenReturn(mockLocation);
         return mockLocation;
@@ -74,11 +80,21 @@ public class ChunkCommandTest {
         return chunk;
     }
 
-    private PlayerData setupPlayer(String playerName, int daysSinceLogin) {
+    private ChunkData setupChunk(String playerName, final ArrayList<String> trustedBuilders, int x, int z) {
+        ChunkData chunk = setupChunk(playerName, trustedBuilders, setupLocation(x, z));
+
+        when(chunk.getChunkX()).thenReturn(x);
+        when(chunk.getChunkZ()).thenReturn(z);
+        return chunk;
+    }
+
+    private PlayerData setupPlayer(String playerName, int daysSinceLogin, int daysSinceFirstLogin) {
         PlayerData player = mock(PlayerData.class);
         when(systemUnderTest.dataStore.readPlayerData(playerName)).thenReturn(player);
         Date lastLogin = new Date((new Date()).getTime() - daysSinceLogin);
         when(player.getLastLogin()).thenReturn(lastLogin);
+        Date firstLogin = new Date((new Date()).getTime() - daysSinceFirstLogin);
+        when(player.getFirstJoin()).thenReturn(firstLogin);
         return player;
     }
 
@@ -93,7 +109,7 @@ public class ChunkCommandTest {
 
     @Test
     public void testChunkCommandSaysWhoOwnsTheChunkWhenTheChunkIsClaimed() {
-        setupChunk("RandomPlayer", new ArrayList<String>(), null);
+        setupChunk("RandomPlayer", new ArrayList<String>(), setupLocation(0, 0));
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
         verify(mockPlayer).sendMessage("§eRandomPlayer owns this chunk. You can't build here.");
@@ -117,7 +133,7 @@ public class ChunkCommandTest {
         setupChunk("APlayer",
                 new ArrayList<String>(Arrays.asList(new String[]{"PlayerA", "PlayerB"})),
                 mockLocation);
-        setupPlayer("APlayer", 2 * dayInMilliseconds);
+        setupPlayer("APlayer", 2 * dayInMilliseconds, 4 * dayInMilliseconds);
 
         // End of super awesome setup stuff
 
@@ -145,7 +161,7 @@ public class ChunkCommandTest {
         setupChunk("SamplePlayer",
                 new ArrayList<String>(Arrays.asList(new String[]{"PlayerA", "PlayerB"})),
                 mockLocation);
-        setupPlayer("SamplePlayer", 2 * dayInMilliseconds);
+        setupPlayer("SamplePlayer", 2 * dayInMilliseconds, 4 * dayInMilliseconds);
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
 
@@ -165,7 +181,7 @@ public class ChunkCommandTest {
         setupChunk("APlayer",
                 new ArrayList<String>(Arrays.asList(new String[]{"PlayerA", "PlayerB"})),
                 mockLocation);
-        setupPlayer("APlayer", 2 * dayInMilliseconds);
+        setupPlayer("APlayer", 2 * dayInMilliseconds, 4 * dayInMilliseconds);
 
         // End of super awesome setup stuff
 
@@ -186,7 +202,7 @@ public class ChunkCommandTest {
         ChunkData mockChunk = setupChunk("APlayer",
                 new ArrayList<String>(),
                 mockLocation);
-        setupPlayer("APlayer", 0);
+        setupPlayer("APlayer", 0, 4 * dayInMilliseconds);
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
 
@@ -202,7 +218,7 @@ public class ChunkCommandTest {
         ChunkData mockChunk = setupChunk("SamplePlayer",
                 new ArrayList<String>(),
                 mockLocation);
-        setupPlayer("APlayer", 0);
+        setupPlayer("APlayer", 0, 4 * dayInMilliseconds);
         setPlayerAsAdmin();
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
@@ -219,7 +235,7 @@ public class ChunkCommandTest {
         ChunkData mockChunk = setupChunk("SamplePlayer",
                 new ArrayList<String>(),
                 mockLocation);
-        setupPlayer("SamplePlayer", 0);
+        setupPlayer("SamplePlayer", 0, 4 * dayInMilliseconds);
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
 
@@ -245,7 +261,7 @@ public class ChunkCommandTest {
         setupChunk("APlayer",
                 new ArrayList<String>(),
                 mockLocation);
-        PlayerData playerMock = setupPlayer("APlayer", 0);
+        PlayerData playerMock = setupPlayer("APlayer", 0, 4 * dayInMilliseconds);
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
         verify(playerMock).addCredit();
@@ -256,7 +272,7 @@ public class ChunkCommandTest {
     @Test
     public void testChunkCreditsShowsHowManyCreditsAPlayerHas() {
         args = new String[]{"credits"};
-        PlayerData playerMock = setupPlayer("APlayer", 0);
+        PlayerData playerMock = setupPlayer("APlayer", 0, 4 * dayInMilliseconds);
         when(playerMock.getCredits()).thenReturn(7);
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
@@ -265,6 +281,67 @@ public class ChunkCommandTest {
 
     // /chunk list
     @Test
-    public void testChunkList() {
+    public void testChunkListDisplaysAListOfChunksOwnedByPlayerWhenPlayerIsOnline() {
+        args = new String[]{"list", "ListablePlayer"};
+        setupPlayer("ListablePlayer", dayInMilliseconds, 4 * dayInMilliseconds);
+        setPlayerAsAdmin();
+        Server mockServer = mock(Server.class);
+        Player onlinePlayer = mock(Player.class);
+
+        when(systemUnderTest.getServerWrapper()).thenReturn(mockServer);
+        when(mockServer.getPlayer("ListablePlayer")).thenReturn(onlinePlayer);
+
+        setupPlayersChunks("ListablePlayer");
+
+        systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
+
+        verify(mockPlayer).sendMessage("§eListablePlayer | Last Login: 1 days ago. First Join: 4 days ago.");
+        verify(mockPlayer).sendMessage("§eID: 12|34, World Location: 192|544");
+        verify(mockPlayer).sendMessage("§eID: 13|35, World Location: 208|560");
+    }
+
+    @Test
+    public void testChunkListDisplaysAListOfChunksOwnedByPlayerWhenPlayerIsOffline() {
+        args = new String[]{"list", "ListablePlayer"};
+        setupPlayer("ListablePlayer", dayInMilliseconds, 4 * dayInMilliseconds);
+        setPlayerAsAdmin();
+
+        Server mockServer = mock(Server.class);
+        OfflinePlayer offlinePlayer = mock(OfflinePlayer.class);
+        when(systemUnderTest.getServerWrapper()).thenReturn(mockServer);
+        when(mockServer.getOfflinePlayer("ListablePlayer")).thenReturn(offlinePlayer);
+
+        setupPlayersChunks("ListablePlayer");
+
+        systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
+
+        verify(mockPlayer).sendMessage("§eListablePlayer | Last Login: 1 days ago. First Join: 4 days ago.");
+        verify(mockPlayer).sendMessage("§eID: 12|34, World Location: 192|544");
+        verify(mockPlayer).sendMessage("§eID: 13|35, World Location: 208|560");
+    }
+
+    @Test
+    public void testNonAdminPlayersCanListTheirOwnChunks() {
+        args = new String[]{"list"};
+        setupPlayer("APlayer", dayInMilliseconds, 4 * dayInMilliseconds);
+
+        setupPlayersChunks("APlayer");
+
+        systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
+
+        verify(mockPlayer).sendMessage("§eHere are your chunks:");
+        verify(mockPlayer).sendMessage("§eID: 12|34, World Location: 192|544");
+        verify(mockPlayer).sendMessage("§eID: 13|35, World Location: 208|560");
+    }
+
+    private void setupPlayersChunks(String playername) {
+        ArrayList<ChunkData> twoChunk = new ArrayList<ChunkData>();
+
+        ChunkData chunkOne = setupChunk(playername, null, 12, 34);
+        ChunkData chunkTwo = setupChunk(playername, null, 13, 35);
+        twoChunk.add(chunkOne);
+        twoChunk.add(chunkTwo);
+
+        when(systemUnderTest.dataStore.getChunksForPlayer(playername)).thenReturn(twoChunk);
     }
 }
