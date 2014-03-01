@@ -57,5 +57,4 @@ public class PlayerJoinHandlerTest {
         verify(mockDataManager).savePlayerData(chunkPlayer);
         verify(mockDataManager).clearCachedPlayerData("PlayerPerson");
     }
-
 }

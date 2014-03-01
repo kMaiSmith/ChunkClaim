@@ -23,7 +23,11 @@ package com.github.schmidtbochum.chunkclaim;
 import com.github.schmidtbochum.chunkclaim.Data.ChunkData;
 import com.github.schmidtbochum.chunkclaim.Data.DataManager;
 import org.bukkit.ChatColor;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Monster;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -38,79 +42,49 @@ public class EntityEventHandler implements Listener {
         this.dataStore = dataStore;
     }
 
-    //when an entity is damaged
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
-    public void onEntityDamage(EntityDamageEvent event) {
-        //only actually interested in entities damaging entities (ignoring environmental damage)
-        if (!(event instanceof EntityDamageByEntityEvent)) return;
-
-        //monsters are never protected
-        if (event.getEntity() instanceof Monster) return;
-        EntityDamageByEntityEvent subEvent = (EntityDamageByEntityEvent) event;
-
-        //determine which player is attacking, if any
-        Player attacker = null;
-        Arrow arrow;
-        Entity damageSource = subEvent.getDamager();
+    private Player getAttackingPlayer(Entity damageSource) {
         if (damageSource instanceof Player) {
-            attacker = (Player) damageSource;
-        } else if (damageSource instanceof Arrow) {
-            arrow = (Arrow) damageSource;
-            if (arrow.getShooter() instanceof Player) {
-                attacker = (Player) arrow.getShooter();
-            }
-        } else if (damageSource instanceof ThrownPotion) {
-            ThrownPotion potion = (ThrownPotion) damageSource;
-            if (potion.getShooter() instanceof Player) {
-                attacker = (Player) potion.getShooter();
-            }
-        }
-        //if the entity is an non-monster creature (remember monsters disqualified above), or a vehicle
-        if ((subEvent.getEntity() instanceof Creature)) {
-            ChunkData chunk = dataStore.getChunkAt(event.getEntity().getLocation());
-
-            //if it's claimed
-            if (chunk != null) {
-                if (attacker == null) {
-                    event.setCancelled(true);
-                } else {
-                    if (!attacker.isOp() && !chunk.isTrusted(attacker.getName())) {
-                        event.setCancelled(true);
-                        ChunkClaim.plugin.sendMsg(attacker, "Not permitted.");
-                    }
-                }
-            }
-        }
-    }
-
-    //when a vehicle is damaged
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-    public void onVehicleDamage(VehicleDamageEvent event) {
-        //determine which player is attacking, if any
-        Player attacker = null;
-        Entity damageSource = event.getAttacker();
-        if (damageSource instanceof Player) {
-            attacker = (Player) damageSource;
+            return (Player) damageSource;
         } else if (damageSource instanceof Projectile) {
             Projectile projectile = (Projectile) damageSource;
             if (projectile.getShooter() instanceof Player) {
-                attacker = (Player) projectile.getShooter();
-            } else {
-                return;
+                return (Player) projectile.getShooter();
             }
-        } else {
-            return;
         }
+        return null;
+    }
 
-        ChunkData chunk = dataStore.getChunkAt(event.getVehicle().getLocation());
-
-        if (chunk != null) {
+    private void revokeIfNotPermitted(Player attacker, ChunkData chunk, Cancellable event, String message) {
+        if (chunk != null && attacker != null) {
             if (!attacker.hasPermission("chunkclaim.admin") && !chunk.isTrusted(attacker.getName())) {
                 event.setCancelled(true);
                 attacker.sendMessage(
                         ChatColor.YELLOW + "You do not have " +
-                                chunk.getOwnerName() + "'s permission to break vehicles here.");
+                                chunk.getOwnerName() + "'s permission to " + message + " here.");
             }
         }
     }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    public void onEntityDamage(EntityDamageEvent event) {
+        Entity damagedEntity = event.getEntity();
+        if (!(event instanceof EntityDamageByEntityEvent) || (damagedEntity instanceof Monster)) {
+            return;
+        }
+
+        Player attacker = getAttackingPlayer(((EntityDamageByEntityEvent) event).getDamager());
+        ChunkData chunk = dataStore.getChunkAt(event.getEntity().getLocation());
+
+        revokeIfNotPermitted(attacker, chunk, event, "hurt creatures");
+
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+    public void onVehicleDamage(VehicleDamageEvent event) {
+        Player attacker = getAttackingPlayer(event.getAttacker());
+        ChunkData chunk = dataStore.getChunkAt(event.getVehicle().getLocation());
+
+        revokeIfNotPermitted(attacker, chunk, event, "break vehicles");
+    }
+
 }
