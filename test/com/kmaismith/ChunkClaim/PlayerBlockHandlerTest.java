@@ -193,4 +193,15 @@ public class PlayerBlockHandlerTest {
         Assert.assertFalse(event.isCancelled());
     }
 
+    @Test
+    public void testInteractingWithAirIsHandledGracefully() {
+        PlayerInteractEvent event = new PlayerInteractEvent(mockPlayer, null, null, null, null);
+
+        try {
+            systemUnderTest.onPlayerInteract(event);
+        } catch (NullPointerException e) {
+            Assert.assertFalse("event.getClickedBlock() failed to get block because it was null", true);
+        }
+    }
+
 }

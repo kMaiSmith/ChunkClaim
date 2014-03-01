@@ -90,9 +90,13 @@ public class PlayerEventHandler extends ChunkClaimEventHandler implements Listen
     @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
-        Block clickedBlock = event.getClickedBlock();
-        ChunkData chunk = this.dataStore.getChunkAt(clickedBlock.getLocation());
+        try {
+            Block clickedBlock = event.getClickedBlock();
+            ChunkData chunk = this.dataStore.getChunkAt(clickedBlock.getLocation());
 
-        revokeIfNotPermitted(player, chunk, event, "build");
+            revokeIfNotPermitted(player, chunk, event, "build");
+        } catch (NullPointerException e) {
+            return;
+        }
     }
 }
