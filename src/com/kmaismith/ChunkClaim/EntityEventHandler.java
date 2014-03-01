@@ -33,7 +33,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
 
-public class EntityEventHandler extends ChunkClaimEventHandler implements Listener {
+class EntityEventHandler extends ChunkClaimEventHandler implements Listener {
     private final DataManager dataStore;
 
     public EntityEventHandler(DataManager dataStore) {
@@ -53,7 +53,7 @@ public class EntityEventHandler extends ChunkClaimEventHandler implements Listen
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
-    public void onEntityDamage(EntityDamageEvent event) {
+    void onEntityDamage(EntityDamageEvent event) {
         Entity damagedEntity = event.getEntity();
         if (!(event instanceof EntityDamageByEntityEvent) || (damagedEntity instanceof Monster)) {
             return;
@@ -67,7 +67,7 @@ public class EntityEventHandler extends ChunkClaimEventHandler implements Listen
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-    public void onVehicleDamage(VehicleDamageEvent event) {
+    void onVehicleDamage(VehicleDamageEvent event) {
         Player attacker = getAttackingPlayer(event.getAttacker());
         ChunkData chunk = dataStore.getChunkAt(event.getVehicle().getLocation());
 

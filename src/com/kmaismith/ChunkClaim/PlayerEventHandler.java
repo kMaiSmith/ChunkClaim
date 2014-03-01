@@ -32,7 +32,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.*;
 
-public class PlayerEventHandler extends ChunkClaimEventHandler implements Listener {
+class PlayerEventHandler extends ChunkClaimEventHandler implements Listener {
 
     private final DataManager dataStore;
 
@@ -41,7 +41,7 @@ public class PlayerEventHandler extends ChunkClaimEventHandler implements Listen
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
-    public void onPlayerJoin(PlayerJoinEvent event) {
+    void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         PlayerData playerData = this.dataStore.readPlayerData(player.getName());
 
@@ -52,7 +52,7 @@ public class PlayerEventHandler extends ChunkClaimEventHandler implements Listen
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void onPlayerQuit(PlayerQuitEvent event) {
+    void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
         PlayerData playerData = this.dataStore.readPlayerData(player.getName());
 
@@ -61,7 +61,7 @@ public class PlayerEventHandler extends ChunkClaimEventHandler implements Listen
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-    public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
+    void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
         Player player = event.getPlayer();
         Entity entity = event.getRightClicked();
         ChunkData chunk = this.dataStore.getChunkAt(entity.getLocation());
@@ -70,7 +70,7 @@ public class PlayerEventHandler extends ChunkClaimEventHandler implements Listen
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-    public void onPlayerBucketEmpty(PlayerBucketEmptyEvent event) {
+    void onPlayerBucketEmpty(PlayerBucketEmptyEvent event) {
         Player player = event.getPlayer();
         Block block = event.getBlockClicked();
         ChunkData chunk = this.dataStore.getChunkAt(block.getLocation());
@@ -79,7 +79,7 @@ public class PlayerEventHandler extends ChunkClaimEventHandler implements Listen
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-    public void onPlayerBucketFill(PlayerBucketFillEvent event) {
+    void onPlayerBucketFill(PlayerBucketFillEvent event) {
         Player player = event.getPlayer();
         Block block = event.getBlockClicked();
         ChunkData chunk = this.dataStore.getChunkAt(block.getLocation());
@@ -88,7 +88,7 @@ public class PlayerEventHandler extends ChunkClaimEventHandler implements Listen
     }
 
     @EventHandler(priority = EventPriority.HIGH)
-    public void onPlayerInteract(PlayerInteractEvent event) {
+    void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         try {
             Block clickedBlock = event.getClickedBlock();
@@ -96,8 +96,7 @@ public class PlayerEventHandler extends ChunkClaimEventHandler implements Listen
 
             revokeIfNotPermitted(player, chunk, event, "build");
         } catch (NullPointerException e) {
-            // TODO: make this prettier
-            return;
+            // now the catch block isn't empty
         }
     }
 }

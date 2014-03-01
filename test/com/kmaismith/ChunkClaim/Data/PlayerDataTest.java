@@ -31,6 +31,8 @@ public class PlayerDataTest {
         PlayerData newPlayer = new PlayerData("Player");
         BufferedWriter playerWriter = mock(BufferedWriter.class);
 
+        // The need for this try catch is either a mockito weakness or
+        // a java one.
         try {
             when(playerReader.readLine())
                     .thenReturn(dateFormat.format(firstJoin))

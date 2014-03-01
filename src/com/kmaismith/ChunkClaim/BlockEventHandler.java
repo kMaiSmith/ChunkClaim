@@ -35,7 +35,7 @@ import org.bukkit.util.Vector;
 
 import java.util.List;
 
-public class BlockEventHandler implements Listener {
+class BlockEventHandler implements Listener {
 
     private final DataManager dataManager;
 
@@ -45,7 +45,7 @@ public class BlockEventHandler implements Listener {
 
     //when a player breaks a block...
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-    public void onBlockBreak(BlockBreakEvent event) {
+    void onBlockBreak(BlockBreakEvent event) {
 
         Player player = event.getPlayer();
         Block block = event.getBlock();
@@ -66,7 +66,7 @@ public class BlockEventHandler implements Listener {
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-    public void onBlockPlace(BlockPlaceEvent event) {
+    void onBlockPlace(BlockPlaceEvent event) {
 
         Player player = event.getPlayer();
         Block block = event.getBlock();
@@ -85,7 +85,7 @@ public class BlockEventHandler implements Listener {
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-    public void onBlockPistonExtend(BlockPistonExtendEvent event) {
+    void onBlockPistonExtend(BlockPistonExtendEvent event) {
         Block piston = event.getBlock();
         ChunkData pistonChunk = this.dataManager.getChunkAt(piston.getLocation());
         String pistonOwnerName = (pistonChunk == null) ? null : pistonChunk.getOwnerName();
@@ -115,7 +115,7 @@ public class BlockEventHandler implements Listener {
 
     //blocks theft by pulling blocks out of a claim (again pistons)
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-    public void onBlockPistonRetract(BlockPistonRetractEvent event) {
+    void onBlockPistonRetract(BlockPistonRetractEvent event) {
 
         //we only care about sticky pistons
         if (!event.isSticky()) return;
@@ -142,7 +142,7 @@ public class BlockEventHandler implements Listener {
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-    public void onBlockFromTo(BlockFromToEvent spreadEvent) {
+    void onBlockFromTo(BlockFromToEvent spreadEvent) {
         //from where?
         Block fromBlock = spreadEvent.getBlock();
         ChunkData fromChunk = this.dataManager.getChunkAt(fromBlock.getLocation());
@@ -164,7 +164,7 @@ public class BlockEventHandler implements Listener {
 
     //ensures dispensers can't be used to dispense a block(like water or lava) or item across a claim boundary
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-    public void onDispense(BlockDispenseEvent dispenseEvent) {
+    void onDispense(BlockDispenseEvent dispenseEvent) {
         //from where?
         Block fromBlock = dispenseEvent.getBlock();
 
