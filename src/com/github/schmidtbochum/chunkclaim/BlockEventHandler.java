@@ -59,7 +59,7 @@ class BlockEventHandler implements Listener {
             return;
         }
 
-        if (!(player.isOp() || player.hasPermission("chunkclaim.admin")) && !chunk.isTrusted(player.getName())) {
+        if (!player.hasPermission("chunkclaim.admin") && !chunk.isTrusted(player.getName())) {
 
             ChunkClaim.plugin.sendMsg(player, "You don't have " + chunk.getOwnerName() + "'s permission to build here.");
 
@@ -81,7 +81,7 @@ class BlockEventHandler implements Listener {
             return;
         }
 
-        if (!(player.isOp() || player.hasPermission("chunkclaim.admin")) && !chunk.isTrusted(player.getName())) {
+        if (!player.hasPermission("chunkclaim.admin") && !chunk.isTrusted(player.getName())) {
             ChunkClaim.plugin.sendMsg(player, "You don't have " + chunk.getOwnerName() + "'s permission to build here.");
             event.setCancelled(true);
         }
