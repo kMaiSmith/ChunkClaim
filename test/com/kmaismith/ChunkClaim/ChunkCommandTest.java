@@ -7,6 +7,7 @@ import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.entity.Player;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -26,12 +27,13 @@ public class ChunkCommandTest {
 
     private static int dayInMilliseconds = 1000 * 60 * 60 * 24;
 
-    private void basicSetup(String playerName) {
+    @Before
+    public void setupTestCase() {
         systemUnderTest = new ChunkClaim();
         systemUnderTest.dataStore = mock(DataManager.class);
 
         mockPlayer = mock(Player.class);
-        when(mockPlayer.getName()).thenReturn(playerName);
+        when(mockPlayer.getName()).thenReturn("APlayer");
 
         mockCommand = mock(Command.class);
         when(mockCommand.getName()).thenReturn("chunk");
@@ -80,10 +82,10 @@ public class ChunkCommandTest {
         return player;
     }
 
+    // /chunk
+
     @Test
     public void testChunkCommandSaysTheChunkIsPublicWhenTheChunkIsntClaimed() {
-        basicSetup("");
-
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
         verify(mockPlayer).sendMessage("§eThis chunk is public.");
 
@@ -91,8 +93,6 @@ public class ChunkCommandTest {
 
     @Test
     public void testChunkCommandSaysWhoOwnsTheChunkWhenTheChunkIsClaimed() {
-        basicSetup("FriendlyPlayer");
-
         setupChunk("RandomPlayer", new ArrayList<String>(), null);
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
@@ -101,10 +101,8 @@ public class ChunkCommandTest {
 
     @Test
     public void testChunkCommandSaysYouHaveBuildRightsWhenYouAreTrustedOnAChunk() {
-        basicSetup("FriendlyPlayer");
-
         setupChunk("RandomPlayer",
-                new ArrayList<String>(Arrays.asList(new String[]{"FriendlyPlayer"})),
+                new ArrayList<String>(Arrays.asList(new String[]{"APlayer"})),
                 null);
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
@@ -113,15 +111,13 @@ public class ChunkCommandTest {
 
     @Test
     public void testChunkCommandGivesAListOfTrustedBuildersWhenYouOwnTheChunk() {
-        basicSetup("SamplePlayer");
-
         // Super awesome setup stuff, prone to changing with flow changes
 
         Location mockLocation = setupLocation(12, -34);
-        setupChunk("SamplePlayer",
+        setupChunk("APlayer",
                 new ArrayList<String>(Arrays.asList(new String[]{"PlayerA", "PlayerB"})),
                 mockLocation);
-        setupPlayer("SamplePlayer", 2 * dayInMilliseconds);
+        setupPlayer("APlayer", 2 * dayInMilliseconds);
 
         // End of super awesome setup stuff
 
@@ -133,8 +129,6 @@ public class ChunkCommandTest {
 
     @Test
     public void testChunkCommandTellsTheChunkIdWhenPlayerHasAdminRightsAndTheChunkIsntClaimed() {
-        basicSetup("");
-
         setupLocation(12, -34);
 
         setPlayerAsAdmin();
@@ -146,18 +140,12 @@ public class ChunkCommandTest {
 
     @Test
     public void testChunkCommandGivesDaysSinceLastLoginAndTrustedBuilderAndOwnerWhenCalledByAdminWhoIsNotTheOwner() {
-        basicSetup("");
-
-        // Super awesome setup stuff, prone to changing with flow changes
-
         Location mockLocation = setupLocation(12, -34);
         setPlayerAsAdmin();
         setupChunk("SamplePlayer",
                 new ArrayList<String>(Arrays.asList(new String[]{"PlayerA", "PlayerB"})),
                 mockLocation);
         setupPlayer("SamplePlayer", 2 * dayInMilliseconds);
-
-        // End of super awesome setup stuff
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
 
@@ -170,16 +158,14 @@ public class ChunkCommandTest {
 
     @Test
     public void testChunkCommandShowsChunkIDAndStandardInformationIfOwner() {
-        basicSetup("SamplePlayer");
-
         // Super awesome setup stuff, prone to changing with flow changes
 
         Location mockLocation = setupLocation(12, -34);
         setPlayerAsAdmin();
-        setupChunk("SamplePlayer",
+        setupChunk("APlayer",
                 new ArrayList<String>(Arrays.asList(new String[]{"PlayerA", "PlayerB"})),
                 mockLocation);
-        setupPlayer("SamplePlayer", 2 * dayInMilliseconds);
+        setupPlayer("APlayer", 2 * dayInMilliseconds);
 
         // End of super awesome setup stuff
 
@@ -190,16 +176,17 @@ public class ChunkCommandTest {
         verify(mockPlayer).sendMessage("§eTrusted Builders: PlayerA PlayerB ");
     }
 
+    // /chunk abandon
+
     @Test
     public void testChunkAbandonCommandAbandonsTheChunkBeingStoodIn() {
-        basicSetup("SamplePlayer");
         args = new String[]{"abandon"};
 
         Location mockLocation = setupLocation(12, -34);
-        ChunkData mockChunk = setupChunk("SamplePlayer",
+        ChunkData mockChunk = setupChunk("APlayer",
                 new ArrayList<String>(),
                 mockLocation);
-        setupPlayer("SamplePlayer", 0);
+        setupPlayer("APlayer", 0);
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
 
@@ -209,15 +196,13 @@ public class ChunkCommandTest {
 
     @Test
     public void testChunkAbandonCommandAbandonsTheChunkIfAdminAndNotOwnedByPlayer() {
-        basicSetup("AdminPlayer");
         args = new String[]{"abandon"};
 
         Location mockLocation = setupLocation(12, -34);
         ChunkData mockChunk = setupChunk("SamplePlayer",
                 new ArrayList<String>(),
                 mockLocation);
-        setupPlayer("SamplePlayer", 0);
-        setupPlayer("AdminPlayer", 0);
+        setupPlayer("APlayer", 0);
         setPlayerAsAdmin();
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
@@ -228,7 +213,6 @@ public class ChunkCommandTest {
 
     @Test
     public void testChunkAbandonCommandDoesNotAbandonIfNonAdminAndPlayerDoesntOwnChunk() {
-        basicSetup("OtherPlayer");
         args = new String[]{"abandon"};
 
         Location mockLocation = setupLocation(12, -34);
@@ -245,7 +229,6 @@ public class ChunkCommandTest {
 
     @Test
     public void testChunkAbandonCommandSpitsOutAnError() {
-        basicSetup("OtherPlayer");
         args = new String[]{"abandon"};
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
@@ -256,27 +239,32 @@ public class ChunkCommandTest {
 
     @Test
     public void testChunkAbandonReturnsACreditForAbandoning() {
-        basicSetup("SamplePlayer");
         args = new String[]{"abandon"};
 
         Location mockLocation = setupLocation(12, -34);
-        setupChunk("SamplePlayer",
+        setupChunk("APlayer",
                 new ArrayList<String>(),
                 mockLocation);
-        PlayerData playerMock = setupPlayer("SamplePlayer", 0);
+        PlayerData playerMock = setupPlayer("APlayer", 0);
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
         verify(playerMock).addCredit();
     }
 
+    // /chunk credits
+
     @Test
     public void testChunkCreditsShowsHowManyCreditsAPlayerHas() {
-        basicSetup("SamplePlayer");
         args = new String[]{"credits"};
-        PlayerData playerMock = setupPlayer("SamplePlayer", 0);
+        PlayerData playerMock = setupPlayer("APlayer", 0);
         when(playerMock.getCredits()).thenReturn(7);
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
         verify(mockPlayer).sendMessage("§eYou have 7 credits.");
+    }
+
+    // /chunk list
+    @Test
+    public void testChunkList() {
     }
 }

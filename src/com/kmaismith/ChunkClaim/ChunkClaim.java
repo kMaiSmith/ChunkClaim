@@ -102,82 +102,15 @@ public class ChunkClaim extends JavaPlugin {
         if (cmd.getName().equalsIgnoreCase("chunk") && player != null) {
             if (args.length == 0) {
 
-                ChunkData chunk = this.dataStore.getChunkAt(player.getLocation());
-                Location location = player.getLocation();
+                return handleChunkInfoCommand(player);
 
-                if (player.hasPermission("chunkclaim.admin")) {
-                    sendMsg(player, "ID: " + location.getChunk().getX() + "," + location.getChunk().getZ());
-                    if (chunk != null && !chunk.getOwnerName().equals(player.getName())) {
-                        long loginDays = ((new Date()).getTime() - this.dataStore.readPlayerData(chunk.getOwnerName()).getLastLogin().getTime()) / (1000 * 60 * 60 * 24);
-                        sendMsg(player, "Last Login: " + loginDays + " days ago.");
-                        StringBuilder builders = new StringBuilder();
-                        for (String builder : chunk.getBuilderNames()) {
-                            builders.append(builder);
-                            builders.append(" ");
-                        }
-                        sendMsg(player, "Trusted Builders: " + builders.toString());
-                        sendMsg(player, chunk.getOwnerName() + " owns this chunk.");
-                        return true;
-                    }
-                }
-
-                if (chunk == null) {
-                    sendMsg(player, "This chunk is public.");
-                    return true;
-
-                } else if (chunk.getOwnerName().equals(player.getName())) {
-                    if (chunk.getBuilderNames().size() > 0) {
-                        StringBuilder builders = new StringBuilder();
-                        for (String builder : chunk.getBuilderNames()) {
-                            builders.append(builder);
-                            builders.append(" ");
-                        }
-                        sendMsg(player, "You own this chunk.");
-                        sendMsg(player, "Trusted Builders: " + builders.toString());
-
-                    } else {
-                        sendMsg(player, "You own this chunk. Use /chunk trust <player> to add other builders.");
-                    }
-                    return true;
-
-                } else {
-
-                    if (chunk.isTrusted(player.getName())) {
-                        sendMsg(player, chunk.getOwnerName() + " owns this chunk. You have build rights!");
-                    } else {
-
-                        sendMsg(player, chunk.getOwnerName() + " owns this chunk. You can't build here.");
-
-                    }
-                    return true;
-                }
             } else if (args[0].equalsIgnoreCase("abandon")) {
-                ChunkData chunk = this.dataStore.getChunkAt(player.getLocation());
-                PlayerData playerData = this.dataStore.readPlayerData(player.getName());
 
-                if (chunk == null) {
-                    sendMsg(player, "This chunk is public.");
-
-
-                } else if (chunk.getOwnerName().equals(player.getName()) || player.hasPermission("chunkclaim.admin")) {
-                    this.dataStore.deleteChunk(chunk);
-                    playerData.addCredit();
-                    this.dataStore.savePlayerData(playerData);
-                    sendMsg(player, "ChunkData abandoned. Credits: " + playerData.getCredits());
-                    return true;
-
-                } else {
-
-                    sendMsg(player, "You don't own this chunk. Only " + chunk.getOwnerName() + " or the staff can delete it.");
-                    return true;
-                }
-
+                return handeChunkAbandon(player);
 
             } else if (args[0].equalsIgnoreCase("credits")) {
 
-                PlayerData playerData = this.dataStore.readPlayerData(player.getName());
-                sendMsg(player, "You have " + playerData.getCredits() + " credits.");
-                return true;
+                return handleChunkCredits(player);
 
             } else if (args[0].equalsIgnoreCase("trust")) {
 
@@ -347,6 +280,87 @@ public class ChunkClaim extends JavaPlugin {
             }
         }
         return false;
+    }
+
+    private boolean handleChunkCredits(Player player) {
+        PlayerData playerData = this.dataStore.readPlayerData(player.getName());
+        sendMsg(player, "You have " + playerData.getCredits() + " credits.");
+        return true;
+    }
+
+    private boolean handeChunkAbandon(Player player) {
+        ChunkData chunk = this.dataStore.getChunkAt(player.getLocation());
+        PlayerData playerData = this.dataStore.readPlayerData(player.getName());
+
+        if (chunk == null) {
+            sendMsg(player, "This chunk is public.");
+
+
+        } else if (chunk.getOwnerName().equals(player.getName()) || player.hasPermission("chunkclaim.admin")) {
+            this.dataStore.deleteChunk(chunk);
+            playerData.addCredit();
+            this.dataStore.savePlayerData(playerData);
+            sendMsg(player, "ChunkData abandoned. Credits: " + playerData.getCredits());
+            return true;
+
+        } else {
+
+            sendMsg(player, "You don't own this chunk. Only " + chunk.getOwnerName() + " or the staff can delete it.");
+            return true;
+        }
+        return false;
+    }
+
+    private boolean handleChunkInfoCommand(Player player) {
+        ChunkData chunk = this.dataStore.getChunkAt(player.getLocation());
+        Location location = player.getLocation();
+
+        if (player.hasPermission("chunkclaim.admin")) {
+            sendMsg(player, "ID: " + location.getChunk().getX() + "," + location.getChunk().getZ());
+            if (chunk != null && !chunk.getOwnerName().equals(player.getName())) {
+                long loginDays = ((new Date()).getTime() - this.dataStore.readPlayerData(chunk.getOwnerName()).getLastLogin().getTime()) / (1000 * 60 * 60 * 24);
+                sendMsg(player, "Last Login: " + loginDays + " days ago.");
+                StringBuilder builders = new StringBuilder();
+                for (String builder : chunk.getBuilderNames()) {
+                    builders.append(builder);
+                    builders.append(" ");
+                }
+                sendMsg(player, "Trusted Builders: " + builders.toString());
+                sendMsg(player, chunk.getOwnerName() + " owns this chunk.");
+                return true;
+            }
+        }
+
+        if (chunk == null) {
+            sendMsg(player, "This chunk is public.");
+            return true;
+
+        } else if (chunk.getOwnerName().equals(player.getName())) {
+            if (chunk.getBuilderNames().size() > 0) {
+                StringBuilder builders = new StringBuilder();
+                for (String builder : chunk.getBuilderNames()) {
+                    builders.append(builder);
+                    builders.append(" ");
+                }
+                sendMsg(player, "You own this chunk.");
+                sendMsg(player, "Trusted Builders: " + builders.toString());
+
+            } else {
+                sendMsg(player, "You own this chunk. Use /chunk trust <player> to add other builders.");
+            }
+            return true;
+
+        } else {
+
+            if (chunk.isTrusted(player.getName())) {
+                sendMsg(player, chunk.getOwnerName() + " owns this chunk. You have build rights!");
+            } else {
+
+                sendMsg(player, chunk.getOwnerName() + " owns this chunk. You can't build here.");
+
+            }
+            return true;
+        }
     }
 
     OfflinePlayer resolvePlayer(String name) {
