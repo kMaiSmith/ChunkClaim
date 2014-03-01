@@ -22,12 +22,10 @@ package com.github.schmidtbochum.chunkclaim;
 
 import com.github.schmidtbochum.chunkclaim.Data.ChunkData;
 import com.github.schmidtbochum.chunkclaim.Data.DataManager;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
-import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -35,7 +33,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
 
-public class EntityEventHandler implements Listener {
+public class EntityEventHandler extends ChunkClaimEventHandler implements Listener {
     private final DataManager dataStore;
 
     public EntityEventHandler(DataManager dataStore) {
@@ -52,17 +50,6 @@ public class EntityEventHandler implements Listener {
             }
         }
         return null;
-    }
-
-    private void revokeIfNotPermitted(Player attacker, ChunkData chunk, Cancellable event, String message) {
-        if (chunk != null && attacker != null) {
-            if (!attacker.hasPermission("chunkclaim.admin") && !chunk.isTrusted(attacker.getName())) {
-                event.setCancelled(true);
-                attacker.sendMessage(
-                        ChatColor.YELLOW + "You do not have " +
-                                chunk.getOwnerName() + "'s permission to " + message + " here.");
-            }
-        }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)

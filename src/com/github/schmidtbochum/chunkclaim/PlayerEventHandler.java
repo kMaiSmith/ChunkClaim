@@ -27,13 +27,12 @@ import org.bukkit.ChatColor;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.*;
 
-public class PlayerEventHandler implements Listener {
+public class PlayerEventHandler extends ChunkClaimEventHandler implements Listener {
 
     private final DataManager dataStore;
 
@@ -59,17 +58,6 @@ public class PlayerEventHandler implements Listener {
 
         this.dataStore.savePlayerData(playerData);
         this.dataStore.clearCachedPlayerData(player.getName());
-    }
-
-    private void revokeIfNotPermitted(Player player, ChunkData chunk, Cancellable cancellable, String message) {
-        if (chunk == null) {
-            return;
-        }
-        if (!player.hasPermission("chunkclaim.admin") && !chunk.isTrusted(player.getName())) {
-            cancellable.setCancelled(true);
-            player.sendMessage(ChatColor.YELLOW +
-                    "You don't have " + chunk.getOwnerName() + "'s permission to " + message + " here.");
-        }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)

@@ -71,7 +71,7 @@ public class PlayerBlockHandlerTest {
 
         systemUnderTest.onPlayerInteract(event);
         Assert.assertTrue(event.isCancelled());
-        verify(mockPlayer).sendMessage("§eYou don't have NotYou's permission to build here.");
+        verify(mockPlayer).sendMessage("§eYou do not have NotYou's permission to build here.");
     }
 
     @Test
@@ -104,7 +104,7 @@ public class PlayerBlockHandlerTest {
 
         systemUnderTest.onPlayerBucketFill(event);
         Assert.assertTrue(event.isCancelled());
-        verify(mockPlayer).sendMessage("§eYou don't have NotYou's permission to build here.");
+        verify(mockPlayer).sendMessage("§eYou do not have NotYou's permission to build here.");
     }
 
     @Test
@@ -137,7 +137,7 @@ public class PlayerBlockHandlerTest {
 
         systemUnderTest.onPlayerBucketEmpty(event);
         Assert.assertTrue(event.isCancelled());
-        verify(mockPlayer).sendMessage("§eYou don't have NotYou's permission to build here.");
+        verify(mockPlayer).sendMessage("§eYou do not have NotYou's permission to build here.");
     }
 
     @Test
@@ -170,7 +170,7 @@ public class PlayerBlockHandlerTest {
 
         systemUnderTest.onPlayerInteractEntity(event);
         Assert.assertTrue(event.isCancelled());
-        verify(mockPlayer).sendMessage("§eYou don't have NotYou's permission to interact with entities here.");
+        verify(mockPlayer).sendMessage("§eYou do not have NotYou's permission to interact with entities here.");
     }
 
     @Test
