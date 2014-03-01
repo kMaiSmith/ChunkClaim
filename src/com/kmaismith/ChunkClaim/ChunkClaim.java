@@ -18,11 +18,11 @@
     along with ChunkClaim.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.github.schmidtbochum.chunkclaim;
+package com.kmaismith.ChunkClaim;
 
-import com.github.schmidtbochum.chunkclaim.Data.ChunkData;
-import com.github.schmidtbochum.chunkclaim.Data.DataManager;
-import com.github.schmidtbochum.chunkclaim.Data.PlayerData;
+import com.kmaismith.ChunkClaim.Data.ChunkData;
+import com.kmaismith.ChunkClaim.Data.DataManager;
+import com.kmaismith.ChunkClaim.Data.PlayerData;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;

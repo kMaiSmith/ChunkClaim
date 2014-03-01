@@ -1,8 +1,7 @@
 package com.kmaismith.ChunkClaim;
 
-import com.github.schmidtbochum.chunkclaim.Data.ChunkData;
-import com.github.schmidtbochum.chunkclaim.Data.DataManager;
-import com.github.schmidtbochum.chunkclaim.PlayerEventHandler;
+import com.kmaismith.ChunkClaim.Data.ChunkData;
+import com.kmaismith.ChunkClaim.Data.DataManager;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;

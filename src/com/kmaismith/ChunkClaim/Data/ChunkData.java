@@ -18,9 +18,9 @@
     along with ChunkClaim.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.github.schmidtbochum.chunkclaim.Data;
+package com.kmaismith.ChunkClaim.Data;
 
-import com.github.schmidtbochum.chunkclaim.ChunkClaim;
+import com.kmaismith.ChunkClaim.ChunkClaim;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 
@@ -83,7 +83,7 @@ public class ChunkData implements IData {
     public boolean contains(Location location) {
         return this.chunkX == location.getChunk().getX() &&
                 this.chunkZ == location.getChunk().getZ() &&
-                this.chunkWorld.equals(location.getWorld());
+                this.chunkWorld.equals(location.getWorld().getName());
     }
 
     public boolean isTrusted(String playerName) {

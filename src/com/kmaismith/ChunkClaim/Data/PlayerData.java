@@ -18,9 +18,9 @@
     along with ChunkClaim.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.github.schmidtbochum.chunkclaim.Data;
+package com.kmaismith.ChunkClaim.Data;
 
-import com.github.schmidtbochum.chunkclaim.ChunkClaim;
+import com.kmaismith.ChunkClaim.ChunkClaim;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -118,7 +118,7 @@ public class PlayerData implements IData {
         outStream.write(dateFormat.format(firstJoin));
         outStream.newLine();
 
-        outStream.write(dateFormat.format(lastLogin));
+        outStream.write(dateFormat.format(new Date()));
         outStream.newLine();
 
         //third line is credits

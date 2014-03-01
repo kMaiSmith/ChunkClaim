@@ -18,10 +18,10 @@
     along with ChunkClaim.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.github.schmidtbochum.chunkclaim;
+package com.kmaismith.ChunkClaim;
 
-import com.github.schmidtbochum.chunkclaim.Data.ChunkData;
-import com.github.schmidtbochum.chunkclaim.Data.DataManager;
+import com.kmaismith.ChunkClaim.Data.ChunkData;
+import com.kmaismith.ChunkClaim.Data.DataManager;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;

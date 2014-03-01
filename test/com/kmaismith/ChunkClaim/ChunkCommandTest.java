@@ -1,9 +1,8 @@
 package com.kmaismith.ChunkClaim;
 
-import com.github.schmidtbochum.chunkclaim.ChunkClaim;
-import com.github.schmidtbochum.chunkclaim.Data.ChunkData;
-import com.github.schmidtbochum.chunkclaim.Data.DataManager;
-import com.github.schmidtbochum.chunkclaim.Data.PlayerData;
+import com.kmaismith.ChunkClaim.Data.ChunkData;
+import com.kmaismith.ChunkClaim.Data.DataManager;
+import com.kmaismith.ChunkClaim.Data.PlayerData;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
@@ -18,13 +17,6 @@ import java.util.Date;
 
 import static org.mockito.Mockito.*;
 
-/**
- * Created with IntelliJ IDEA.
- * User: kyle
- * Date: 2/25/14
- * Time: 12:46 PM
- * To change this template use File | Settings | File Templates.
- */
 public class ChunkCommandTest {
     private ChunkClaim systemUnderTest;
     private Player mockPlayer;

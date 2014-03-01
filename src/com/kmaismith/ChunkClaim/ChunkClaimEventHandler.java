@@ -1,6 +1,6 @@
-package com.github.schmidtbochum.chunkclaim;
+package com.kmaismith.ChunkClaim;
 
-import com.github.schmidtbochum.chunkclaim.Data.ChunkData;
+import com.kmaismith.ChunkClaim.Data.ChunkData;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;

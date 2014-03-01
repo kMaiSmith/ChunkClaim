@@ -1,7 +1,5 @@
 package com.kmaismith.ChunkClaim.Data;
 
-import com.github.schmidtbochum.chunkclaim.Data.ChunkData;
-import com.github.schmidtbochum.chunkclaim.Data.DataManager;
 import junit.framework.Assert;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
@@ -10,13 +8,6 @@ import org.junit.Test;
 
 import static org.mockito.Mockito.*;
 
-/**
- * Created with IntelliJ IDEA.
- * User: kyle
- * Date: 2/28/14
- * Time: 8:49 PM
- * To change this template use File | Settings | File Templates.
- */
 public class DataManagerTest {
 
     @Test

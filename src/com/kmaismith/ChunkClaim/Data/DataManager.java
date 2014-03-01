@@ -1,6 +1,6 @@
-package com.github.schmidtbochum.chunkclaim.Data;
+package com.kmaismith.ChunkClaim.Data;
 
-import com.github.schmidtbochum.chunkclaim.ChunkClaim;
+import com.kmaismith.ChunkClaim.ChunkClaim;
 import org.bukkit.Location;
 
 import java.io.File;

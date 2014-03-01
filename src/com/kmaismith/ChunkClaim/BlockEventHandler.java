@@ -18,26 +18,24 @@
     along with ChunkClaim.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.github.schmidtbochum.chunkclaim;
+package com.kmaismith.ChunkClaim;
 
-import com.github.schmidtbochum.chunkclaim.Data.ChunkData;
-import com.github.schmidtbochum.chunkclaim.Data.DataManager;
+import com.kmaismith.ChunkClaim.Data.ChunkData;
+import com.kmaismith.ChunkClaim.Data.DataManager;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
-import org.bukkit.event.world.StructureGrowEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
 
 import java.util.List;
 
-class BlockEventHandler implements Listener {
+public class BlockEventHandler implements Listener {
 
     private final DataManager dataManager;
 
@@ -67,7 +65,6 @@ class BlockEventHandler implements Listener {
         }
     }
 
-    //when a player places a block...
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onBlockPlace(BlockPlaceEvent event) {
 
@@ -82,23 +79,18 @@ class BlockEventHandler implements Listener {
         }
 
         if (!player.hasPermission("chunkclaim.admin") && !chunk.isTrusted(player.getName())) {
-            ChunkClaim.plugin.sendMsg(player, "You don't have " + chunk.getOwnerName() + "'s permission to build here.");
+            player.sendMessage(ChatColor.YELLOW + "You don't have " + chunk.getOwnerName() + "'s permission to build here.");
             event.setCancelled(true);
         }
     }
 
-    //blocks "pushing" other players' blocks around (pistons)
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onBlockPistonExtend(BlockPistonExtendEvent event) {
-
-        List<Block> blocks = event.getBlocks();
-
         Block piston = event.getBlock();
         ChunkData pistonChunk = this.dataManager.getChunkAt(piston.getLocation());
         String pistonOwnerName = (pistonChunk == null) ? null : pistonChunk.getOwnerName();
 
-        //if no blocks moving, then only check to make sure we're not pushing into a claim from outside
-        //this avoids pistons breaking non-solids just inside a claim, like torches, doors, and touchplates
+        List<Block> blocks = event.getBlocks();
         if (blocks.size() == 0) {
 
             Block invadedBlock = piston.getRelative(event.getDirection());
@@ -112,29 +104,12 @@ class BlockEventHandler implements Listener {
             return;
         }
 
-
-        ChunkData chunk;
-        //which blocks are being pushed?
         for (Block block : blocks) {
-            //if ANY of the pushed blocks are owned by someone other than the piston owner, cancel the event
-            chunk = this.dataManager.getChunkAt(block.getLocation());
+            ChunkData chunk = this.dataManager.getChunkAt(block.getLocation());
             if (chunk == null || !chunk.isTrusted(pistonOwnerName)) {
                 event.setCancelled(true);
-                event.getBlock().getWorld().createExplosion(event.getBlock().getLocation(), 0);
-                event.getBlock().getWorld().dropItem(event.getBlock().getLocation(), new ItemStack(event.getBlock().getType()));
-                event.getBlock().setType(Material.AIR);
                 return;
             }
-        }
-
-        Block block = blocks.get(blocks.size() - 1).getRelative(event.getDirection());
-
-        chunk = this.dataManager.getChunkAt(block.getLocation());
-        if (chunk == null || !chunk.isTrusted(pistonOwnerName)) {
-            event.setCancelled(true);
-            event.getBlock().getWorld().createExplosion(event.getBlock().getLocation(), 0);
-            event.getBlock().getWorld().dropItem(event.getBlock().getLocation(), new ItemStack(event.getBlock().getType()));
-            event.getBlock().setType(Material.AIR);
         }
     }
 
@@ -235,27 +210,6 @@ class BlockEventHandler implements Listener {
 
             //everything else is NOT OK
             dispenseEvent.setCancelled(true);
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onTreeGrow(StructureGrowEvent growEvent) {
-
-        Location rootLocation = growEvent.getLocation();
-        ChunkData rootChunk = this.dataManager.getChunkAt(rootLocation);
-        String rootOwnerName = (rootChunk == null) ? null : rootChunk.getOwnerName();
-
-        //for each block growing
-        for (int i = 0; i < growEvent.getBlocks().size(); i++) {
-            BlockState block = growEvent.getBlocks().get(i);
-            ChunkData blockChunk = this.dataManager.getChunkAt(block.getLocation());
-            if (blockChunk != null) {
-                if (rootOwnerName == null || !blockChunk.isTrusted(rootOwnerName)) {
-                    growEvent.getBlocks().remove(i--);
-                }
-            } else if (rootOwnerName != null) {
-                growEvent.getBlocks().remove(i--);
-            }
         }
     }
 }

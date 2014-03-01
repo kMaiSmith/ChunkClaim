@@ -1,5 +1,5 @@
 name: ChunkClaim
-main: com.github.schmidtbochum.chunkclaim.ChunkClaim
+main: com.kmaismith.ChunkClaim.ChunkClaim
 version: 2.0-SNAPSHOT
 author: schmidtbochum & kMaiSmith
 softdepend: [Multiverse-Core]
