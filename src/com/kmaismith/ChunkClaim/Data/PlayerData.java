@@ -18,9 +18,9 @@
     along with ChunkClaim.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.kmaismith.ChunkClaim.Data;
+package com.kmaismith.chunkclaim.Data;
 
-import com.kmaismith.ChunkClaim.ChunkClaim;
+import com.kmaismith.chunkclaim.ChunkClaim;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

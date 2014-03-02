@@ -1,4 +1,4 @@
-package com.kmaismith.ChunkClaim.Data;
+package com.kmaismith.chunkclaim.Data;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

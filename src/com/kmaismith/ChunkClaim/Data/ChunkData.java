@@ -18,7 +18,7 @@
     along with ChunkClaim.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.kmaismith.ChunkClaim.Data;
+package com.kmaismith.chunkclaim.Data;
 
 import org.bukkit.Chunk;
 import org.bukkit.Location;

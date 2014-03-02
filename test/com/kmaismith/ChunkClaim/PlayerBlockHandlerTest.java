@@ -1,7 +1,7 @@
-package com.kmaismith.ChunkClaim;
+package com.kmaismith.chunkclaim;
 
-import com.kmaismith.ChunkClaim.Data.ChunkData;
-import com.kmaismith.ChunkClaim.Data.DataManager;
+import com.kmaismith.chunkclaim.Data.ChunkData;
+import com.kmaismith.chunkclaim.Data.DataManager;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;

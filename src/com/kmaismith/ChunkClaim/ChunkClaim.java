@@ -18,11 +18,11 @@
     along with ChunkClaim.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package com.kmaismith.ChunkClaim;
+package com.kmaismith.chunkclaim;
 
-import com.kmaismith.ChunkClaim.Data.ChunkData;
-import com.kmaismith.ChunkClaim.Data.DataManager;
-import com.kmaismith.ChunkClaim.Data.PlayerData;
+import com.kmaismith.chunkclaim.Data.ChunkData;
+import com.kmaismith.chunkclaim.Data.DataManager;
+import com.kmaismith.chunkclaim.Data.PlayerData;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -39,17 +39,19 @@ import java.util.logging.Logger;
 
 public class ChunkClaim extends JavaPlugin {
     public static ChunkClaim plugin;
-    private final ChunkClaimLogger logger;
-    private final ChunkCommandHandler chunkCommandHandler;
-    private final DataManager dataStore;
+    private ChunkClaimLogger logger;
+    private DataManager dataStore;
+    private ChunkCommandHandler chunkCommandHandler;
 
-    ChunkClaim() {
+    public ChunkClaim() {
+        super();
         this.logger = new ChunkClaimLogger(Logger.getLogger("Minecraft"));
         this.dataStore = new DataManager(logger);
-        this.chunkCommandHandler = new ChunkCommandHandler(this, this.dataStore);
+        this.chunkCommandHandler = new ChunkCommandHandler(this, dataStore);
     }
 
     ChunkClaim(Logger logger, DataManager dataManager) {
+        super();
         this.logger = new ChunkClaimLogger(logger);
         this.dataStore = dataManager;
         this.chunkCommandHandler = new ChunkCommandHandler(this, dataManager);

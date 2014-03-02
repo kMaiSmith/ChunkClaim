@@ -1,4 +1,4 @@
-package com.kmaismith.ChunkClaim;
+package com.kmaismith.chunkclaim;
 
 import java.util.logging.Logger;
 

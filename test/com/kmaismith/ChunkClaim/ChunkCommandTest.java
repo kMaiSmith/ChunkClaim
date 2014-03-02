@@ -1,8 +1,8 @@
-package com.kmaismith.ChunkClaim;
+package com.kmaismith.chunkclaim;
 
-import com.kmaismith.ChunkClaim.Data.ChunkData;
-import com.kmaismith.ChunkClaim.Data.DataManager;
-import com.kmaismith.ChunkClaim.Data.PlayerData;
+import com.kmaismith.chunkclaim.Data.ChunkData;
+import com.kmaismith.chunkclaim.Data.DataManager;
+import com.kmaismith.chunkclaim.Data.PlayerData;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;

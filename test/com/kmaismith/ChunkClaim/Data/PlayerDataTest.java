@@ -1,7 +1,7 @@
-package com.kmaismith.ChunkClaim.Data;
+package com.kmaismith.chunkclaim.Data;
 
 
-import com.kmaismith.ChunkClaim.ChunkClaim;
+import com.kmaismith.chunkclaim.ChunkClaim;
 import junit.framework.Assert;
 import org.junit.Test;
 

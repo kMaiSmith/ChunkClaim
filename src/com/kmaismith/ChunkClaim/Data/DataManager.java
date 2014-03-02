@@ -1,6 +1,6 @@
-package com.kmaismith.ChunkClaim.Data;
+package com.kmaismith.chunkclaim.Data;
 
-import com.kmaismith.ChunkClaim.ChunkClaimLogger;
+import com.kmaismith.chunkclaim.ChunkClaimLogger;
 import org.bukkit.Location;
 
 import java.io.File;
