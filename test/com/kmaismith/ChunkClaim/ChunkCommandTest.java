@@ -29,7 +29,7 @@ public class ChunkCommandTest {
     private String[] args;
     private DataManager dataStore;
 
-    private static int dayInMilliseconds = 1000 * 60 * 60 * 24;
+    private final int dayInMilliseconds = 1000 * 60 * 60 * 24;
 
     @Before
     public void setupTestCase() {
@@ -74,11 +74,12 @@ public class ChunkCommandTest {
         when(dataStore.getChunkAt(mockLocation)).thenReturn(chunk);
         when(chunk.getBuilderNames()).thenReturn(trustedBuilders);
 
+
         when(chunk.isTrusted(anyString())).thenAnswer(new Answer() {
             public Object answer(InvocationOnMock invocation) {
-                Object[] args = invocation.getArguments();
+                String arg = (String) invocation.getArguments()[0];
 
-                return trustedBuilders.contains(args[0]);
+                return trustedBuilders.contains(arg);
             }
         });
 

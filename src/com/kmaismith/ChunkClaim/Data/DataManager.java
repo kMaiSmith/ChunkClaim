@@ -13,8 +13,8 @@ public class DataManager {
     private HashMap<String, ChunkData> chunks = new HashMap<String, ChunkData>();
     private HashMap<String, PlayerData> playerNameToPlayerDataMap = new HashMap<String, PlayerData>();
 
-    private IDataStore dataStore;
-    private ChunkClaimLogger logger;
+    private final IDataStore dataStore;
+    private final ChunkClaimLogger logger;
 
     public DataManager(ChunkClaimLogger logger) {
         this.dataStore = new FlatFileDataStore(logger);

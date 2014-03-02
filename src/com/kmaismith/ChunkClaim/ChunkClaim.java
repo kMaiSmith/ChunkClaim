@@ -39,10 +39,9 @@ import java.util.logging.Logger;
 
 public class ChunkClaim extends JavaPlugin {
     public static ChunkClaim plugin;
-    private ChunkClaimLogger logger; // = Logger.getLogger("Minecraft");
-    private ChunkCommandHandler chunkCommandHandler; // = new ChunkCommandHandler(this, dataStore);
-
-    private DataManager dataStore; // = new DataManager();
+    private final ChunkClaimLogger logger;
+    private final ChunkCommandHandler chunkCommandHandler;
+    private final DataManager dataStore;
 
     ChunkClaim() {
         this.logger = new ChunkClaimLogger(Logger.getLogger("Minecraft"));
@@ -56,9 +55,7 @@ public class ChunkClaim extends JavaPlugin {
         this.chunkCommandHandler = new ChunkCommandHandler(this, dataManager);
     }
 
-    public float config_maxCredits;
     public float config_startCredits;
-    public float config_autoDeleteDays;
 
     public void onDisable() {
         Player[] players = this.getServer().getOnlinePlayers();
@@ -79,8 +76,6 @@ public class ChunkClaim extends JavaPlugin {
         this.saveConfig();
 
         this.config_startCredits = (float) this.getConfig().getDouble("startCredits");
-        this.config_maxCredits = (float) this.getConfig().getDouble("maxCredits");
-        this.config_autoDeleteDays = (float) this.getConfig().getDouble("autoDeleteDays");
 
         // register for events
         PluginManager pluginManager = this.getServer().getPluginManager();
@@ -109,7 +104,8 @@ public class ChunkClaim extends JavaPlugin {
         if (cmd.getName().equalsIgnoreCase("chunk") && player != null) {
             if (args.length == 0) {
 
-                return chunkCommandHandler.handleChunkInfoCommand(player);
+                chunkCommandHandler.handleChunkInfoCommand(player);
+                return true;
 
             } else if (args[0].equalsIgnoreCase("abandon")) {
 
@@ -117,7 +113,8 @@ public class ChunkClaim extends JavaPlugin {
 
             } else if (args[0].equalsIgnoreCase("credits")) {
 
-                return chunkCommandHandler.handleChunkCredits(player);
+                chunkCommandHandler.handleChunkCredits(player);
+                return true;
 
             } else if (args[0].equalsIgnoreCase("trust")) {
 

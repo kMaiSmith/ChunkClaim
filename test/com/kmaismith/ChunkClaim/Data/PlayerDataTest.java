@@ -16,10 +16,9 @@ import static org.mockito.Mockito.*;
 
 public class PlayerDataTest {
 
-    private static int dayInMilliseconds = 1000 * 60 * 60 * 24;
-
     @Test
     public void testPlayerDataSavesAppropriateLastLoginDate() {
+        final int dayInMilliseconds = 1000 * 60 * 60 * 24;
 
         ChunkClaim.plugin = mock(ChunkClaim.class);
         ChunkClaim.plugin.config_startCredits = 10;

@@ -27,7 +27,7 @@ import java.io.*;
 
 class FlatFileDataStore implements IDataStore {
 
-    private ChunkClaimLogger logger;
+    private final ChunkClaimLogger logger;
 
     FlatFileDataStore(ChunkClaimLogger logger) {
 

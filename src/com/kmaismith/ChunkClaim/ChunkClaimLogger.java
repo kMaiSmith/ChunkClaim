@@ -4,7 +4,7 @@ import java.util.logging.Logger;
 
 public class ChunkClaimLogger {
 
-    private Logger logger;
+    private final Logger logger;
 
     ChunkClaimLogger(Logger minecraftLogger) {
         this.logger = minecraftLogger;

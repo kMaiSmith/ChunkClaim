@@ -8,7 +8,7 @@ import org.bukkit.entity.Player;
 
 import java.util.Date;
 
-public class ChunkCommandHandler {
+class ChunkCommandHandler {
     private final ChunkClaim chunkClaim;
     private final DataManager dataManager;
 
@@ -17,10 +17,9 @@ public class ChunkCommandHandler {
         this.dataManager = dataManager;
     }
 
-    boolean handleChunkCredits(Player player) {
+    void handleChunkCredits(Player player) {
         PlayerData playerData = dataManager.readPlayerData(player.getName());
         chunkClaim.sendMsg(player, "You have " + playerData.getCredits() + " credits.");
-        return true;
     }
 
     boolean handeChunkAbandon(Player player) {
@@ -46,7 +45,7 @@ public class ChunkCommandHandler {
         return false;
     }
 
-    boolean handleChunkInfoCommand(Player player) {
+    void handleChunkInfoCommand(Player player) {
         ChunkData chunk = dataManager.getChunkAt(player.getLocation());
         Location location = player.getLocation();
 
@@ -62,13 +61,11 @@ public class ChunkCommandHandler {
                 }
                 chunkClaim.sendMsg(player, "Trusted Builders: " + builders.toString());
                 chunkClaim.sendMsg(player, chunk.getOwnerName() + " owns this chunk.");
-                return true;
             }
         }
 
         if (chunk == null) {
             chunkClaim.sendMsg(player, "This chunk is public.");
-            return true;
 
         } else if (chunk.getOwnerName().equals(player.getName())) {
             if (chunk.getBuilderNames().size() > 0) {
@@ -83,7 +80,6 @@ public class ChunkCommandHandler {
             } else {
                 chunkClaim.sendMsg(player, "You own this chunk. Use /chunk trust <player> to add other builders.");
             }
-            return true;
 
         } else {
 
@@ -94,7 +90,6 @@ public class ChunkCommandHandler {
                 chunkClaim.sendMsg(player, chunk.getOwnerName() + " owns this chunk. You can't build here.");
 
             }
-            return true;
         }
     }
 }
