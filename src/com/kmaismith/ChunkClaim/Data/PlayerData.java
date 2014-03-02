@@ -1,6 +1,7 @@
 /*
     ChunkClaim Plugin for Minecraft Bukkit Servers
     Copyright (C) 2012 Felix Schmidt
+    Copyright (C) 2014 Kyle Smith
     
     This file is part of ChunkClaim.
 
