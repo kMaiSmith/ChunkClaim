@@ -1,5 +1,6 @@
 package com.kmaismith.ChunkClaim.Data;
 
+import com.kmaismith.ChunkClaim.ChunkClaimLogger;
 import junit.framework.Assert;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
@@ -12,7 +13,8 @@ public class DataManagerTest {
 
     @Test
     public void testGetChunkReturnsAppropriateChunk() {
-        DataManager systemUnderTest = new DataManager();
+        ChunkClaimLogger logger = mock(ChunkClaimLogger.class);
+        DataManager systemUnderTest = new DataManager(logger);
 
         World world = mock(World.class);
         Chunk chunk = mock(Chunk.class);

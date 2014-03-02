@@ -35,7 +35,6 @@ import java.util.Date;
 
 public class PlayerData implements IData {
     private File playerFile;
-    private String playerName;
     private int credits = (int) ChunkClaim.plugin.config_startCredits;
     private ArrayList<String> builderNames = new ArrayList<String>();
     private Date lastLogin = new Date();
@@ -49,7 +48,6 @@ public class PlayerData implements IData {
     PlayerData(String playerName) {
         this();
         this.playerFile = new File(PlayerData.playerDataFolderPath + File.separator + playerName + ".dat");
-        this.playerName = playerName;
     }
 
     final static String playerDataFolderPath = dataLayerFolderPath + File.separator + "PlayerData";
@@ -87,7 +85,6 @@ public class PlayerData implements IData {
         try {
             firstJoin = dateFormat.parse(firstJoinTimestampString);
         } catch (ParseException parseException) {
-            ChunkClaim.addLogEntry("Unable to load first join date for \"" + playerName + "\"... Falling back to today's date");
             firstJoin = new Date();
         }
 
@@ -98,7 +95,6 @@ public class PlayerData implements IData {
         try {
             lastLogin = dateFormat.parse(lastLoginTimestampString);
         } catch (ParseException parseException) {
-            ChunkClaim.addLogEntry("Unable to load last login for \"" + getFile().getName() + "\"... Falling back to today's date");
             lastLogin = new Date();
         }
         //third line is credits

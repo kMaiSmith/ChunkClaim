@@ -20,7 +20,8 @@ public class PlayerDataTest {
 
     @Test
     public void testPlayerDataSavesAppropriateLastLoginDate() {
-        ChunkClaim.plugin = new ChunkClaim();
+
+        ChunkClaim.plugin = mock(ChunkClaim.class);
         ChunkClaim.plugin.config_startCredits = 10;
 
         DateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");

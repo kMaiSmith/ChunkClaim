@@ -20,16 +20,18 @@
 
 package com.kmaismith.ChunkClaim.Data;
 
-import com.kmaismith.ChunkClaim.ChunkClaim;
+import com.kmaismith.ChunkClaim.ChunkClaimLogger;
 
 import java.io.*;
 
 
 class FlatFileDataStore implements IDataStore {
 
+    private ChunkClaimLogger logger;
 
-    FlatFileDataStore() {
+    FlatFileDataStore(ChunkClaimLogger logger) {
 
+        this.logger = logger;
         //ensure data folders exist
         //if (new File(playerDataFolderPath).mkdirs()) {
         //    ChunkClaim.addLogEntry("Created Player Data Folder Directory");
@@ -45,7 +47,7 @@ class FlatFileDataStore implements IDataStore {
                 stream.close();
             }
         } catch (IOException exception) {
-            ChunkClaim.addLogEntry("Failed to close stream for file " + filename);
+            logger.addLogEntry("Failed to close stream for file " + filename);
         }
     }
 
@@ -63,7 +65,7 @@ class FlatFileDataStore implements IDataStore {
             closeFile(outStream, dataFile.getName());
 
         } catch (IOException e) {
-            ChunkClaim.addLogEntry("IO Exception saving data to " + data.getFile().getName() + "... " + e.getMessage());
+            logger.addLogEntry("IO Exception saving data to " + data.getFile().getName() + "... " + e.getMessage());
             return false;
         }
         return true;
@@ -77,14 +79,14 @@ class FlatFileDataStore implements IDataStore {
 
         try {
             if (dataFile.createNewFile()) {
-                ChunkClaim.addLogEntry("Created Data File " + dataFile.getName());
+                logger.addLogEntry("Created Data File " + dataFile.getName());
             }
             outStream = new BufferedWriter(new FileWriter(dataFile));
 
             data.writeDataToFile(outStream);
 
         } catch (IOException e) {
-            ChunkClaim.addLogEntry("IO Exception reading data from " + dataFile.getName() + "... " + e.getMessage());
+            logger.addLogEntry("IO Exception reading data from " + dataFile.getName() + "... " + e.getMessage());
         }
 
         closeFile(outStream, dataFile.getName());
@@ -95,7 +97,7 @@ class FlatFileDataStore implements IDataStore {
         File dataFile = data.getFile();
 
         if (dataFile.exists() && !dataFile.delete()) {
-            ChunkClaim.addLogEntry("Error: Unable to delete data file \"" + dataFile.getName() + "\"");
+            logger.addLogEntry("Error: Unable to delete data file \"" + dataFile.getName() + "\"");
         }
     }
 

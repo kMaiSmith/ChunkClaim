@@ -17,6 +17,7 @@ import org.mockito.stubbing.Answer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.logging.Logger;
 
 import static org.mockito.Mockito.*;
 
@@ -26,13 +27,17 @@ public class ChunkCommandTest {
     private Command mockCommand;
     private String commandLabel;
     private String[] args;
+    private DataManager dataStore;
 
     private static int dayInMilliseconds = 1000 * 60 * 60 * 24;
 
     @Before
     public void setupTestCase() {
-        systemUnderTest = spy(new ChunkClaim());
-        systemUnderTest.dataStore = mock(DataManager.class);
+        Logger minecraftLogger = mock(Logger.class);
+        //ChunkClaimLogger logger = spy(ChunkClaimLogger(mock(Logger.class)))
+
+        dataStore = mock(DataManager.class);
+        systemUnderTest = spy(new ChunkClaim(minecraftLogger, dataStore));
 
         mockPlayer = mock(Player.class);
         when(mockPlayer.getName()).thenReturn("APlayer");
@@ -66,7 +71,7 @@ public class ChunkCommandTest {
     private ChunkData setupChunk(String playerName, final ArrayList<String> trustedBuilders, Location mockLocation) {
         ChunkData chunk = mock(ChunkData.class);
         when(chunk.getOwnerName()).thenReturn(playerName);
-        when(systemUnderTest.dataStore.getChunkAt(mockLocation)).thenReturn(chunk);
+        when(dataStore.getChunkAt(mockLocation)).thenReturn(chunk);
         when(chunk.getBuilderNames()).thenReturn(trustedBuilders);
 
         when(chunk.isTrusted(anyString())).thenAnswer(new Answer() {
@@ -90,7 +95,7 @@ public class ChunkCommandTest {
 
     private PlayerData setupPlayer(String playerName, int daysSinceLogin, int daysSinceFirstLogin) {
         PlayerData player = mock(PlayerData.class);
-        when(systemUnderTest.dataStore.readPlayerData(playerName)).thenReturn(player);
+        when(dataStore.readPlayerData(playerName)).thenReturn(player);
         Date lastLogin = new Date((new Date()).getTime() - daysSinceLogin);
         when(player.getLastLogin()).thenReturn(lastLogin);
         Date firstLogin = new Date((new Date()).getTime() - daysSinceFirstLogin);
@@ -206,7 +211,7 @@ public class ChunkCommandTest {
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
 
-        verify(systemUnderTest.dataStore).deleteChunk(mockChunk);
+        verify(dataStore).deleteChunk(mockChunk);
         verify(mockPlayer).sendMessage("§eChunkData abandoned. Credits: 0");
     }
 
@@ -223,7 +228,7 @@ public class ChunkCommandTest {
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
 
-        verify(systemUnderTest.dataStore).deleteChunk(mockChunk);
+        verify(dataStore).deleteChunk(mockChunk);
         verify(mockPlayer).sendMessage("§eChunkData abandoned. Credits: 0");
     }
 
@@ -239,7 +244,7 @@ public class ChunkCommandTest {
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
 
-        verify(systemUnderTest.dataStore, never()).deleteChunk(mockChunk);
+        verify(dataStore, never()).deleteChunk(mockChunk);
         verify(mockPlayer).sendMessage("§eYou don't own this chunk. Only SamplePlayer or the staff can delete it.");
     }
 
@@ -249,7 +254,7 @@ public class ChunkCommandTest {
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
 
-        verify(systemUnderTest.dataStore, never()).deleteChunk((ChunkData) anyObject());
+        verify(dataStore, never()).deleteChunk((ChunkData) anyObject());
         verify(mockPlayer).sendMessage("§eThis chunk is public.");
     }
 
@@ -342,6 +347,6 @@ public class ChunkCommandTest {
         twoChunk.add(chunkOne);
         twoChunk.add(chunkTwo);
 
-        when(systemUnderTest.dataStore.getChunksForPlayer(playername)).thenReturn(twoChunk);
+        when(dataStore.getChunksForPlayer(playername)).thenReturn(twoChunk);
     }
 }

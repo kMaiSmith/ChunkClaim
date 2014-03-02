@@ -39,9 +39,22 @@ import java.util.logging.Logger;
 
 public class ChunkClaim extends JavaPlugin {
     public static ChunkClaim plugin;
-    private static final Logger logger = Logger.getLogger("Minecraft");
+    private ChunkClaimLogger logger; // = Logger.getLogger("Minecraft");
+    private ChunkCommandHandler chunkCommandHandler; // = new ChunkCommandHandler(this, dataStore);
 
-    public DataManager dataStore;
+    private DataManager dataStore; // = new DataManager();
+
+    ChunkClaim() {
+        this.logger = new ChunkClaimLogger(Logger.getLogger("Minecraft"));
+        this.dataStore = new DataManager(logger);
+        this.chunkCommandHandler = new ChunkCommandHandler(this, this.dataStore);
+    }
+
+    ChunkClaim(Logger logger, DataManager dataManager) {
+        this.logger = new ChunkClaimLogger(logger);
+        this.dataStore = dataManager;
+        this.chunkCommandHandler = new ChunkCommandHandler(this, dataManager);
+    }
 
     public float config_maxCredits;
     public float config_startCredits;
@@ -68,13 +81,6 @@ public class ChunkClaim extends JavaPlugin {
         this.config_startCredits = (float) this.getConfig().getDouble("startCredits");
         this.config_maxCredits = (float) this.getConfig().getDouble("maxCredits");
         this.config_autoDeleteDays = (float) this.getConfig().getDouble("autoDeleteDays");
-
-        try {
-            this.dataStore = new DataManager();
-        } catch (Exception e) {
-            addLogEntry("Unable to initialize the file system data store. Details:");
-            addLogEntry(e.getMessage());
-        }
 
         // register for events
         PluginManager pluginManager = this.getServer().getPluginManager();
@@ -103,15 +109,15 @@ public class ChunkClaim extends JavaPlugin {
         if (cmd.getName().equalsIgnoreCase("chunk") && player != null) {
             if (args.length == 0) {
 
-                return handleChunkInfoCommand(player);
+                return chunkCommandHandler.handleChunkInfoCommand(player);
 
             } else if (args[0].equalsIgnoreCase("abandon")) {
 
-                return handeChunkAbandon(player);
+                return chunkCommandHandler.handeChunkAbandon(player);
 
             } else if (args[0].equalsIgnoreCase("credits")) {
 
-                return handleChunkCredits(player);
+                return chunkCommandHandler.handleChunkCredits(player);
 
             } else if (args[0].equalsIgnoreCase("trust")) {
 
@@ -294,87 +300,6 @@ public class ChunkClaim extends JavaPlugin {
         return false;
     }
 
-    private boolean handleChunkCredits(Player player) {
-        PlayerData playerData = this.dataStore.readPlayerData(player.getName());
-        sendMsg(player, "You have " + playerData.getCredits() + " credits.");
-        return true;
-    }
-
-    private boolean handeChunkAbandon(Player player) {
-        ChunkData chunk = this.dataStore.getChunkAt(player.getLocation());
-        PlayerData playerData = this.dataStore.readPlayerData(player.getName());
-
-        if (chunk == null) {
-            sendMsg(player, "This chunk is public.");
-
-
-        } else if (chunk.getOwnerName().equals(player.getName()) || player.hasPermission("chunkclaim.admin")) {
-            this.dataStore.deleteChunk(chunk);
-            playerData.addCredit();
-            this.dataStore.savePlayerData(playerData);
-            sendMsg(player, "ChunkData abandoned. Credits: " + playerData.getCredits());
-            return true;
-
-        } else {
-
-            sendMsg(player, "You don't own this chunk. Only " + chunk.getOwnerName() + " or the staff can delete it.");
-            return true;
-        }
-        return false;
-    }
-
-    private boolean handleChunkInfoCommand(Player player) {
-        ChunkData chunk = this.dataStore.getChunkAt(player.getLocation());
-        Location location = player.getLocation();
-
-        if (player.hasPermission("chunkclaim.admin")) {
-            sendMsg(player, "ID: " + location.getChunk().getX() + "," + location.getChunk().getZ());
-            if (chunk != null && !chunk.getOwnerName().equals(player.getName())) {
-                long loginDays = ((new Date()).getTime() - this.dataStore.readPlayerData(chunk.getOwnerName()).getLastLogin().getTime()) / (1000 * 60 * 60 * 24);
-                sendMsg(player, "Last Login: " + loginDays + " days ago.");
-                StringBuilder builders = new StringBuilder();
-                for (String builder : chunk.getBuilderNames()) {
-                    builders.append(builder);
-                    builders.append(" ");
-                }
-                sendMsg(player, "Trusted Builders: " + builders.toString());
-                sendMsg(player, chunk.getOwnerName() + " owns this chunk.");
-                return true;
-            }
-        }
-
-        if (chunk == null) {
-            sendMsg(player, "This chunk is public.");
-            return true;
-
-        } else if (chunk.getOwnerName().equals(player.getName())) {
-            if (chunk.getBuilderNames().size() > 0) {
-                StringBuilder builders = new StringBuilder();
-                for (String builder : chunk.getBuilderNames()) {
-                    builders.append(builder);
-                    builders.append(" ");
-                }
-                sendMsg(player, "You own this chunk.");
-                sendMsg(player, "Trusted Builders: " + builders.toString());
-
-            } else {
-                sendMsg(player, "You own this chunk. Use /chunk trust <player> to add other builders.");
-            }
-            return true;
-
-        } else {
-
-            if (chunk.isTrusted(player.getName())) {
-                sendMsg(player, chunk.getOwnerName() + " owns this chunk. You have build rights!");
-            } else {
-
-                sendMsg(player, chunk.getOwnerName() + " owns this chunk. You can't build here.");
-
-            }
-            return true;
-        }
-    }
-
     OfflinePlayer resolvePlayer(String name) {
 
         Player player = this.getServerWrapper().getPlayer(name);
@@ -388,10 +313,6 @@ public class ChunkClaim extends JavaPlugin {
 
     Server getServerWrapper() {
         return this.getServer();
-    }
-
-    public static void addLogEntry(String entry) {
-        logger.info("ChunkClaim: " + entry);
     }
 
     public void sendMsg(Player player, String message) {

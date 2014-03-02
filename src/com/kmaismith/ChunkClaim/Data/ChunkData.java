@@ -20,7 +20,6 @@
 
 package com.kmaismith.ChunkClaim.Data;
 
-import com.kmaismith.ChunkClaim.ChunkClaim;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 
@@ -42,7 +41,6 @@ public class ChunkData implements IData {
 
     private File chunkFile;
     private String ownerName;
-    private int modifiedBlocks;
     private ArrayList<String> builderNames;
     private Date claimDate;
     private int chunkX;
@@ -56,7 +54,6 @@ public class ChunkData implements IData {
     ChunkData(File chunkDataFile, ChunkData chunkData) {
         this(chunkDataFile);
         this.ownerName = chunkData.ownerName;
-        this.modifiedBlocks = chunkData.modifiedBlocks;
         this.builderNames = chunkData.builderNames;
         this.claimDate = chunkData.claimDate;
         this.chunkX = chunkData.getChunkX();
@@ -102,10 +99,6 @@ public class ChunkData implements IData {
         return chunkWorld;
     }
 
-    public int getModifiedBlocks() {
-        return modifiedBlocks;
-    }
-
     public String getOwnerName() {
         return this.ownerName;
     }
@@ -135,7 +128,6 @@ public class ChunkData implements IData {
         outStream.newLine();
 
         //3. Line: Number of modified blocks
-        outStream.write(String.valueOf(modifiedBlocks));
         outStream.newLine();
 
         //4. Line: List of Builders
@@ -163,8 +155,8 @@ public class ChunkData implements IData {
         //2. Line: ChunkData Creation timestamp
         String claimDateString = inStream.readLine();
 
-        //3. Line: Number of modified blocks
-        this.modifiedBlocks = Integer.parseInt(inStream.readLine());
+        //3. Line: where modified blocks used to live.  holding onto this for legacy compatibility
+        inStream.readLine();
 
         //4. Line: List of Builders
         this.builderNames = new ArrayList<String>(Arrays.asList(inStream.readLine().split(";")));
@@ -178,7 +170,6 @@ public class ChunkData implements IData {
         try {
             this.claimDate = dateFormat.parse(claimDateString);
         } catch (ParseException e) {
-            ChunkClaim.addLogEntry("Failed to parse Claim Date for chunk file " + this.getFile().getName() + "... falling back to today's date");
             this.claimDate = new Date();
         }
 

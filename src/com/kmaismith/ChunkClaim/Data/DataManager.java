@@ -1,6 +1,6 @@
 package com.kmaismith.ChunkClaim.Data;
 
-import com.kmaismith.ChunkClaim.ChunkClaim;
+import com.kmaismith.ChunkClaim.ChunkClaimLogger;
 import org.bukkit.Location;
 
 import java.io.File;
@@ -14,10 +14,11 @@ public class DataManager {
     private HashMap<String, PlayerData> playerNameToPlayerDataMap = new HashMap<String, PlayerData>();
 
     private IDataStore dataStore;
+    private ChunkClaimLogger logger;
 
-    public DataManager() {
-        this.dataStore = new FlatFileDataStore();
-
+    public DataManager(ChunkClaimLogger logger) {
+        this.dataStore = new FlatFileDataStore(logger);
+        this.logger = logger;
         initialize();
 
     }
@@ -33,7 +34,7 @@ public class DataManager {
 
             ChunkData loadedChunk = new ChunkData(file);
 
-            ChunkClaim.addLogEntry("found chunk at " + file.getName());
+            logger.addLogEntry("found chunk at " + file.getName());
 
             dataStore.loadDataFromFile(loadedChunk);
 
@@ -43,7 +44,7 @@ public class DataManager {
 
             chunks.put(chunkAddress, loadedChunk);
 
-            ChunkClaim.addLogEntry("chunks now has " + String.valueOf(chunks.values().size()) + " elements.. now including " + chunkAddress);
+            logger.addLogEntry("chunks now has " + String.valueOf(chunks.values().size()) + " elements.. now including " + chunkAddress);
         }
 
         System.gc();
