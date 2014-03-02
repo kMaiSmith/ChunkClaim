@@ -43,8 +43,6 @@ public class DataManager {
                     Integer.toString(loadedChunk.getChunkZ());
 
             chunks.put(chunkAddress, loadedChunk);
-
-            logger.addLogEntry("chunks now has " + String.valueOf(chunks.values().size()) + " elements.. now including " + chunkAddress);
         }
 
         System.gc();
