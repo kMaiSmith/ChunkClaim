@@ -1,7 +1,7 @@
 /*
     ChunkClaim Plugin for Minecraft Bukkit Servers
     Copyright (C) 2012 Felix Schmidt
-    Copyright (C) 2014 Kyle Smith
+    Based on code by Felix Schmidt, Copyright (C) 2014 Kyle Smith
     
     This file is part of ChunkClaim.
 
@@ -17,6 +17,8 @@
 
     You should have received a copy of the GNU General Public License
     along with ChunkClaim.  If not, see <http://www.gnu.org/licenses/>.
+
+    Contact: Kyle Smith <kMaiSmith@gmail.com>
  */
 
 package com.kmaismith.chunkclaim;
@@ -51,6 +53,7 @@ public class ChunkClaim extends JavaPlugin {
         this.chunkCommandHandler = new ChunkCommandHandler(this, dataStore);
     }
 
+    // Sadness constructor (for tests) :'(
     ChunkClaim(Logger logger, DataManager dataManager) {
         super();
         this.logger = new ChunkClaimLogger(logger);

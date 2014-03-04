@@ -1,6 +1,7 @@
 /*
     ChunkClaim Plugin for Minecraft Bukkit Servers
-    Copyright (C) 2014 Kyle Smith
+    Copyright (C) 2012 Felix Schmidt
+    Based on code by Felix Schmidt, Copyright (C) 2014 Kyle Smith
 
     This file is part of ChunkClaim.
 
@@ -16,6 +17,8 @@
 
     You should have received a copy of the GNU General Public License
     along with ChunkClaim.  If not, see <http://www.gnu.org/licenses/>.
+
+    Contact: Kyle Smith <kMaiSmith@gmail.com>
  */
 
 package com.kmaismith.chunkclaim.Data;
