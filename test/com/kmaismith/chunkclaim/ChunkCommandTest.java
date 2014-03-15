@@ -213,16 +213,4 @@ public class ChunkCommandTest {
         verify(mockPlayer).sendMessage("§eYou own this chunk.");
         verify(mockPlayer).sendMessage("§eTrusted Builders: PlayerA PlayerB ");
     }
-
-    // /chunk credits
-
-    @Test
-    public void testChunkCreditsShowsHowManyCreditsAPlayerHas() {
-        args = new String[]{"credits"};
-        PlayerData playerMock = setupPlayer("APlayer", 0, 4 * dayInMilliseconds);
-        when(playerMock.getCredits()).thenReturn(7);
-
-        systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
-        verify(mockPlayer).sendMessage("§eYou have 7 credits.");
-    }
 }
