@@ -81,7 +81,6 @@ public class PlayerData implements IData {
     }
 
     public void readDataFromFile(BufferedReader inStream) throws IOException {
-        //first line is first join date
         String firstJoinTimestampString = inStream.readLine();
 
         //convert that to a date and store it
@@ -92,7 +91,6 @@ public class PlayerData implements IData {
             firstJoin = new Date();
         }
 
-        //first line is last login timestamp
         String lastLoginTimestampString = inStream.readLine();
 
         //convert that to a date and store it
@@ -101,19 +99,16 @@ public class PlayerData implements IData {
         } catch (ParseException parseException) {
             lastLogin = new Date();
         }
-        //third line is credits
+
         String creditsString = inStream.readLine();
         credits = Integer.parseInt(creditsString);
 
-        //5. line: list of builders
         builderNames = new ArrayList<String>(Arrays.asList(inStream.readLine().split(";")));
 
         inStream.close();
-
     }
 
     public void writeDataToFile(BufferedWriter outStream) throws IOException {
-        //first line is first join date
         DateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
         outStream.write(dateFormat.format(firstJoin));
         outStream.newLine();
@@ -121,11 +116,9 @@ public class PlayerData implements IData {
         outStream.write(dateFormat.format(new Date()));
         outStream.newLine();
 
-        //third line is credits
         outStream.write(String.valueOf(credits));
         outStream.newLine();
 
-        //fifth line are trusted builders (trusted on all chunks)
         for (String builder : builderNames) {
             outStream.write(builder + ";");
         }

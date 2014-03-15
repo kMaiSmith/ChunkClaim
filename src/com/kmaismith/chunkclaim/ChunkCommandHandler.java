@@ -26,6 +26,7 @@ package com.kmaismith.chunkclaim;
 import com.kmaismith.chunkclaim.Data.ChunkData;
 import com.kmaismith.chunkclaim.Data.DataManager;
 import com.kmaismith.chunkclaim.Data.PlayerData;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -45,23 +46,31 @@ class ChunkCommandHandler {
         chunkClaim.sendMsg(player, "You have " + playerData.getCredits() + " credits.");
     }
 
-    boolean handeChunkAbandon(Player player) {
-        ChunkData chunk = dataManager.getChunkAt(player.getLocation());
+    boolean handleChunkAbandon(Player player) {
+        return  handleChunkAbandon(player, false);
+    }
+
+    boolean handleChunkAbandon(Player player, Boolean all) {
         PlayerData playerData = dataManager.readPlayerData(player.getName());
+
+        if(all) {
+            dataManager.deleteChunksForPlayer(player.getName());
+            dataManager.savePlayerData(playerData);
+            chunkClaim.sendMsg(player, "Your chunks have been abandoned. Credits: " + playerData.getCredits());
+            return false;
+        }
+
+        ChunkData chunk = dataManager.getChunkAt(player.getLocation());
 
         if (chunk == null) {
             chunkClaim.sendMsg(player, "This chunk is public.");
-
-
         } else if (chunk.getOwnerName().equals(player.getName()) || player.hasPermission("chunkclaim.admin")) {
             dataManager.deleteChunk(chunk);
             playerData.addCredit();
             dataManager.savePlayerData(playerData);
             chunkClaim.sendMsg(player, "ChunkData abandoned. Credits: " + playerData.getCredits());
             return true;
-
         } else {
-
             chunkClaim.sendMsg(player, "You don't own this chunk. Only " + chunk.getOwnerName() + " or the staff can delete it.");
             return true;
         }
@@ -105,13 +114,10 @@ class ChunkCommandHandler {
             }
 
         } else {
-
             if (chunk.isTrusted(player.getName())) {
                 chunkClaim.sendMsg(player, chunk.getOwnerName() + " owns this chunk. You have build rights!");
             } else {
-
                 chunkClaim.sendMsg(player, chunk.getOwnerName() + " owns this chunk. You can't build here.");
-
             }
         }
     }

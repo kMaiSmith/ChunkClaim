@@ -105,7 +105,6 @@ public class DataManager {
                 dataStore.writeDataToFile(playerData);
             }
 
-
             this.playerNameToPlayerDataMap.put(playerName, playerData);
         }
 

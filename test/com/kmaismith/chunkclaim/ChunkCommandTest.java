@@ -26,6 +26,7 @@ package com.kmaismith.chunkclaim;
 import com.kmaismith.chunkclaim.Data.ChunkData;
 import com.kmaismith.chunkclaim.Data.DataManager;
 import com.kmaismith.chunkclaim.Data.PlayerData;
+import junit.framework.Assert;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -51,6 +52,7 @@ public class ChunkCommandTest {
     private String commandLabel;
     private String[] args;
     private DataManager dataStore;
+    private DataHelper dataHelper;
 
     private final int dayInMilliseconds = 1000 * 60 * 60 * 24;
 
@@ -70,6 +72,8 @@ public class ChunkCommandTest {
 
         commandLabel = "";
         args = new String[]{};
+
+        dataHelper = new DataHelper(dataStore);
     }
 
     private Location setupLocation(int x, int z) {
@@ -133,7 +137,6 @@ public class ChunkCommandTest {
     public void testChunkCommandSaysTheChunkIsPublicWhenTheChunkIsntClaimed() {
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
         verify(mockPlayer).sendMessage("§eThis chunk is public.");
-
     }
 
     @Test
@@ -273,7 +276,7 @@ public class ChunkCommandTest {
     }
 
     @Test
-    public void testChunkAbandonCommandSpitsOutAnError() {
+    public void testChunkAbandonCommandSpitsOutAnErrorInPublicChunk() {
         args = new String[]{"abandon"};
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
@@ -294,6 +297,28 @@ public class ChunkCommandTest {
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
         verify(playerMock).addCredit();
+    }
+
+    @Test
+    public void testChunkAbandonAllAbandonsAll() {
+        args = new String[]{"abandon","all"};
+
+        ChunkData testChunk = setupChunk("FooPlayer",
+                new ArrayList<String>(),
+                setupLocation(-5, 65));
+
+        ChunkData testChunk2 = setupChunk("FooPlayer",
+                new ArrayList<String>(),
+                setupLocation(0,0));
+
+        Player playerMock = dataHelper.newPlayer("FooPlayer", dataHelper.newLocation("wallyworld",4,-9), false);
+        dataHelper.newPlayer(playerMock,0,0);
+
+        systemUnderTest.onCommand(playerMock, mockCommand, commandLabel, args);
+
+        verify(dataStore).deleteChunksForPlayer("FooPlayer");
+
+        verify(playerMock).sendMessage("§eYour chunks have been abandoned. Credits: 0");
     }
 
     // /chunk credits
