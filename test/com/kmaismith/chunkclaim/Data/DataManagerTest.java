@@ -25,19 +25,35 @@ package com.kmaismith.chunkclaim.Data;
 
 import com.kmaismith.chunkclaim.ChunkClaimLogger;
 import junit.framework.Assert;
+import org.apache.commons.io.FileUtils;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 
 import static org.mockito.Mockito.*;
 
 public class DataManagerTest {
 
+    private DataManager systemUnderTest;
+    private ChunkClaimLogger logger;
+
+    @Before
+    public void setup()
+    {
+        logger = mock(ChunkClaimLogger.class);
+        systemUnderTest = new DataManager(logger);
+    }
+
     @Test
-    public void testGetChunkReturnsAppropriateChunk() {
-        ChunkClaimLogger logger = mock(ChunkClaimLogger.class);
-        DataManager systemUnderTest = new DataManager(logger);
+    public void testGetChunkReturnsAppropriateChunk()
+    {
 
         World world = mock(World.class);
         Chunk chunk = mock(Chunk.class);
@@ -50,10 +66,103 @@ public class DataManagerTest {
         Location location = spy(new Location(world, 123 * 16 + 5, 64, 321 * 16 + 5));
         when(location.getChunk()).thenReturn(chunk);
 
-        ChunkData chunkIWant = new ChunkData(chunk);
+        ChunkData chunkIWant = new ChunkData(chunk, "someone", new ArrayList<String>());
 
         systemUnderTest.addChunk(chunkIWant);
 
         Assert.assertNotNull(systemUnderTest.getChunkAt(location));
+    }
+
+    @Test
+    public void testDataManagerFindsAllRegisteredChunksWhenInitialized() {
+        World world = mock(World.class);
+        Chunk chunk = mock(Chunk.class);
+
+        when(chunk.getX()).thenReturn(123);
+        when(chunk.getZ()).thenReturn(321);
+        when(chunk.getWorld()).thenReturn(world);
+        when(world.getName()).thenReturn("world");
+
+        Location location = spy(new Location(world, 123 * 16 + 5, 64, 321 * 16 + 5));
+        when(location.getChunk()).thenReturn(chunk);
+
+        ChunkData chunkIWant = new ChunkData(chunk, "someone", new ArrayList<String>());
+
+        systemUnderTest.addChunk(chunkIWant);
+
+        systemUnderTest = new DataManager(logger);
+
+        Assert.assertNotNull(systemUnderTest.getChunkAt(location));
+    }
+
+    @Test
+    public void testGetAllChunksReturnsAllChunksInCollection() {
+
+    }
+
+    @Test
+    public void testGivenAPlayerNameGetAllChunksForPlayerWillGetAllChunksForPlayer() {
+
+    }
+
+    @Test
+    public void testReadPlayerDataWillReadPlayerDataForPlayer() {
+
+    }
+
+    @Test
+    public void testReadPlayerDataWillCreatePlayerDataWhenNoPlayerDataIsPresent() {
+
+    }
+
+    @Test
+    public void testDeleteChunksForPlayerDeletesAllChunksForAGivenPlayer() {
+
+    }
+
+    @Test
+    public void testDeleteChunkWillDeleteAChunkFromList()
+    {
+
+    }
+
+    @Test
+    public void testDeleteChunkWillDeleteChunkFromStorage()
+    {
+
+    }
+
+    @Test
+    public void testAddChunkWillAddAChunkToTheCollection()
+    {
+
+    }
+
+    @Test
+    public void testAddChunkWillAddChunkToDataStore()
+    {
+
+    }
+
+    @Test
+    public void testSavePlayerDataWillWriteChangesToPlayerData()
+    {
+
+    }
+
+    @Test
+    public void testWriteChunkToStorageWritesChunkValuesToDataStore()
+    {
+
+    }
+
+    @After
+    public void cleanup()
+    {
+        try {
+        FileUtils.deleteDirectory(new File("plugins"));
+        } catch (IOException e) {
+            assert false;
+        }
     }
 }

@@ -54,7 +54,7 @@ public class PlayerData implements IData {
         this.playerFile = new File(PlayerData.playerDataFolderPath + File.separator + playerName + ".dat");
     }
 
-    private final static String playerDataFolderPath = dataLayerFolderPath + File.separator + "PlayerData";
+    final static String playerDataFolderPath = dataLayerFolderPath + File.separator + "PlayerData";
 
     public int getCredits() {
         return credits;

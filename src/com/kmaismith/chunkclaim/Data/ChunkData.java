@@ -64,7 +64,7 @@ public class ChunkData implements IData {
         this.chunkWorld = chunkData.getChunkWorld();
     }
 
-    public ChunkData(Chunk chunk) {
+    private ChunkData(Chunk chunk) {
         this.chunkX = chunk.getX();
         this.chunkZ = chunk.getZ();
         this.chunkWorld = chunk.getWorld().getName();

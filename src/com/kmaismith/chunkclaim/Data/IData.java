@@ -28,7 +28,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 
-public interface IData {
+interface IData {
 
     final static String dataLayerFolderPath = "plugins" + File.separator + "ChunkClaim";
 

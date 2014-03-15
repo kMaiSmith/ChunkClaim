@@ -36,12 +36,12 @@ class FlatFileDataStore implements IDataStore {
 
         this.logger = logger;
         //ensure data folders exist
-        //if (new File(playerDataFolderPath).mkdirs()) {
-        //    ChunkClaim.addLogEntry("Created Player Data Folder Directory");
-        //}
-        //if (new File(worldDataFolderPath).mkdirs()) {
-        //    ChunkClaim.addLogEntry("Created World Data Folder Directory");
-        //}
+        if (new File(PlayerData.playerDataFolderPath).mkdirs()) {
+            logger.addLogEntry("Created Player Data Folder Directory");
+        }
+        if (new File(ChunkData.chunkDataFolderPath).mkdirs()) {
+            logger.addLogEntry("Created World Data Folder Directory");
+        }
     }
 
     private void closeFile(Closeable stream, String filename) {
