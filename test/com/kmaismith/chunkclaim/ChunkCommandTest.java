@@ -26,7 +26,7 @@ package com.kmaismith.chunkclaim;
 import com.kmaismith.chunkclaim.Data.ChunkData;
 import com.kmaismith.chunkclaim.Data.DataManager;
 import com.kmaismith.chunkclaim.Data.PlayerData;
-import junit.framework.Assert;
+
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -222,135 +222,6 @@ public class ChunkCommandTest {
         verify(mockPlayer).sendMessage("§eID: 12,-34");
         verify(mockPlayer).sendMessage("§eYou own this chunk.");
         verify(mockPlayer).sendMessage("§eTrusted Builders: PlayerA PlayerB ");
-    }
-
-    // /chunk abandon
-
-    @Test
-    public void testChunkAbandonCommandAbandonsTheChunkBeingStoodIn() {
-        args = new String[]{"abandon"};
-
-        Location mockLocation = setupLocation(12, -34);
-        ChunkData mockChunk = setupChunk("APlayer",
-                new ArrayList<String>(),
-                mockLocation);
-        setupPlayer("APlayer", 0, 4 * dayInMilliseconds);
-
-        systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
-
-        verify(dataStore).deleteChunk(mockChunk);
-        verify(mockPlayer).sendMessage("§eChunkData abandoned. Credits: 0");
-    }
-
-    @Test
-    public void testChunkAbandonCommandAbandonsTheChunkIfAdminAndNotOwnedByPlayer() {
-        args = new String[]{"abandon"};
-
-        Location mockLocation = setupLocation(12, -34);
-        ChunkData mockChunk = setupChunk("SamplePlayer",
-                new ArrayList<String>(),
-                mockLocation);
-        setupPlayer("APlayer", 0, 4 * dayInMilliseconds);
-        setPlayerAsAdmin();
-
-        systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
-
-        verify(dataStore).deleteChunk(mockChunk);
-        verify(mockPlayer).sendMessage("§eChunkData abandoned. Credits: 0");
-    }
-
-    @Test
-    public void testChunkAbandonCommandDoesNotAbandonIfNonAdminAndPlayerDoesntOwnChunk() {
-        args = new String[]{"abandon"};
-
-        Location mockLocation = setupLocation(12, -34);
-        ChunkData mockChunk = setupChunk("SamplePlayer",
-                new ArrayList<String>(),
-                mockLocation);
-        setupPlayer("SamplePlayer", 0, 4 * dayInMilliseconds);
-
-        systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
-
-        verify(dataStore, never()).deleteChunk(mockChunk);
-        verify(mockPlayer).sendMessage("§eYou don't own this chunk. Only SamplePlayer or the staff can delete it.");
-    }
-
-    @Test
-    public void testChunkAbandonCommandSpitsOutAnErrorInPublicChunk() {
-        args = new String[]{"abandon"};
-
-        systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
-
-        verify(dataStore, never()).deleteChunk((ChunkData) anyObject());
-        verify(mockPlayer).sendMessage("§eThis chunk is public.");
-    }
-
-    @Test
-    public void testChunkAbandonReturnsACreditForAbandoning() {
-        args = new String[]{"abandon"};
-
-        Location mockLocation = setupLocation(12, -34);
-        setupChunk("APlayer",
-                new ArrayList<String>(),
-                mockLocation);
-        PlayerData playerMock = setupPlayer("APlayer", 0, 4 * dayInMilliseconds);
-
-        systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
-        verify(playerMock).addCredit();
-    }
-
-    @Test
-    public void testChunkAbandonAllAbandonsAllChunks() {
-        args = new String[]{"abandon","all"};
-
-        ArrayList<ChunkData> chunkDatas = new ArrayList<ChunkData>();
-        // The execution path is simply testing for the size of the array, not the contents
-        chunkDatas.add(null);
-        chunkDatas.add(null);
-        when(dataStore.getChunksForPlayer("FooPlayer")).thenReturn(chunkDatas);
-
-        Player playerMock = dataHelper.newPlayer("FooPlayer", dataHelper.newLocation("wallyworld", 4, -9), false);
-        dataHelper.newPlayerData(playerMock, 0, 0);
-
-        systemUnderTest.onCommand(playerMock, mockCommand, commandLabel, args);
-
-        verify(dataStore).deleteChunksForPlayer("FooPlayer");
-
-        verify(playerMock).sendMessage("§eYour chunks have been abandoned. Credits: 0");
-    }
-
-    @Test
-    public void testAbandonAllHappyPathReturnsTrue() {
-        args = new String[]{"abandon","all"};
-
-        ChunkData testChunk = setupChunk("FooPlayer",
-                new ArrayList<String>(),
-                setupLocation(-5, 65));
-
-        ChunkData testChunk2 = setupChunk("FooPlayer",
-                new ArrayList<String>(),
-                setupLocation(0,0));
-
-        ArrayList<ChunkData> chunkDatas = new ArrayList<ChunkData>();
-        chunkDatas.add(testChunk);
-        chunkDatas.add(testChunk2);
-        when(dataStore.getChunksForPlayer("FooPlayer")).thenReturn(chunkDatas);
-
-        Player playerMock = dataHelper.newPlayer("FooPlayer", dataHelper.newLocation("wallyworld", 4, -9), false);
-        dataHelper.newPlayerData(playerMock, 0, 0);
-
-        Assert.assertEquals(systemUnderTest.onCommand(playerMock, mockCommand, commandLabel, args), true);
-    }
-
-    @Test
-    public void testChunklessPlayerReceivesErrorMessage() {
-        args = new String[]{"abandon","all"};
-        Player playerMock = dataHelper.newPlayer("PlayerZ", dataHelper.newLocation("supermarioland",-3,329), false);
-        dataHelper.newPlayerData(playerMock,0,0);
-
-        systemUnderTest.onCommand(playerMock, mockCommand, commandLabel, args);
-
-        verify(playerMock).sendMessage("§eYou don't have any chunks.");
     }
 
     // /chunk credits
