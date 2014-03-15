@@ -327,6 +327,29 @@ public class ChunkCommandTest {
     }
 
     @Test
+    public void testAbandonAllHappyPathReturnsTrue() {
+        args = new String[]{"abandon","all"};
+
+        ChunkData testChunk = setupChunk("FooPlayer",
+                new ArrayList<String>(),
+                setupLocation(-5, 65));
+
+        ChunkData testChunk2 = setupChunk("FooPlayer",
+                new ArrayList<String>(),
+                setupLocation(0,0));
+
+        ArrayList<ChunkData> chunkDatas = new ArrayList<ChunkData>();
+        chunkDatas.add(testChunk);
+        chunkDatas.add(testChunk2);
+        when(dataStore.getChunksForPlayer("FooPlayer")).thenReturn(chunkDatas);
+
+        Player playerMock = dataHelper.newPlayer("FooPlayer", dataHelper.newLocation("wallyworld", 4, -9), false);
+        dataHelper.newPlayer(playerMock, 0, 0);
+
+        Assert.assertEquals(systemUnderTest.onCommand(playerMock, mockCommand, commandLabel, args), true);
+    }
+
+    @Test
     public void testChunklessPlayerReceivesErrorMessage() {
         args = new String[]{"abandon","all"};
         Player playerMock = dataHelper.newPlayer("PlayerZ", dataHelper.newLocation("supermarioland",-3,329), false);

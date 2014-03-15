@@ -26,7 +26,6 @@ package com.kmaismith.chunkclaim;
 import com.kmaismith.chunkclaim.Data.ChunkData;
 import com.kmaismith.chunkclaim.Data.DataManager;
 import com.kmaismith.chunkclaim.Data.PlayerData;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -61,7 +60,7 @@ class ChunkCommandHandler {
             dataManager.deleteChunksForPlayer(player.getName());
             dataManager.savePlayerData(playerData);
             chunkClaim.sendMsg(player, "Your chunks have been abandoned. Credits: " + playerData.getCredits());
-            return false;
+            return true;
         }
 
         ChunkData chunk = dataManager.getChunkAt(player.getLocation());
