@@ -23,7 +23,6 @@
 
 package com.kmaismith.chunkclaim.Data;
 
-import com.avaje.ebean.validation.AssertTrue;
 import com.kmaismith.chunkclaim.ChunkClaim;
 import com.kmaismith.chunkclaim.ChunkClaimLogger;
 import com.kmaismith.chunkclaim.DataHelper;
