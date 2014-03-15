@@ -15,6 +15,7 @@ import java.util.Date;
 
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 
@@ -38,10 +39,7 @@ public class DataHelper {
         when(bukkitChunk.getZ()).thenReturn(z);
         when(bukkitChunk.getWorld()).thenReturn(bukkitWorld);
 
-        Location mockLocation = mock(Location.class);
-
-        when(mockLocation.getBlockX()).thenReturn(x * 16);
-        when(mockLocation.getBlockZ()).thenReturn(z * 16);
+        Location mockLocation = spy(new Location(bukkitWorld, x * 16, 64, z * 16));
 
         when(mockLocation.getChunk()).thenReturn(bukkitChunk);
         return mockLocation;
@@ -58,20 +56,7 @@ public class DataHelper {
     }
 
     public ChunkData newChunkData(String playerName, final ArrayList<String> trustedBuilders, Location location) {
-        ChunkData chunk = mock(ChunkData.class);
-        when(chunk.getOwnerName()).thenReturn(playerName);
-        when(chunk.getBuilderNames()).thenReturn(trustedBuilders);
-
-        when(chunk.isTrusted(anyString())).thenAnswer(new Answer() {
-            public Object answer(InvocationOnMock invocation) {
-                String arg = (String) invocation.getArguments()[0];
-
-                return trustedBuilders.contains(arg);
-            }
-        });
-
-        when(chunk.getChunkX()).thenReturn(location.getChunk().getX());
-        when(chunk.getChunkZ()).thenReturn(location.getChunk().getZ());
+        ChunkData chunk = new ChunkData(location.getChunk(), playerName, trustedBuilders);
 
         when(dataManager.getChunkAt(location)).thenReturn(chunk);
 

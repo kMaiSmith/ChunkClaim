@@ -24,6 +24,7 @@
 package com.kmaismith.chunkclaim.Data;
 
 import com.kmaismith.chunkclaim.ChunkClaimLogger;
+import com.kmaismith.chunkclaim.DataHelper;
 import junit.framework.Assert;
 import org.apache.commons.io.FileUtils;
 import org.bukkit.Chunk;
@@ -44,9 +45,13 @@ public class DataManagerTest {
     private DataManager systemUnderTest;
     private ChunkClaimLogger logger;
 
+    private DataHelper helpers;
+
     @Before
     public void setup()
     {
+        helpers = new DataHelper();
+
         logger = mock(ChunkClaimLogger.class);
         systemUnderTest = new DataManager(logger);
     }
@@ -54,19 +59,9 @@ public class DataManagerTest {
     @Test
     public void testGetChunkReturnsAppropriateChunk()
     {
+        Location location = helpers.newLocation("world", 123, 321);
 
-        World world = mock(World.class);
-        Chunk chunk = mock(Chunk.class);
-
-        when(chunk.getX()).thenReturn(123);
-        when(chunk.getZ()).thenReturn(321);
-        when(chunk.getWorld()).thenReturn(world);
-        when(world.getName()).thenReturn("world");
-
-        Location location = spy(new Location(world, 123 * 16 + 5, 64, 321 * 16 + 5));
-        when(location.getChunk()).thenReturn(chunk);
-
-        ChunkData chunkIWant = new ChunkData(chunk, "someone", new ArrayList<String>());
+        ChunkData chunkIWant = helpers.newChunkData("player", new ArrayList<String>(), location);
 
         systemUnderTest.addChunk(chunkIWant);
 
@@ -75,18 +70,9 @@ public class DataManagerTest {
 
     @Test
     public void testDataManagerFindsAllRegisteredChunksWhenInitialized() {
-        World world = mock(World.class);
-        Chunk chunk = mock(Chunk.class);
+        Location location = helpers.newLocation("world", 123, 321);
 
-        when(chunk.getX()).thenReturn(123);
-        when(chunk.getZ()).thenReturn(321);
-        when(chunk.getWorld()).thenReturn(world);
-        when(world.getName()).thenReturn("world");
-
-        Location location = spy(new Location(world, 123 * 16 + 5, 64, 321 * 16 + 5));
-        when(location.getChunk()).thenReturn(chunk);
-
-        ChunkData chunkIWant = new ChunkData(chunk, "someone", new ArrayList<String>());
+        ChunkData chunkIWant = helpers.newChunkData("player", new ArrayList<String>(), location);
 
         systemUnderTest.addChunk(chunkIWant);
 
