@@ -23,20 +23,25 @@
 
 package com.kmaismith.chunkclaim.Data;
 
+import com.kmaismith.chunkclaim.ChunkClaim;
 import com.kmaismith.chunkclaim.ChunkClaimLogger;
 import com.kmaismith.chunkclaim.DataHelper;
 import junit.framework.Assert;
 import org.apache.commons.io.FileUtils;
-import org.bukkit.Chunk;
 import org.bukkit.Location;
-import org.bukkit.World;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
@@ -51,6 +56,9 @@ public class DataManagerTest {
     @Before
     public void setup()
     {
+        ChunkClaim.plugin = new ChunkClaim();
+        ChunkClaim.plugin.config_startCredits = 10;
+
         helpers = new DataHelper();
 
         logger = mock(ChunkClaimLogger.class);
@@ -106,7 +114,36 @@ public class DataManagerTest {
 
     @Test
     public void testReadPlayerDataWillReadPlayerDataForPlayer() {
+        // Sample player file stolen from a player
+        String playerFileContents =
+                "2014.02.16.18.49.49\n" +
+                "2014.03.13.02.25.21\n" +
+                "5\n" +
+                "\n" +
+                "==========";
 
+        try {
+            PrintWriter playerFile = new PrintWriter(PlayerData.playerDataFolderPath + File.separator + "playerA.dat");
+            playerFile.print(playerFileContents);
+            playerFile.close();
+} catch(FileNotFoundException e) {
+            assert false;
+        }
+
+        DateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss");
+        Date loginDate = new Date();
+
+        try {
+            loginDate = dateFormat.parse("2014.02.16.18.49.49");
+        } catch (ParseException parseException) {
+            assert false;
+        }
+
+        PlayerData player = systemUnderTest.readPlayerData("playerA");
+        systemUnderTest.savePlayerData(player);
+        systemUnderTest.clearCachedPlayerData("playerA");
+
+        Assert.assertEquals(player.getFirstJoin(), loginDate);
     }
 
     @Test
