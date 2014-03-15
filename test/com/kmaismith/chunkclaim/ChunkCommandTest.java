@@ -311,14 +311,30 @@ public class ChunkCommandTest {
                 new ArrayList<String>(),
                 setupLocation(0,0));
 
-        Player playerMock = dataHelper.newPlayer("FooPlayer", dataHelper.newLocation("wallyworld",4,-9), false);
-        dataHelper.newPlayer(playerMock,0,0);
+        ArrayList<ChunkData> chunkDatas = new ArrayList<ChunkData>();
+        chunkDatas.add(testChunk);
+        chunkDatas.add(testChunk2);
+        when(dataStore.getChunksForPlayer("FooPlayer")).thenReturn(chunkDatas);
+
+        Player playerMock = dataHelper.newPlayer("FooPlayer", dataHelper.newLocation("wallyworld", 4, -9), false);
+        dataHelper.newPlayer(playerMock, 0, 0);
 
         systemUnderTest.onCommand(playerMock, mockCommand, commandLabel, args);
 
         verify(dataStore).deleteChunksForPlayer("FooPlayer");
 
         verify(playerMock).sendMessage("§eYour chunks have been abandoned. Credits: 0");
+    }
+
+    @Test
+    public void testChunklessPlayerReceivesErrorMessage() {
+        args = new String[]{"abandon","all"};
+        Player playerMock = dataHelper.newPlayer("PlayerZ", dataHelper.newLocation("supermarioland",-3,329), false);
+        dataHelper.newPlayer(playerMock,0,0);
+
+        systemUnderTest.onCommand(playerMock, mockCommand, commandLabel, args);
+
+        verify(playerMock).sendMessage("§eYou don't have any chunks.");
     }
 
     // /chunk credits

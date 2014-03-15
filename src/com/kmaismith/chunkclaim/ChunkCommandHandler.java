@@ -54,6 +54,10 @@ class ChunkCommandHandler {
         PlayerData playerData = dataManager.readPlayerData(player.getName());
 
         if(all) {
+            if(dataManager.getChunksForPlayer(player.getName()).size() == 0) {
+                chunkClaim.sendMsg(player, "You don't have any chunks.");
+                return true;
+            }
             dataManager.deleteChunksForPlayer(player.getName());
             dataManager.savePlayerData(playerData);
             chunkClaim.sendMsg(player, "Your chunks have been abandoned. Credits: " + playerData.getCredits());
