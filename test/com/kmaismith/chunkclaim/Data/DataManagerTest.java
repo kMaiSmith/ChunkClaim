@@ -23,6 +23,7 @@
 
 package com.kmaismith.chunkclaim.Data;
 
+import com.avaje.ebean.validation.AssertTrue;
 import com.kmaismith.chunkclaim.ChunkClaim;
 import com.kmaismith.chunkclaim.ChunkClaimLogger;
 import com.kmaismith.chunkclaim.DataHelper;
@@ -126,7 +127,7 @@ public class DataManagerTest {
             PrintWriter playerFile = new PrintWriter(PlayerData.playerDataFolderPath + File.separator + "playerA.dat");
             playerFile.print(playerFileContents);
             playerFile.close();
-} catch(FileNotFoundException e) {
+        } catch(FileNotFoundException e) {
             assert false;
         }
 
@@ -148,57 +149,108 @@ public class DataManagerTest {
 
     @Test
     public void testReadPlayerDataWillCreatePlayerDataWhenNoPlayerDataIsPresent() {
+        File playerFile = new File(PlayerData.playerDataFolderPath + File.separator + "playerA.dat");
 
+        Assert.assertFalse(playerFile.exists());
+
+        PlayerData player = systemUnderTest.readPlayerData("playerA");
+        systemUnderTest.savePlayerData(player);
+
+        // There are already tests covering the contents being written correctly
+        Assert.assertTrue(playerFile.exists());
     }
 
     @Test
     public void testDeleteChunksForPlayerDeletesAllChunksForAGivenPlayer() {
+        Location location1 = helpers.newLocation("world", 123, 321);
+        Location location2 = helpers.newLocation("world", 321, 123);
+        Location location3 = helpers.newLocation("world", 222, 123);
 
+        ChunkData chunk1 = helpers.newChunkData("player", new ArrayList<String>(), location1);
+        ChunkData chunk2 = helpers.newChunkData("player", new ArrayList<String>(), location2);
+        ChunkData chunk3 = helpers.newChunkData("player2", new ArrayList<String>(), location3);
+
+        systemUnderTest.addChunk(chunk1);
+        systemUnderTest.addChunk(chunk2);
+        systemUnderTest.addChunk(chunk3);
+
+        int previouslyOwnedChunks = systemUnderTest.deleteChunksForPlayer("player");
+
+        Assert.assertEquals(previouslyOwnedChunks, 2);
+
+        Assert.assertEquals(systemUnderTest.getChunksForPlayer("player"), new ArrayList<ChunkData>());
     }
 
     @Test
     public void testDeleteChunkWillDeleteAChunkFromList()
     {
+        Location location1 = helpers.newLocation("world", 123, 321);
+        ChunkData chunk1 = helpers.newChunkData("player", new ArrayList<String>(), location1);
+        chunk1 = systemUnderTest.addChunk(chunk1);
+        systemUnderTest.writeChunkToStorage(chunk1);
 
+        Assert.assertNotNull(systemUnderTest.getChunkAt(location1));
+        systemUnderTest.deleteChunk(chunk1);
+        Assert.assertNull(systemUnderTest.getChunkAt(location1));
     }
 
     @Test
     public void testDeleteChunkWillDeleteChunkFromStorage()
     {
+        Location location1 = helpers.newLocation("world", 123, 321);
+        ChunkData chunk1 = helpers.newChunkData("player", new ArrayList<String>(), location1);
+        chunk1 = systemUnderTest.addChunk(chunk1);
+        systemUnderTest.writeChunkToStorage(chunk1);
 
+        Assert.assertTrue(chunk1.getFile().exists());
+        systemUnderTest.deleteChunk(chunk1);
+        Assert.assertFalse(chunk1.getFile().exists());
     }
 
     @Test
     public void testAddChunkWillAddAChunkToTheCollection()
     {
-
+        Location location1 = helpers.newLocation("world", 123, 321);
+        ChunkData chunk1 = helpers.newChunkData("player", new ArrayList<String>(), location1);
+        Assert.assertNull(systemUnderTest.getChunkAt(location1));
+        systemUnderTest.addChunk(chunk1);
+        Assert.assertNotNull(systemUnderTest.getChunkAt(location1));
     }
 
     @Test
     public void testAddChunkWillAddChunkToDataStore()
     {
-
-    }
-
-    @Test
-    public void testSavePlayerDataWillWriteChangesToPlayerData()
-    {
+        Location location1 = helpers.newLocation("world", 123, 321);
+        ChunkData chunk1 = helpers.newChunkData("player", new ArrayList<String>(), location1);
+        Assert.assertNull(chunk1.getFile());
+        chunk1 = systemUnderTest.addChunk(chunk1);
+        Assert.assertTrue(chunk1.getFile().exists());
 
     }
 
     @Test
     public void testWriteChunkToStorageWritesChunkValuesToDataStore()
     {
+        Location location1 = helpers.newLocation("world", 123, 321);
+        ChunkData chunk1 = helpers.newChunkData("player", new ArrayList<String>(), location1);
+        chunk1 = systemUnderTest.addChunk(chunk1);
+        chunk1.addBuilder("personB");
+        systemUnderTest.writeChunkToStorage(chunk1);
 
+        systemUnderTest = new DataManager(logger);
+        ChunkData chunk2 = systemUnderTest.getChunkAt(location1);
+        Assert.assertTrue(chunk2.isTrusted("personB"));
     }
 
     @After
     public void cleanup()
     {
         try {
-        FileUtils.deleteDirectory(new File("plugins"));
+            FileUtils.deleteDirectory(new File("plugins"));
         } catch (IOException e) {
             assert false;
         }
+
+        ChunkClaim.plugin = null;
     }
 }

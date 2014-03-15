@@ -310,7 +310,7 @@ public class ChunkCommandTest {
         when(dataStore.getChunksForPlayer("FooPlayer")).thenReturn(chunkDatas);
 
         Player playerMock = dataHelper.newPlayer("FooPlayer", dataHelper.newLocation("wallyworld", 4, -9), false);
-        dataHelper.newPlayer(playerMock, 0, 0);
+        dataHelper.newPlayerData(playerMock, 0, 0);
 
         systemUnderTest.onCommand(playerMock, mockCommand, commandLabel, args);
 
@@ -337,7 +337,7 @@ public class ChunkCommandTest {
         when(dataStore.getChunksForPlayer("FooPlayer")).thenReturn(chunkDatas);
 
         Player playerMock = dataHelper.newPlayer("FooPlayer", dataHelper.newLocation("wallyworld", 4, -9), false);
-        dataHelper.newPlayer(playerMock, 0, 0);
+        dataHelper.newPlayerData(playerMock, 0, 0);
 
         Assert.assertEquals(systemUnderTest.onCommand(playerMock, mockCommand, commandLabel, args), true);
     }
@@ -346,7 +346,7 @@ public class ChunkCommandTest {
     public void testChunklessPlayerReceivesErrorMessage() {
         args = new String[]{"abandon","all"};
         Player playerMock = dataHelper.newPlayer("PlayerZ", dataHelper.newLocation("supermarioland",-3,329), false);
-        dataHelper.newPlayer(playerMock,0,0);
+        dataHelper.newPlayerData(playerMock,0,0);
 
         systemUnderTest.onCommand(playerMock, mockCommand, commandLabel, args);
 
