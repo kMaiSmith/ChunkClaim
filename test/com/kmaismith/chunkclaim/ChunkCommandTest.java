@@ -29,8 +29,6 @@ import com.kmaismith.chunkclaim.Data.PlayerData;
 
 import org.bukkit.Chunk;
 import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
-import org.bukkit.Server;
 import org.bukkit.command.Command;
 import org.bukkit.entity.Player;
 import org.junit.Before;
@@ -110,14 +108,6 @@ public class ChunkCommandTest {
             }
         });
 
-        return chunk;
-    }
-
-    private ChunkData setupChunk(String playerName, final ArrayList<String> trustedBuilders, int x, int z) {
-        ChunkData chunk = setupChunk(playerName, trustedBuilders, setupLocation(x, z));
-
-        when(chunk.getChunkX()).thenReturn(x);
-        when(chunk.getChunkZ()).thenReturn(z);
         return chunk;
     }
 
@@ -234,71 +224,5 @@ public class ChunkCommandTest {
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
         verify(mockPlayer).sendMessage("§eYou have 7 credits.");
-    }
-
-    // /chunk list
-    @Test
-    public void testChunkListDisplaysAListOfChunksOwnedByPlayerWhenPlayerIsOnline() {
-        args = new String[]{"list", "ListablePlayer"};
-        setupPlayer("ListablePlayer", dayInMilliseconds, 4 * dayInMilliseconds);
-        setPlayerAsAdmin();
-        Server mockServer = mock(Server.class);
-        Player onlinePlayer = mock(Player.class);
-
-        when(systemUnderTest.getServerWrapper()).thenReturn(mockServer);
-        when(mockServer.getPlayer("ListablePlayer")).thenReturn(onlinePlayer);
-
-        setupPlayersChunks("ListablePlayer");
-
-        systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
-
-        verify(mockPlayer).sendMessage("§eListablePlayer | Last Login: 1 days ago. First Join: 4 days ago.");
-        verify(mockPlayer).sendMessage("§eID: 12|34, World Location: 192|544");
-        verify(mockPlayer).sendMessage("§eID: 13|35, World Location: 208|560");
-    }
-
-    @Test
-    public void testChunkListDisplaysAListOfChunksOwnedByPlayerWhenPlayerIsOffline() {
-        args = new String[]{"list", "ListablePlayer"};
-        setupPlayer("ListablePlayer", dayInMilliseconds, 4 * dayInMilliseconds);
-        setPlayerAsAdmin();
-
-        Server mockServer = mock(Server.class);
-        OfflinePlayer offlinePlayer = mock(OfflinePlayer.class);
-        when(systemUnderTest.getServerWrapper()).thenReturn(mockServer);
-        when(mockServer.getOfflinePlayer("ListablePlayer")).thenReturn(offlinePlayer);
-
-        setupPlayersChunks("ListablePlayer");
-
-        systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
-
-        verify(mockPlayer).sendMessage("§eListablePlayer | Last Login: 1 days ago. First Join: 4 days ago.");
-        verify(mockPlayer).sendMessage("§eID: 12|34, World Location: 192|544");
-        verify(mockPlayer).sendMessage("§eID: 13|35, World Location: 208|560");
-    }
-
-    @Test
-    public void testNonAdminPlayersCanListTheirOwnChunks() {
-        args = new String[]{"list"};
-        setupPlayer("APlayer", dayInMilliseconds, 4 * dayInMilliseconds);
-
-        setupPlayersChunks("APlayer");
-
-        systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
-
-        verify(mockPlayer).sendMessage("§eHere are your chunks:");
-        verify(mockPlayer).sendMessage("§eID: 12|34, World Location: 192|544");
-        verify(mockPlayer).sendMessage("§eID: 13|35, World Location: 208|560");
-    }
-
-    private void setupPlayersChunks(String playername) {
-        ArrayList<ChunkData> twoChunk = new ArrayList<ChunkData>();
-
-        ChunkData chunkOne = setupChunk(playername, null, 12, 34);
-        ChunkData chunkTwo = setupChunk(playername, null, 13, 35);
-        twoChunk.add(chunkOne);
-        twoChunk.add(chunkTwo);
-
-        when(dataStore.getChunksForPlayer(playername)).thenReturn(twoChunk);
     }
 }
