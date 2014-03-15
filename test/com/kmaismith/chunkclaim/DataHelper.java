@@ -7,13 +7,10 @@ import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import java.util.ArrayList;
 import java.util.Date;
 
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -67,7 +64,7 @@ public class DataHelper {
         return newChunkData(playerName, trustedBuilders, newLocation("world", x, z));
     }
 
-    public PlayerData newPlayer(Player player, int daysSinceLogin, int daysSinceFirstLogin) {
+    public PlayerData newPlayerData(Player player, int daysSinceLogin, int daysSinceFirstLogin) {
         PlayerData playerData = mock(PlayerData.class);
 
         when(dataManager.readPlayerData(player.getName())).thenReturn(playerData);
