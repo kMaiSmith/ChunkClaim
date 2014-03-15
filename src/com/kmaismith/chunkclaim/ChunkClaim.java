@@ -114,10 +114,7 @@ public class ChunkClaim extends JavaPlugin {
                 return true;
 
             } else if (args[0].equalsIgnoreCase("abandon")) {
-                if(args.length == 2 && args[1].equalsIgnoreCase("all")) {
-                    return chunkCommandHandler.handleChunkAbandon(player,true);
-                }
-                return chunkCommandHandler.handleChunkAbandon(player);
+                return chunkCommandHandler.handleChunkAbandon(player, args);
 
             } else if (args[0].equalsIgnoreCase("credits")) {
 

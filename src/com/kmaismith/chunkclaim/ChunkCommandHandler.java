@@ -45,14 +45,10 @@ class ChunkCommandHandler {
         chunkClaim.sendMsg(player, "You have " + playerData.getCredits() + " credits.");
     }
 
-    boolean handleChunkAbandon(Player player) {
-        return  handleChunkAbandon(player, false);
-    }
-
-    boolean handleChunkAbandon(Player player, Boolean all) {
+    boolean handleChunkAbandon(Player player, String[] args) {
         PlayerData playerData = dataManager.readPlayerData(player.getName());
 
-        if(all) {
+        if(args.length > 1 && args[1].equalsIgnoreCase("all")) {
             if(dataManager.getChunksForPlayer(player.getName()).size() == 0) {
                 chunkClaim.sendMsg(player, "You don't have any chunks.");
                 return true;

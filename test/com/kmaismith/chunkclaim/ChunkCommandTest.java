@@ -300,20 +300,13 @@ public class ChunkCommandTest {
     }
 
     @Test
-    public void testChunkAbandonAllAbandonsAll() {
+    public void testChunkAbandonAllAbandonsAllChunks() {
         args = new String[]{"abandon","all"};
 
-        ChunkData testChunk = setupChunk("FooPlayer",
-                new ArrayList<String>(),
-                setupLocation(-5, 65));
-
-        ChunkData testChunk2 = setupChunk("FooPlayer",
-                new ArrayList<String>(),
-                setupLocation(0,0));
-
         ArrayList<ChunkData> chunkDatas = new ArrayList<ChunkData>();
-        chunkDatas.add(testChunk);
-        chunkDatas.add(testChunk2);
+        // The execution path is simply testing for the size of the array, not the contents
+        chunkDatas.add(null);
+        chunkDatas.add(null);
         when(dataStore.getChunksForPlayer("FooPlayer")).thenReturn(chunkDatas);
 
         Player playerMock = dataHelper.newPlayer("FooPlayer", dataHelper.newLocation("wallyworld", 4, -9), false);
