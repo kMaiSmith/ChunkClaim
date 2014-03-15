@@ -37,6 +37,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.mockito.Mockito.*;
 
@@ -82,13 +83,25 @@ public class DataManagerTest {
     }
 
     @Test
-    public void testGetAllChunksReturnsAllChunksInCollection() {
-
-    }
-
-    @Test
     public void testGivenAPlayerNameGetAllChunksForPlayerWillGetAllChunksForPlayer() {
+        Location location1 = helpers.newLocation("world", 123, 321);
+        Location location2 = helpers.newLocation("world", 321, 123);
+        Location location3 = helpers.newLocation("world", 222, 123);
 
+        ChunkData chunk1 = helpers.newChunkData("player", new ArrayList<String>(), location1);
+        ChunkData chunk2 = helpers.newChunkData("player", new ArrayList<String>(), location2);
+        ChunkData chunk3 = helpers.newChunkData("player2", new ArrayList<String>(), location3);
+
+        systemUnderTest.addChunk(chunk1);
+        systemUnderTest.addChunk(chunk2);
+        systemUnderTest.addChunk(chunk3);
+
+        List<ChunkData> chunks = systemUnderTest.getChunksForPlayer("player");
+
+        Assert.assertEquals(chunks.size(), 2);
+        for(ChunkData chunk : chunks) {
+            Assert.assertEquals(chunk.getOwnerName(), "player");
+        }
     }
 
     @Test
