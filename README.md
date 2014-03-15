@@ -13,7 +13,9 @@ Commands:
 
 /chunk untrust <player> - This removes trusted players from all of your chunks
 
-/chunk abandon - Abandons the chunk you are in if you abandon it
+/chunk abandon - Abandons the chunk you are in if you own it
+
+/chunk abandon all - Abandons all chunks you own
 
 /chunk list - Shows all of the chunks that you own
 
