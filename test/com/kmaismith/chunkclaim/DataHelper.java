@@ -22,6 +22,10 @@ public class DataHelper {
 
     private DataManager dataManager;
 
+    public DataHelper() {
+        dataManager = mock(DataManager.class);
+    }
+
     public DataHelper(DataManager dataManager) {
         this.dataManager = dataManager;
     }
@@ -53,7 +57,7 @@ public class DataHelper {
         return mockPlayer;
     }
 
-    private ChunkData newChunkData(String playerName, final ArrayList<String> trustedBuilders, Location location) {
+    public ChunkData newChunkData(String playerName, final ArrayList<String> trustedBuilders, Location location) {
         ChunkData chunk = mock(ChunkData.class);
         when(chunk.getOwnerName()).thenReturn(playerName);
         when(chunk.getBuilderNames()).thenReturn(trustedBuilders);
@@ -74,11 +78,11 @@ public class DataHelper {
         return chunk;
     }
 
-    private ChunkData newChunkData(String playerName, final ArrayList<String> trustedBuilders, int x, int z) {
+    public ChunkData newChunkData(String playerName, final ArrayList<String> trustedBuilders, int x, int z) {
         return newChunkData(playerName, trustedBuilders, newLocation("world", x, z));
     }
 
-    private PlayerData newPlayer(Player player, int daysSinceLogin, int daysSinceFirstLogin) {
+    public PlayerData newPlayer(Player player, int daysSinceLogin, int daysSinceFirstLogin) {
         PlayerData playerData = mock(PlayerData.class);
 
         when(dataManager.readPlayerData(player.getName())).thenReturn(playerData);
