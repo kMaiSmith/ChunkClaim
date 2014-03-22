@@ -23,33 +23,26 @@
 
 package com.kmaismith.chunkclaim;
 
-import com.kmaismith.chunkclaim.Data.ChunkData;
 import com.kmaismith.chunkclaim.Data.DataManager;
-import com.kmaismith.chunkclaim.Data.PlayerData;
 
-import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.entity.Player;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.logging.Logger;
 
 import static org.mockito.Mockito.*;
 
 public class ChunkCommandTest {
     private ChunkClaim systemUnderTest;
-    private Player mockPlayer;
     private Command mockCommand;
     private String commandLabel;
     private String[] args;
-    private DataManager dataStore;
+    private DataManager dataManager;
     private DataHelper dataHelper;
 
     private final int dayInMilliseconds = 1000 * 60 * 60 * 24;
@@ -57,81 +50,31 @@ public class ChunkCommandTest {
     @Before
     public void setupTestCase() {
         Logger minecraftLogger = mock(Logger.class);
-        //ChunkClaimLogger logger = spy(ChunkClaimLogger(mock(Logger.class)))
-
-        dataStore = mock(DataManager.class);
-        systemUnderTest = spy(new ChunkClaim(minecraftLogger, dataStore));
-
-        mockPlayer = mock(Player.class);
-        when(mockPlayer.getName()).thenReturn("APlayer");
-
+        dataManager = mock(DataManager.class);
+        dataHelper = new DataHelper(dataManager);
+        systemUnderTest = spy(new ChunkClaim(minecraftLogger, dataManager));
         mockCommand = mock(Command.class);
         when(mockCommand.getName()).thenReturn("chunk");
-
         commandLabel = "";
         args = new String[]{};
-
-        dataHelper = new DataHelper(dataStore);
     }
-
-    private Location setupLocation(int x, int z) {
-        Chunk bukkitChunk = mock(Chunk.class);
-        when(bukkitChunk.getX()).thenReturn(x);
-        when(bukkitChunk.getZ()).thenReturn(z);
-
-        Location mockLocation = mock(Location.class);
-
-        when(mockLocation.getBlockX()).thenReturn(x * 16);
-        when(mockLocation.getBlockZ()).thenReturn(z * 16);
-
-        when(mockLocation.getChunk()).thenReturn(bukkitChunk);
-        when(mockPlayer.getLocation()).thenReturn(mockLocation);
-        return mockLocation;
-    }
-
-    private void setPlayerAsAdmin() {
-        when(mockPlayer.hasPermission("chunkclaim.admin")).thenReturn(true);
-    }
-
-    private ChunkData setupChunk(String playerName, final ArrayList<String> trustedBuilders, Location mockLocation) {
-        ChunkData chunk = mock(ChunkData.class);
-        when(chunk.getOwnerName()).thenReturn(playerName);
-        when(dataStore.getChunkAt(mockLocation)).thenReturn(chunk);
-        when(chunk.getBuilderNames()).thenReturn(trustedBuilders);
-
-
-        when(chunk.isTrusted(anyString())).thenAnswer(new Answer() {
-            public Object answer(InvocationOnMock invocation) {
-                String arg = (String) invocation.getArguments()[0];
-
-                return trustedBuilders.contains(arg);
-            }
-        });
-
-        return chunk;
-    }
-
-    private PlayerData setupPlayer(String playerName, int daysSinceLogin, int daysSinceFirstLogin) {
-        PlayerData player = mock(PlayerData.class);
-        when(dataStore.readPlayerData(playerName)).thenReturn(player);
-        Date lastLogin = new Date((new Date()).getTime() - daysSinceLogin);
-        when(player.getLastLogin()).thenReturn(lastLogin);
-        Date firstLogin = new Date((new Date()).getTime() - daysSinceFirstLogin);
-        when(player.getFirstJoin()).thenReturn(firstLogin);
-        return player;
-    }
-
-    // /chunk
 
     @Test
     public void testChunkCommandSaysTheChunkIsPublicWhenTheChunkIsntClaimed() {
+        Location mockLocation = dataHelper.newLocation("nirn",0,0);
+        Player mockPlayer = dataHelper.newPlayer("FiveSyllableName", mockLocation, false);
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
         verify(mockPlayer).sendMessage("§eThis chunk is public.");
     }
 
     @Test
     public void testChunkCommandSaysWhoOwnsTheChunkWhenTheChunkIsClaimed() {
-        setupChunk("RandomPlayer", new ArrayList<String>(), setupLocation(0, 0));
+        Location mockLocation = dataHelper.newLocation("elmosworld", 1, 2);
+        Player mockPlayer = dataHelper.newPlayer("FooPlayer", mockLocation, false);
+        dataHelper.newChunkData(
+                "RandomPlayer",
+                new ArrayList<String>(),
+                mockLocation);
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
         verify(mockPlayer).sendMessage("§eRandomPlayer owns this chunk. You can't build here.");
@@ -139,23 +82,26 @@ public class ChunkCommandTest {
 
     @Test
     public void testChunkCommandSaysYouHaveBuildRightsWhenYouAreTrustedOnAChunk() {
-        setupChunk("RandomPlayer",
+        Location mockLocation = dataHelper.newLocation("relto",-2,-3);
+        Player mockPlayer = dataHelper.newPlayer("APlayer", mockLocation, false);
+        dataHelper.newChunkData(
+                "Owner",
                 new ArrayList<String>(Arrays.asList(new String[]{"APlayer"})),
-                null);
+                mockLocation);
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
-        verify(mockPlayer).sendMessage("§eRandomPlayer owns this chunk. You have build rights!");
+        verify(mockPlayer).sendMessage("§eOwner owns this chunk. You have build rights!");
     }
 
     @Test
     public void testChunkCommandGivesAListOfTrustedBuildersWhenYouOwnTheChunk() {
         // Super awesome setup stuff, prone to changing with flow changes
-
-        Location mockLocation = setupLocation(12, -34);
-        setupChunk("APlayer",
+        Location mockLocation = dataHelper.newLocation("DIM-5000", -12, 34);
+        Player mockPlayer = dataHelper.newPlayer("Foovakhin", mockLocation, false);
+        dataHelper.newChunkData(
+                "Foovakhin",
                 new ArrayList<String>(Arrays.asList(new String[]{"PlayerA", "PlayerB"})),
                 mockLocation);
-        setupPlayer("APlayer", 2 * dayInMilliseconds, 4 * dayInMilliseconds);
 
         // End of super awesome setup stuff
 
@@ -167,50 +113,53 @@ public class ChunkCommandTest {
 
     @Test
     public void testChunkCommandTellsTheChunkIdWhenPlayerHasAdminRightsAndTheChunkIsntClaimed() {
-        setupLocation(12, -34);
-
-        setPlayerAsAdmin();
+        Location mockLocation = dataHelper.newLocation("tokyo", 12, -34);
+        Player mockPlayer = dataHelper.newPlayer("BanHammerWielder", mockLocation, true);
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
+
         verify(mockPlayer).sendMessage("§eID: 12,-34");
         verify(mockPlayer).sendMessage("§eThis chunk is public.");
     }
 
     @Test
     public void testChunkCommandGivesDaysSinceLastLoginAndTrustedBuilderAndOwnerWhenCalledByAdminWhoIsNotTheOwner() {
-        Location mockLocation = setupLocation(12, -34);
-        setPlayerAsAdmin();
-        setupChunk("SamplePlayer",
-                new ArrayList<String>(Arrays.asList(new String[]{"PlayerA", "PlayerB"})),
+        Location mockLocation = dataHelper.newLocation("didneyworl", 0, 666);
+        Player mockPlayer = dataHelper.newPlayer("Walt", mockLocation, true);
+
+        dataHelper.newChunkData(
+                "Mickey",
+                new ArrayList<String>(Arrays.asList(new String[]{"Minnie", "Pluto"})),
                 mockLocation);
-        setupPlayer("SamplePlayer", 2 * dayInMilliseconds, 4 * dayInMilliseconds);
+
+        Player chunkOwner = dataHelper.newPlayer("Mickey", mockLocation, false);
+        dataHelper.newPlayerData(chunkOwner, 2 * dayInMilliseconds, 4 * dayInMilliseconds);
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
 
-        verify(mockPlayer).sendMessage("§eID: 12,-34");
+        verify(mockPlayer).sendMessage("§eID: 0,666");
         verify(mockPlayer).sendMessage("§eLast Login: 2 days ago.");
-        verify(mockPlayer).sendMessage("§eTrusted Builders: PlayerA PlayerB ");
-        verify(mockPlayer).sendMessage("§eSamplePlayer owns this chunk.");
-
+        verify(mockPlayer).sendMessage("§eTrusted Builders: Minnie Pluto ");
+        verify(mockPlayer).sendMessage("§eMickey owns this chunk.");
     }
 
     @Test
-    public void testChunkCommandShowsChunkIDAndStandardInformationIfOwner() {
+    public void testChunkCommandShowsChunkIDAndStandardInformationIfOwnerAndAdmin() {
         // Super awesome setup stuff, prone to changing with flow changes
 
-        Location mockLocation = setupLocation(12, -34);
-        setPlayerAsAdmin();
-        setupChunk("APlayer",
-                new ArrayList<String>(Arrays.asList(new String[]{"PlayerA", "PlayerB"})),
+        Location mockLocation = dataHelper.newLocation("jurassicpark", -8, -3);
+        Player mockPlayer = dataHelper.newPlayer("Raptor", mockLocation, true);
+        dataHelper.newChunkData(
+                "Raptor",
+                new ArrayList<String>(Arrays.asList(new String[]{"Trex", "PlayerB"})),
                 mockLocation);
-        setupPlayer("APlayer", 2 * dayInMilliseconds, 4 * dayInMilliseconds);
 
         // End of super awesome setup stuff
 
         systemUnderTest.onCommand(mockPlayer, mockCommand, commandLabel, args);
 
-        verify(mockPlayer).sendMessage("§eID: 12,-34");
+        verify(mockPlayer).sendMessage("§eID: -8,-3");
         verify(mockPlayer).sendMessage("§eYou own this chunk.");
-        verify(mockPlayer).sendMessage("§eTrusted Builders: PlayerA PlayerB ");
+        verify(mockPlayer).sendMessage("§eTrusted Builders: Trex PlayerB ");
     }
 }
