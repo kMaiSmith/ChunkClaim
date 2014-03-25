@@ -302,61 +302,63 @@ public class ChunkClaim extends JavaPlugin {
 
                     }
                     return true;
+                }
 
-                } else if (args[0].equalsIgnoreCase("buy")) {
-                    int total = dataStore.readPlayerData(player.getName()).getCredits() + dataStore.getChunksForPlayer(player.getName()).size();
-                    if(total >= this.config_maxCredits && !player.hasPermission("chunkclaim.admin")) {
-                        sendMsg(player, "You have reached the maximum number of chunks allowed.");
-                        sendMsg(player, "If you need more, you will have to consult a server operator.");
-                        return true;
-                    } else {
-                        // Many thanks to msoulworrier for contributions.
-                        // We highly recommend: config_startCredits=4 and 25<=config_maxCredits<=30
-                        // let x be the number of chunks
-                        // let m be the price index
-                        // let f(x) be the price, relative to the price index
-                        // f(x)=me^{.753(.6542x)}+4
-                        BigDecimal reqBal = new BigDecimal(Math.pow(2.71828,  (0.4926126 * total) + 4)).multiply(priceIndex.getPI());
-                        boolean hasEnough;
+            } else if (args[0].equalsIgnoreCase("buy")) {
+                int total = dataStore.readPlayerData(player.getName()).getCredits() + dataStore.getChunksForPlayer(player.getName()).size();
+                if(total >= this.config_maxCredits && !player.hasPermission("chunkclaim.admin")) {
+                    sendMsg(player, "You have reached the maximum number of chunks allowed.");
+                    sendMsg(player, "If you need more, you will have to consult a server operator.");
+                    return true;
+                } else {
+                    // Many thanks to msoulworrier for contributions.
+                    // We highly recommend: config_startCredits=4 and 25<=config_maxCredits<=30
+                    // let x be the number of chunks
+                    // let m be the price index
+                    // let f(x) be the price, relative to the price index
+                    // f(x)=me^{.753(.6542x)}+4
+                    BigDecimal reqBal = new BigDecimal(Math.pow(2.71828,  (0.4926126 * total) + 4)).multiply(priceIndex.getPI());
+                    boolean hasEnough;
+                    try {
+                        hasEnough = com.earth2me.essentials.api.Economy.hasEnough(player.getName(), reqBal);
+                    } catch (com.earth2me.essentials.api.UserDoesNotExistException e) {
+                        sendMsg(player, "Internal error: UserDoesNotExistException. No transaction was made. Please report.");
+                        return true; // Should this be false? I don't know.
+                    }
+                    if (hasEnough) {
                         try {
-                            hasEnough = com.earth2me.essentials.api.Economy.hasEnough(player.getName(), reqBal);
-                        } catch (com.earth2me.essentials.api.UserDoesNotExistException e) {
+                            com.earth2me.essentials.api.Economy.substract(player.getName(), reqBal);
+                        } catch (NoLoanPermittedException | ArithmeticException	| UserDoesNotExistException e) {
                             sendMsg(player, "Internal error: UserDoesNotExistException. No transaction was made. Please report.");
                             return true; // Should this be false? I don't know.
                         }
-                        if (hasEnough) {
-                            try {
-                                com.earth2me.essentials.api.Economy.substract(player.getName(), reqBal);
-                            } catch (NoLoanPermittedException | ArithmeticException	| UserDoesNotExistException e) {
-                                sendMsg(player, "Internal error: UserDoesNotExistException. No transaction was made. Please report.");
-                                return true; // Should this be false? I don't know.
-                            }
-                            PlayerData playerData = dataStore.readPlayerData(player.getName());
-                            playerData.addCredit();
-                            dataStore.savePlayerData(playerData);
-                            sendMsg(player, "Successfully purchased a chunk credit for $" + String.valueOf(reqBal.doubleValue()) + ".");
-                            return true;
-                    } else {
-                        sendMsg(player, "You can't afford to buy another chunk for $" + String.valueOf(reqBal.doubleValue()) + ".");
+                        PlayerData playerData = dataStore.readPlayerData(player.getName());
+                        playerData.addCredit();
+                        dataStore.savePlayerData(playerData);
+                        sendMsg(player, "Successfully purchased a chunk credit for $" + String.valueOf(reqBal.doubleValue()) + ".");
                         return true;
-                    }
-                }
-            } else if (args[0].equalsIgnoreCase("index")) {
-                if(args.length == 2 && player.hasPermission("chunkclaim.admin")) {
-                    // Check if second argument is valid... TODO
-                    priceIndex.setPI(args[1]);
-                    }
-                    else {
-                        // Display the price index
-                        sendMsg(player, "The current price index is $" + String.valueOf(priceIndex.getPI()));
-                    }
                 } else {
+                    sendMsg(player, "You can't afford to buy another chunk for $" + String.valueOf(reqBal.doubleValue()) + ".");
+                    return true;
+                }
+            }
+        } else if (args[0].equalsIgnoreCase("index")) {
+            if(args.length == 2 && player.hasPermission("chunkclaim.admin")) {
+                // Check if second argument is valid... TODO
+                priceIndex.setPI(args[1]);
+                return true;
+                }
+                else {
+                    // Display the price index
+                    sendMsg(player, "The current price index is $" + String.valueOf(priceIndex.getPI()));
+                    return true;
+                    }
+            } else {
                     return false;
                 }
             }
-        }
-        return false;
-    }
+            return false;
+            }
 
     OfflinePlayer resolvePlayer(String name) {
 
