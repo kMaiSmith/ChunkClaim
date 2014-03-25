@@ -15,8 +15,8 @@ public class PriceIndex implements IConfig {
 		return config.getBigDecimal("pi", BigDecimal.ONE.negate());
 	}
 	
-	public void setPI(String inputString) {
-		config.setProperty("pi", Config.toBigDecimal(inputString, BigDecimal.ONE.negate()));
+	public void setPI(double input) {
+		config.setProperty("pi", BigDecimal.valueOf(input));
 		config.removeProperty("pi");
 		config.save();
 	}
