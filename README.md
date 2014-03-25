@@ -1,7 +1,9 @@
 ChunkClaim
 ==========
 
-ChunkClaim aims to be an extensible chunk protection plugin for bukkit.  
+ChunkClaim aims to be an extensible chunk protection plugin for bukkit.
+
+Now dependent on Essentials.
 
 Commands:
 
@@ -19,3 +21,12 @@ Commands:
 
 /chunk list - Shows all of the chunks that you own
 
+/chunk buy - Buys a chunk using the Essentials Economy
+
+/chunk index - Displays the price index, a measure of the economy used in calculating chunk prices
+
+Admin Commands:
+
+/chunk list <player> - Shows all of the chunks owned by <player>
+
+/chunk index <dollar amount> - Sets the price index.
