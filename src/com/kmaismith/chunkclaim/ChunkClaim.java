@@ -23,6 +23,8 @@
 
 package com.kmaismith.chunkclaim;
 
+import com.earth2me.essentials.api.NoLoanPermittedException;
+import com.earth2me.essentials.api.UserDoesNotExistException;
 import com.kmaismith.chunkclaim.Data.ChunkData;
 import com.kmaismith.chunkclaim.Data.DataManager;
 import com.kmaismith.chunkclaim.Data.PlayerData;
@@ -36,6 +38,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.logging.Logger;
@@ -63,7 +66,7 @@ public class ChunkClaim extends JavaPlugin {
     }
 
     public float config_startCredits;
-    public float config_maxCredits;
+    public int config_maxCredits;
 
     public void onDisable() {
         Player[] players = this.getServer().getOnlinePlayers();
@@ -84,7 +87,7 @@ public class ChunkClaim extends JavaPlugin {
         this.saveConfig();
 
         this.config_startCredits = (float) this.getConfig().getDouble("startCredits");
-        this.config_maxCredits = whit.getConfig()getInt("maxCredits");
+        this.config_maxCredits = this.getConfig().getInt("maxCredits");
         
         // price index
         priceIndex = new PriceIndex(this.getDataFolder());
@@ -316,24 +319,32 @@ public class ChunkClaim extends JavaPlugin {
                         BigDecimal reqBal = new BigDecimal(Math.pow(2.71828,  (0.4926126 * total) + 4)).multiply(priceIndex.getPI());
                         boolean hasEnough;
                         try {
-                            com.earth2me.essentials.api.Economy.substract(player.getName(), reqBal);
-                        } catch (NoLoanPermittedException | ArithmeticException	| UserDoesNotExistException e) {
+                            hasEnough = com.earth2me.essentials.api.Economy.hasEnough(player.getName(), reqBal);
+                        } catch (com.earth2me.essentials.api.UserDoesNotExistException e) {
                             sendMsg(player, "Internal error: UserDoesNotExistException. No transaction was made. Please report.");
                             return true; // Should this be false? I don't know.
                         }
-                        PlayerData playerData = dataStore.readPlayerData(player.getName());
-                        playerData.addCredit();
-                        dataStore.savePlayerData(playerData);
-                        sendMsg(player, "Successfully purchased a chunk credit for $" + String.valueOf(reqBal.doubleValue()) + ".");
-                        return true;
+                        if (hasEnough) {
+                            try {
+                                com.earth2me.essentials.api.Economy.substract(player.getName(), reqBal);
+                            } catch (NoLoanPermittedException | ArithmeticException	| UserDoesNotExistException e) {
+                                sendMsg(player, "Internal error: UserDoesNotExistException. No transaction was made. Please report.");
+                                return true; // Should this be false? I don't know.
+                            }
+                            PlayerData playerData = dataStore.readPlayerData(player.getName());
+                            playerData.addCredit();
+                            dataStore.savePlayerData(playerData);
+                            sendMsg(player, "Successfully purchased a chunk credit for $" + String.valueOf(reqBal.doubleValue()) + ".");
+                            return true;
                     } else {
                         sendMsg(player, "You can't afford to buy another chunk for $" + String.valueOf(reqBal.doubleValue()) + ".");
                         return true;
                     }
-                } else if (args[0].equalsIgnoreCase("index")) {
-                    if(args.length == 2 && player.hasPermission("chunkclaim.admin")) {
-                        // Check if second argument is valid... TODO
-                        priceIndex.setPI(args[1]);
+                }
+            } else if (args[0].equalsIgnoreCase("index")) {
+                if(args.length == 2 && player.hasPermission("chunkclaim.admin")) {
+                    // Check if second argument is valid... TODO
+                    priceIndex.setPI(args[1]);
                     }
                     else {
                         // Display the price index
