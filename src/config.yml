@@ -1,8 +1,8 @@
 # ChunkClaim Configuration File. 
 # Visit http://dev.bukkit.org/server-mods/chunkclaim/pages/configuration/
+# Config Key: Description | Default Value
+# startCredits: Credits players get when they spawn the first time. | 4
+# maxCredits: Max credits a player can get. By the time an ambitious player reaches this limit, the admins can work something out. | 27
 
-startCredits: 11
-maxCredits: 30
-autoDeleteDays: 2
-s
-  
+startCredits: 4
+maxCredits: 27
