@@ -314,9 +314,10 @@ public class ChunkClaim extends JavaPlugin {
 					// Many thanks to msoulworrier for contributions.
 					// We highly recommend: config_startCredits=4 and 25<=config_maxCredits<=30
 					// let x be the number of chunks
+					// let m be the price index
 					// let f(x) be the price, relative to the price index
-					// f(x)=e^{.753(.6542x)}+4
-					BigDecimal reqBal = new BigDecimal(/*Price Index, times*/ Math.pow(2.71828,  (0.4926126 * total) + 4));
+					// f(x)=me^{.753(.6542x)}+4
+					BigDecimal reqBal = new BigDecimal(Math.pow(2.71828,  (0.4926126 * total) + 4)).multiply(priceIndex.getPI());
 					boolean hasEnough;
 					try {
 						hasEnough = com.earth2me.essentials.api.Economy.hasEnough(player.getName(), reqBal);
