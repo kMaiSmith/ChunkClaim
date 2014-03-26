@@ -317,7 +317,7 @@ public class ChunkClaim extends JavaPlugin {
                     // let m be the price index
                     // let f(x) be the price, relative to the price index
                     // f(x)=me^{.753(.6542x)}+4
-                    BigDecimal reqBal = new BigDecimal(Math.pow(2.71828,  (0.4926126 * total) + 4)).multiply(priceIndex.getPI());
+                    BigDecimal reqBal = new BigDecimal(Math.pow(2.71828,  (0.4926126 * total) + 4)).multiply(new BigDecimal(priceIndex.getPI()));
                     boolean hasEnough;
                     try {
                         hasEnough = com.earth2me.essentials.api.Economy.hasEnough(player.getName(), reqBal);
@@ -344,14 +344,14 @@ public class ChunkClaim extends JavaPlugin {
             }
         } else if (args[0].equalsIgnoreCase("index")) {
             if(args.length == 2 && player.hasPermission("chunkclaim.admin")) {
-                // Now working! No safeties though! TODO: only accept valid numbers
+                // Check if second argument is valid... TODO
                 priceIndex.setPI(BigDecimal.valueOf(Double.parseDouble(args[1])));
                 return true;
                 }
-                // Display the price index
-                sendMsg(player, "The current price index is $" + String.valueOf(priceIndex.getPI()));
-                return true;
-                } else {
+            // Display the price index
+            sendMsg(player, "The current price index is $" + priceIndex.getPI());
+            return true;
+            } else {
                     return false;
                 }
             }
