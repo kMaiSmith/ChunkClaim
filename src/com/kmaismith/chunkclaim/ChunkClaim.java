@@ -344,16 +344,14 @@ public class ChunkClaim extends JavaPlugin {
             }
         } else if (args[0].equalsIgnoreCase("index")) {
             if(args.length == 2 && player.hasPermission("chunkclaim.admin")) {
-                // Check if second argument is valid... TODO
-                priceIndex.setPI(Double.parseDouble(args[1]));
+                // Now working! No safeties though! TODO: only accept valid numbers
+                priceIndex.setPI(BigDecimal.valueOf(Double.parseDouble(args[1])));
                 return true;
                 }
-                else {
-                    // Display the price index
-                    sendMsg(player, "The current price index is $" + String.valueOf(priceIndex.getPI()));
-                    return true;
-                    }
-            } else {
+                // Display the price index
+                sendMsg(player, "The current price index is $" + String.valueOf(priceIndex.getPI()));
+                return true;
+                } else {
                     return false;
                 }
             }
