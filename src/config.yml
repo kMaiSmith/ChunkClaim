@@ -2,11 +2,11 @@
 # Visit http://dev.bukkit.org/server-mods/chunkclaim/pages/configuration/
 # Config Key: Description | Default Value
 # startCredits: Credits players get when they spawn the first time. | 4
-# maxCredits: The maximum price input into the formula. After this number, it will cost the same to buy more chunks (adjusted for inflation) | 27
+# maxCredits: The maximum price input into the formula. After this number, it will cost the same to buy more chunks (adjusted for inflation) | 27 -DEPRICATED
 # constant1: Used in the formula. Change if you know what you're doing.
 # constant2: Used in the formula. Change if you know what you're doing.
 
 startCredits: 4
-maxCredits: 27
+# maxCredits: 27
 constant1: .753
 constant2: .6542
