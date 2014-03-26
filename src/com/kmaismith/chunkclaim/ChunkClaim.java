@@ -345,6 +345,7 @@ public class ChunkClaim extends JavaPlugin {
         } else if (args[0].equalsIgnoreCase("index")) {
             if(args.length == 2 && player.hasPermission("chunkclaim.admin")) {
                 // Check if second argument is valid... TODO
+                sendMsg(player, "The old price index was $" + priceIndex.getPI());
                 priceIndex.setPI(BigDecimal.valueOf(Double.parseDouble(args[1])));
                 }
             // Display the price index
