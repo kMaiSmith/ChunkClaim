@@ -67,6 +67,8 @@ public class ChunkClaim extends JavaPlugin {
 
     public float config_startCredits;
     public int config_maxCredits;
+    public float config_constant1;
+    public float config_constant2;
 
     public void onDisable() {
         Player[] players = this.getServer().getOnlinePlayers();
@@ -88,6 +90,8 @@ public class ChunkClaim extends JavaPlugin {
 
         this.config_startCredits = (float) this.getConfig().getDouble("startCredits");
         this.config_maxCredits = this.getConfig().getInt("maxCredits");
+        this.config_constant1 = (float) this.getConfig().getDouble("constant1");
+        this.config_constant2 = (float) this.getConfig().getDouble("constant2");
         
         // price index
         priceIndex = new PriceIndex(this.getDataFolder());
@@ -306,41 +310,45 @@ public class ChunkClaim extends JavaPlugin {
 
             } else if (args[0].equalsIgnoreCase("buy")) {
                 int total = dataStore.readPlayerData(player.getName()).getCredits() + dataStore.getChunksForPlayer(player.getName()).size();
-                if(total >= this.config_maxCredits && !player.hasPermission("chunkclaim.admin")) {
-                    sendMsg(player, "You have reached the maximum number of chunks allowed.");
-                    sendMsg(player, "If you need more, you will have to consult a server operator.");
-                    return true;
+                BigDecimal reqBal;
+                if(total >= this.config_maxCredits) {
+                	// After reaching the "soft limit", expansion will be a constant value (adjusted for inflation)
+                	// See below comment for more information
+                    reqBal = new BigDecimal(Math.pow(2.71828, config_constant1 * config_constant2 * config_maxCredits)).multiply(new BigDecimal(priceIndex.getPI())).add(new BigDecimal(Float.toString(config_startCredits)));
                 } else {
                     // Many thanks to msoulworrier for contributions.
                     // We highly recommend: config_startCredits=4 and 25<=config_maxCredits<=30
                     // let x be the number of chunks
                     // let m be the price index
+                	// let constant1 be a configurable "config_constant1", defaults to .753
+                	// let constant2 be a configurable "config_constant2", defaults to .6542
+                	// let b be the config_startCredits
                     // let f(x) be the price, relative to the price index
-                    // f(x)=me^{.753(.6542x)}+4
-                    BigDecimal reqBal = new BigDecimal(Math.pow(2.71828,  (0.4926126 * total) + 4)).multiply(new BigDecimal(priceIndex.getPI()));
-                    boolean hasEnough;
+                    // f(x)=me^(constant1 * constant2 * x) + b
+                    reqBal = new BigDecimal(Math.pow(2.71828,  (config_constant1 * config_constant2 * total))).multiply(new BigDecimal(priceIndex.getPI())).add(new BigDecimal(Float.toString(config_startCredits)));
+                }
+                boolean hasEnough;
+                try {
+                    hasEnough = com.earth2me.essentials.api.Economy.hasEnough(player.getName(), reqBal);
+                } catch (com.earth2me.essentials.api.UserDoesNotExistException e) {
+                    sendMsg(player, "Internal error: UserDoesNotExistException. No transaction was made. Please report.");
+                    return true; // Should this be false? I don't know.
+                }
+                if (hasEnough) {
                     try {
-                        hasEnough = com.earth2me.essentials.api.Economy.hasEnough(player.getName(), reqBal);
-                    } catch (com.earth2me.essentials.api.UserDoesNotExistException e) {
+                        com.earth2me.essentials.api.Economy.substract(player.getName(), reqBal);
+                    } catch (NoLoanPermittedException | ArithmeticException	| UserDoesNotExistException e) {
                         sendMsg(player, "Internal error: UserDoesNotExistException. No transaction was made. Please report.");
                         return true; // Should this be false? I don't know.
                     }
-                    if (hasEnough) {
-                        try {
-                            com.earth2me.essentials.api.Economy.substract(player.getName(), reqBal);
-                        } catch (NoLoanPermittedException | ArithmeticException	| UserDoesNotExistException e) {
-                            sendMsg(player, "Internal error: UserDoesNotExistException. No transaction was made. Please report.");
-                            return true; // Should this be false? I don't know.
-                        }
-                        PlayerData playerData = dataStore.readPlayerData(player.getName());
-                        playerData.addCredit();
-                        dataStore.savePlayerData(playerData);
-                        sendMsg(player, "Successfully purchased a chunk credit for $" + String.valueOf(reqBal.doubleValue()) + ".");
-                        return true;
-                } else {
-                    sendMsg(player, "You can't afford to buy another chunk for $" + String.valueOf(reqBal.doubleValue()) + ".");
+                    PlayerData playerData = dataStore.readPlayerData(player.getName());
+                    playerData.addCredit();
+                    dataStore.savePlayerData(playerData);
+                    sendMsg(player, "Successfully purchased a chunk credit for $" + String.valueOf(reqBal.doubleValue()) + ".");
                     return true;
-                }
+            } else {
+                sendMsg(player, "You can't afford to buy another chunk for $" + String.valueOf(reqBal.doubleValue()) + ".");
+                return true;
             }
         } else if (args[0].equalsIgnoreCase("index")) {
             if(args.length == 2 && player.hasPermission("chunkclaim.admin")) {
@@ -351,6 +359,8 @@ public class ChunkClaim extends JavaPlugin {
             // Display the price index
             sendMsg(player, "The current price index is $" + priceIndex.getPI());
             return true;
+            } else if(args[0].equalsIgnoreCase("price")) {
+            	// TODO: /chunk price [integer] returns the formula for integer
             } else {
                     return false;
                 }
