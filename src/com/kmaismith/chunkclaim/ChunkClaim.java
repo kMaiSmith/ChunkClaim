@@ -346,7 +346,6 @@ public class ChunkClaim extends JavaPlugin {
             if(args.length == 2 && player.hasPermission("chunkclaim.admin")) {
                 // Check if second argument is valid... TODO
                 priceIndex.setPI(BigDecimal.valueOf(Double.parseDouble(args[1])));
-                return true;
                 }
             // Display the price index
             sendMsg(player, "The current price index is $" + priceIndex.getPI());
