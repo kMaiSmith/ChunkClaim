@@ -11,13 +11,12 @@ public class PriceIndex implements IConfig {
 		config.load();
 	}
 	
-	public BigDecimal getPI() {
-		return config.getBigDecimal("pi", BigDecimal.ONE.negate());
+	public String getPI() {
+		return config.getBigDecimal("pi", BigDecimal.ONE.negate()).toPlainString();
 	}
 	
-	public void setPI(double input) {
-		config.setProperty("pi", BigDecimal.valueOf(input));
-		config.removeProperty("pi");
+	public void setPI(BigDecimal input) {
+		config.setProperty("pi", input);
 		config.save();
 	}
 
