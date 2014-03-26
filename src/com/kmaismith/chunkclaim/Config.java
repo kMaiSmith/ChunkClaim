@@ -99,7 +99,7 @@ public class Config extends YamlConfiguration {
 		{
 			if (templateName != null)
 			{
-				LOGGER.log(Level.INFO, "creatingConfigFromTemplate", configFile.toString());
+				LOGGER.log(Level.INFO, "[ChunkClaim] Creating " + templateName + "config: " + configFile.getPath(), configFile.toString());
 				createFromTemplate();
 			}
 			else
@@ -188,7 +188,7 @@ public class Config extends YamlConfiguration {
 			istr = resourceClass.getResourceAsStream(templateName);
 			if (istr == null)
 			{
-				LOGGER.log(Level.SEVERE, "couldNotFindTemplate", templateName);
+				LOGGER.log(Level.SEVERE, "Could not find a resource named " + templateName, templateName);
 				return;
 			}
 			ostr = new FileOutputStream(configFile);
@@ -216,7 +216,7 @@ public class Config extends YamlConfiguration {
 			}
 			catch (IOException ex)
 			{
-				Logger.getLogger(Config.class.getName()).log(Level.SEVERE, null, ex);
+				Logger.getLogger(Config.class.getName()).log(Level.SEVERE, "Problem closing config file...?", ex);
 			}
 			try
 			{
@@ -455,10 +455,6 @@ public class Config extends YamlConfiguration {
 			}
 		}
 		return stack;
-		/*
-		 * ,
-		 * (byte)getInt(path + ".data", 0)
-		 */
 	}
 
 	public void setProperty(final String path, final ItemStack stack)
