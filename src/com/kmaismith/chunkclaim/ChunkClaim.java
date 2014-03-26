@@ -65,8 +65,8 @@ public class ChunkClaim extends JavaPlugin {
         this.chunkCommandHandler = new ChunkCommandHandler(this, dataManager);
     }
 
-    public float config_startCredits;
-    public int config_maxCredits;
+    public int config_startCredits;
+    //public int config_maxCredits;
     public float config_constant1;
     public float config_constant2;
 
@@ -88,8 +88,8 @@ public class ChunkClaim extends JavaPlugin {
         this.getConfig().options().copyDefaults(true);
         this.saveConfig();
 
-        this.config_startCredits = (float) this.getConfig().getDouble("startCredits");
-        this.config_maxCredits = this.getConfig().getInt("maxCredits");
+        this.config_startCredits = this.getConfig().getInt("startCredits");
+        //this.config_maxCredits = this.getConfig().getInt("maxCredits");
         this.config_constant1 = (float) this.getConfig().getDouble("constant1");
         this.config_constant2 = (float) this.getConfig().getDouble("constant2");
         
@@ -311,11 +311,11 @@ public class ChunkClaim extends JavaPlugin {
             } else if (args[0].equalsIgnoreCase("buy")) {
                 int total = dataStore.readPlayerData(player.getName()).getCredits() + dataStore.getChunksForPlayer(player.getName()).size();
                 BigDecimal reqBal;
-                if(total >= this.config_maxCredits) {
+                /*if(total >= this.config_maxCredits) {
                 	// After reaching the "soft limit", expansion will be a constant value (adjusted for inflation)
                 	// See below comment for more information
                     reqBal = new BigDecimal(Math.pow(2.71828, config_constant1 * config_constant2 * config_maxCredits)).multiply(new BigDecimal(priceIndex.getPI())).add(new BigDecimal(Float.toString(config_startCredits)));
-                } else {
+                } else {*/
                     // Many thanks to msoulworrier for contributions.
                     // We highly recommend: config_startCredits=4 and 25<=config_maxCredits<=30
                     // let x be the number of chunks
@@ -326,7 +326,7 @@ public class ChunkClaim extends JavaPlugin {
                     // let f(x) be the price, relative to the price index
                     // f(x)=me^(constant1 * constant2 * x) + b
                     reqBal = new BigDecimal(Math.pow(2.71828,  (config_constant1 * config_constant2 * total))).multiply(new BigDecimal(priceIndex.getPI())).add(new BigDecimal(Float.toString(config_startCredits)));
-                }
+                //}
                 boolean hasEnough;
                 try {
                     hasEnough = com.earth2me.essentials.api.Economy.hasEnough(player.getName(), reqBal);
@@ -360,7 +360,35 @@ public class ChunkClaim extends JavaPlugin {
             sendMsg(player, "The current price index is $" + priceIndex.getPI());
             return true;
             } else if(args[0].equalsIgnoreCase("price")) {
-            	// TODO: /chunk price [integer] returns the formula for integer
+            	int total; BigDecimal reqBal; String suffix;
+            	
+            	if(args.length == 1) {
+            		total = dataStore.readPlayerData(player.getName()).getCredits() + dataStore.getChunksForPlayer(player.getName()).size();
+            	} else {
+            		try {
+            			total = Integer.parseInt(args[1]);
+            		} catch(NumberFormatException e) {
+            			sendMsg(player, "I'm having trouble with argument ''" + args[1] + "''. Are you sure it's the right type?");
+            			sendMsg(player, "Usage: /chunk claim price [optional: integer value]");
+            			return true;
+            		}
+            	}
+            	switch(total) {
+            	case -3:
+            		suffix = "rd";
+            		break;
+            	case -2:
+            		suffix = "nd";
+            		break;
+            	case -1:
+            		suffix = "st";
+            	default:
+            		suffix = "th";
+            	}
+            	if(total < config_startCredits) { sendMsg(player, "You should start with " + config_startCredits + " credits."); total = config_startCredits + 1; }
+            	reqBal = new BigDecimal(Math.pow(2.71828,  (config_constant1 * config_constant2 * total))).multiply(new BigDecimal(priceIndex.getPI())).add(new BigDecimal(Float.toString(config_startCredits)));
+            	sendMsg(player, "The cost of the " + total + suffix + " chunk credit: $" + reqBal);
+            	return true;
             } else {
                     return false;
                 }
