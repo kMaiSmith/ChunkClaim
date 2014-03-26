@@ -9,7 +9,7 @@ description: >
 commands:
   chunk:
     description: Displays information about the chunk.
-    usage: "/chunk [credits|abandon|trust|untrust|list|buy|index]"
+    usage: "/chunk [credits|abandon|trust|untrust|list|buy|index|price]"
 permissions:
   chunkclaim.claim:
     description: Claim chunks.
