@@ -11,9 +11,9 @@ Commands:
 
 /chunk claim - This claims a chunk for you if you don't already own it
 
-/chunk trust <player> - This adds a player to be trustable all of your chunks
+/chunk trust [player] - This adds a player to be trustable all of your chunks
 
-/chunk untrust <player> - This removes trusted players from all of your chunks
+/chunk untrust [player] - This removes trusted players from all of your chunks
 
 /chunk abandon - Abandons the chunk you are in if you own it
 
@@ -27,6 +27,6 @@ Commands:
 
 Admin Commands:
 
-/chunk list <player> - Shows all of the chunks owned by <player>
+/chunk list [player] - Shows all of the chunks owned by <player>
 
-/chunk index <dollar amount> - Sets the price index.
+/chunk index [nonnegative decimal value] - Sets the price index. Examples: /chunk index 1.0 /chunk index 853.124953857
