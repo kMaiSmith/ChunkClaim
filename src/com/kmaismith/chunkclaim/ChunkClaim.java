@@ -23,6 +23,8 @@
 
 package com.kmaismith.chunkclaim;
 
+import com.earth2me.essentials.api.NoLoanPermittedException;
+import com.earth2me.essentials.api.UserDoesNotExistException;
 import com.kmaismith.chunkclaim.Data.ChunkData;
 import com.kmaismith.chunkclaim.Data.DataManager;
 import com.kmaismith.chunkclaim.Data.PlayerData;
@@ -36,6 +38,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.logging.Logger;
@@ -45,6 +48,7 @@ public class ChunkClaim extends JavaPlugin {
     private ChunkClaimLogger logger;
     private DataManager dataStore;
     private ChunkCommandHandler chunkCommandHandler;
+    private transient PriceIndex priceIndex;
 
     public ChunkClaim() {
         super();
@@ -61,7 +65,10 @@ public class ChunkClaim extends JavaPlugin {
         this.chunkCommandHandler = new ChunkCommandHandler(this, dataManager);
     }
 
-    public float config_startCredits;
+    public int config_startCredits;
+    //public int config_maxCredits;
+    public float config_constant1;
+    public float config_constant2;
 
     public void onDisable() {
         Player[] players = this.getServer().getOnlinePlayers();
@@ -81,7 +88,13 @@ public class ChunkClaim extends JavaPlugin {
         this.getConfig().options().copyDefaults(true);
         this.saveConfig();
 
-        this.config_startCredits = (float) this.getConfig().getDouble("startCredits");
+        this.config_startCredits = this.getConfig().getInt("startCredits");
+        //this.config_maxCredits = this.getConfig().getInt("maxCredits");
+        this.config_constant1 = (float) this.getConfig().getDouble("constant1");
+        this.config_constant2 = (float) this.getConfig().getDouble("constant2");
+        
+        // price index
+        priceIndex = new PriceIndex(this.getDataFolder());
 
         // register for events
         PluginManager pluginManager = this.getServer().getPluginManager();
@@ -293,14 +306,95 @@ public class ChunkClaim extends JavaPlugin {
 
                     }
                     return true;
+                }
 
-                } else {
+            } else if (args[0].equalsIgnoreCase("buy")) {
+                int total = dataStore.readPlayerData(player.getName()).getCredits() + dataStore.getChunksForPlayer(player.getName()).size();
+                BigDecimal reqBal;
+                /*if(total >= this.config_maxCredits) {
+                	// After reaching the "soft limit", expansion will be a constant value (adjusted for inflation)
+                	// See below comment for more information
+                    reqBal = new BigDecimal(Math.pow(2.71828, config_constant1 * config_constant2 * config_maxCredits)).multiply(new BigDecimal(priceIndex.getPI())).add(new BigDecimal(Float.toString(config_startCredits)));
+                } else {*/
+                    // Many thanks to msoulworrier for contributions.
+                    // We highly recommend: config_startCredits=4 and 25<=config_maxCredits<=30
+                    // let x be the number of chunks
+                    // let m be the price index
+                	// let constant1 be a configurable "config_constant1", defaults to .753
+                	// let constant2 be a configurable "config_constant2", defaults to .6542
+                	// let b be the config_startCredits
+                    // let f(x) be the price, relative to the price index
+                    // f(x)=me^(constant1 * constant2 * x) + b
+                    reqBal = new BigDecimal(Math.pow(2.71828,  (config_constant1 * config_constant2 * total))).multiply(new BigDecimal(priceIndex.getPI())).add(new BigDecimal(Float.toString(config_startCredits)));
+                //}
+                boolean hasEnough;
+                try {
+                    hasEnough = com.earth2me.essentials.api.Economy.hasEnough(player.getName(), reqBal);
+                } catch (com.earth2me.essentials.api.UserDoesNotExistException e) {
+                    sendMsg(player, "Internal error: UserDoesNotExistException. No transaction was made. Please report.");
+                    return true; // Should this be false? I don't know.
+                }
+                if (hasEnough) {
+                    try {
+                        com.earth2me.essentials.api.Economy.substract(player.getName(), reqBal);
+                    } catch (NoLoanPermittedException | ArithmeticException	| UserDoesNotExistException e) {
+                        sendMsg(player, "Internal error: UserDoesNotExistException. No transaction was made. Please report.");
+                        return true; // Should this be false? I don't know.
+                    }
+                    PlayerData playerData = dataStore.readPlayerData(player.getName());
+                    playerData.addCredit();
+                    dataStore.savePlayerData(playerData);
+                    sendMsg(player, "Successfully purchased a chunk credit for $" + String.valueOf(reqBal.doubleValue()) + ".");
+                    return true;
+            } else {
+                sendMsg(player, "You can't afford to buy another chunk for $" + String.valueOf(reqBal.doubleValue()) + ".");
+                return true;
+            }
+        } else if (args[0].equalsIgnoreCase("index")) {
+            if(args.length == 2 && player.hasPermission("chunkclaim.admin")) {
+                // Check if second argument is valid... TODO
+                sendMsg(player, "The old price index was $" + priceIndex.getPI());
+                priceIndex.setPI(BigDecimal.valueOf(Double.parseDouble(args[1])));
+                }
+            // Display the price index
+            sendMsg(player, "The current price index is $" + priceIndex.getPI());
+            return true;
+            } else if(args[0].equalsIgnoreCase("price")) {
+            	int total; BigDecimal reqBal; String suffix;
+            	
+            	if(args.length == 1) {
+            		total = dataStore.readPlayerData(player.getName()).getCredits() + dataStore.getChunksForPlayer(player.getName()).size();
+            	} else {
+            		try {
+            			total = Integer.parseInt(args[1]);
+            		} catch(NumberFormatException e) {
+            			sendMsg(player, "I'm having trouble with argument ''" + args[1] + "''. Are you sure it's the right type?");
+            			sendMsg(player, "Usage: /chunk claim price [optional: integer value]");
+            			return true;
+            		}
+            	}
+            	switch(total) {
+            	case -3:
+            		suffix = "rd";
+            		break;
+            	case -2:
+            		suffix = "nd";
+            		break;
+            	case -1:
+            		suffix = "st";
+            	default:
+            		suffix = "th";
+            	}
+            	if(total < config_startCredits) { sendMsg(player, "You should start with " + config_startCredits + " credits."); total = config_startCredits + 1; }
+            	reqBal = new BigDecimal(Math.pow(2.71828,  (config_constant1 * config_constant2 * total))).multiply(new BigDecimal(priceIndex.getPI())).add(new BigDecimal(Float.toString(config_startCredits)));
+            	sendMsg(player, "The cost of the " + total + suffix + " chunk credit: $" + reqBal);
+            	return true;
+            } else {
                     return false;
                 }
             }
-        }
-        return false;
-    }
+            return false;
+            }
 
     OfflinePlayer resolvePlayer(String name) {
 

@@ -2,13 +2,14 @@ name: ChunkClaim
 main: com.kmaismith.chunkclaim.ChunkClaim
 version: 2.0-SNAPSHOT
 author: schmidtbochum & kMaiSmith
+depend: [Essentials]
 softdepend: [Multiverse-Core]
 description: >
              Simple Chunk Protection with Forge mod support
 commands:
   chunk:
     description: Displays information about the chunk.
-    usage: "/chunk [credits|abandon|trust|untrust|list]"
+    usage: "/chunk [credits|abandon|trust|untrust|list|buy|index|price]"
 permissions:
   chunkclaim.claim:
     description: Claim chunks.
